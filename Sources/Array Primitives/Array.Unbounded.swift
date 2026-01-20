@@ -1,212 +1,319 @@
 // ===----------------------------------------------------------------------===//
 //
-// This source file is part of the swift-standards open source project
+// This source file is part of the swift-primitives open source project
 //
-// Copyright (c) 2024-2025 Coen ten Thije Boonkkamp and the swift-standards project authors
+// Copyright (c) 2024-2026 Coen ten Thije Boonkkamp and the swift-primitives project authors
 // Licensed under Apache License v2.0
 //
 // See LICENSE for license information
 //
 // ===----------------------------------------------------------------------===//
 
-extension Array {
-    /// A growable array with a compile-time initial capacity hint.
+// Note: Array.Unbounded is declared INSIDE the Array enum body (in Array.swift)
+// due to Swift's ~Copyable constraint propagation rules. This file contains
+// only extensions to Array.Unbounded.
+
+// MARK: - Properties
+
+extension Array.Unbounded where Element: ~Copyable {
+    /// The number of elements in the array.
+    @inlinable
+    public var count: Int { _storage.header }
+
+    /// Whether the array is empty.
+    @inlinable
+    public var isEmpty: Bool { _storage.header == 0 }
+
+    /// The current capacity of the array.
+    @inlinable
+    public var capacity: Int { _storage.capacity }
+
+    /// The initial capacity hint from the generic parameter.
+    @inlinable
+    public var initialCapacityHint: Int { N }
+}
+
+// MARK: - Capacity Management
+
+extension Array.Unbounded where Element: ~Copyable {
+    /// Ensures the array has capacity for at least the specified number of elements.
+    @usableFromInline
+    mutating func ensureCapacity(_ minimumCapacity: Int) {
+        guard _storage.capacity < minimumCapacity else { return }
+
+        // Growth factor 2.0, minimum capacity from hint or 4
+        let newCapacity = Swift.max(minimumCapacity, _storage.capacity * 2, N, 4)
+        let newStorage = ElementStorage.create(minimumCapacity: newCapacity)
+        let currentCount = _storage.header
+
+        _storage._moveAllElements(to: newStorage)
+        newStorage.header = currentCount
+        _storage = newStorage
+        unsafe (_cachedPtr = _storage._elementsPointer)  // CRITICAL: Update cached pointer
+    }
+}
+
+// MARK: - Core Operations (Base - for ~Copyable elements)
+
+extension Array.Unbounded where Element: ~Copyable {
+    /// Appends an element to the array.
     ///
-    /// Unlike `Bounded`, this array can grow unbounded. The generic parameter `N`
-    /// specifies the initial allocation capacity when the first element is added.
-    /// Subsequent growth uses a doubling strategy.
-    @safe
-    public struct Unbounded<let N: Int>: ~Copyable {
-        @usableFromInline
-        var _storage: UnsafeMutablePointer<Element>?
+    /// - Parameter element: The element to append (consumed).
+    /// - Complexity: O(1) amortized.
+    @inlinable
+    public mutating func append(_ element: consuming Element) {
+        let count = _storage.header
+        ensureCapacity(count + 1)
+        _storage._initializeElement(at: count, to: element)
+        _storage.header = count + 1
+    }
 
-        @usableFromInline
-        var _count: Int
+    /// Removes and returns the last element, or nil if empty.
+    ///
+    /// - Returns: The removed element, or `nil` if the array is empty.
+    /// - Complexity: O(1).
+    @inlinable
+    public mutating func removeLast() -> Element? {
+        let count = _storage.header
+        guard count > 0 else { return nil }
+        _storage.header = count - 1
+        return _storage._moveElement(at: count - 1)
+    }
 
-        @usableFromInline
-        var _capacity: Int
+    /// Removes all elements from the array.
+    ///
+    /// - Parameter keepingCapacity: Whether to keep the current capacity.
+    @inlinable
+    public mutating func removeAll(keepingCapacity: Bool = false) {
+        _storage._deinitializeAllElements()
+        if !keepingCapacity {
+            _storage = ElementStorage.create(minimumCapacity: 0)
+            unsafe (_cachedPtr = _storage._elementsPointer)
+        }
+    }
+}
 
-        /// Creates an empty growable array.
-        @inlinable
-        public init() {
-            unsafe self._storage = nil
-            self._count = 0
-            self._capacity = 0
+// MARK: - Copy-on-Write Helpers (Copyable elements only)
+
+extension Array.Unbounded.ElementStorage where Element: Copyable {
+    /// Creates a copy of this storage.
+    @usableFromInline
+    func copy() -> Array<Element>.Unbounded<N>.ElementStorage {
+        let count = header
+        guard count > 0 else {
+            return Array<Element>.Unbounded<N>.ElementStorage.create(minimumCapacity: 0)
         }
 
-        deinit {
-            if let storage = unsafe _storage {
-                for i in 0..<_count {
-                    unsafe (storage + i).deinitialize(count: 1)
+        let new = Array<Element>.Unbounded<N>.ElementStorage.create(minimumCapacity: capacity)
+        new.header = count
+
+        _ = unsafe withUnsafeMutablePointerToElements { src in
+            unsafe new.withUnsafeMutablePointerToElements { dst in
+                for i in 0..<count {
+                    unsafe (dst + i).initialize(to: src[i])
                 }
-                unsafe storage.deallocate()
+            }
+        }
+
+        return new
+    }
+
+    /// Copies all elements to new storage.
+    @usableFromInline
+    func _copyAllElements(to newStorage: Array<Element>.Unbounded<N>.ElementStorage) {
+        let count = header
+        guard count > 0 else { return }
+        _ = unsafe withUnsafeMutablePointerToElements { src in
+            unsafe newStorage.withUnsafeMutablePointerToElements { dst in
+                for i in 0..<count {
+                    unsafe (dst + i).initialize(to: src[i])
+                }
             }
         }
     }
 }
 
-// MARK: - Properties
+// MARK: - Copy-on-Write (Copyable elements only)
 
-extension Array.Unbounded {
-    /// The number of elements in the array.
-    @inlinable
-    public var count: Int { _count }
-
-    /// Whether the array is empty.
-    @inlinable
-    public var isEmpty: Bool { _count == 0 }
-
-    /// The current capacity of the array.
-    @inlinable
-    public var capacity: Int { _capacity }
-
-    /// The initial capacity hint from the generic parameter.
-    @inlinable
-    public var initialCapacityHint: Int { N }
-
-}
-
-// MARK: - Core Operations
-
-extension Array.Unbounded {
-    /// Appends an element to the array.
-    @inlinable
-    public mutating func append(_ element: consuming Element) {
-        if _count >= _capacity {
-            grow()
+extension Array.Unbounded where Element: Copyable {
+    /// Ensures the storage is uniquely referenced before mutation.
+    @usableFromInline
+    mutating func makeUnique() {
+        if !isKnownUniquelyReferenced(&_storage) {
+            _storage = _storage.copy()
+            unsafe (_cachedPtr = _storage._elementsPointer)  // CRITICAL: Update cached pointer
         }
-        unsafe (_storage! + _count).initialize(to: element)
-        _count += 1
     }
 
-    /// Removes and returns the last element, or nil if empty.
+    /// Appends an element to the array (CoW-aware).
+    ///
+    /// This method shadows the base `append(_:)` when `Element: Copyable`,
+    /// providing copy-on-write semantics.
+    @inlinable
+    public mutating func append(_ element: Element) {
+        makeUnique()
+        let count = _storage.header
+        ensureCapacity(count + 1)
+        _storage._initializeElement(at: count, to: element)
+        _storage.header = count + 1
+    }
+
+    /// Removes and returns the last element (CoW-aware).
+    ///
+    /// This method shadows the base `removeLast()` when `Element: Copyable`,
+    /// providing copy-on-write semantics.
     @inlinable
     public mutating func removeLast() -> Element? {
-        guard _count > 0 else {
-            return nil
-        }
-        _count -= 1
-        return unsafe (_storage! + _count).move()
+        makeUnique()
+        let count = _storage.header
+        guard count > 0 else { return nil }
+        _storage.header = count - 1
+        return _storage._moveElement(at: count - 1)
     }
 
-    /// Removes all elements from the array.
+    /// Removes all elements from the array (CoW-aware).
+    ///
+    /// This method shadows the base `removeAll(keepingCapacity:)` when `Element: Copyable`,
+    /// providing copy-on-write semantics.
     @inlinable
-    public mutating func removeAll() {
-        guard let storage = unsafe _storage else { return }
-        for i in 0..<_count {
-            unsafe (storage + i).deinitialize(count: 1)
+    public mutating func removeAll(keepingCapacity: Bool = false) {
+        makeUnique()
+        _storage._deinitializeAllElements()
+        if !keepingCapacity {
+            _storage = ElementStorage.create(minimumCapacity: 0)
+            unsafe (_cachedPtr = _storage._elementsPointer)
         }
-        _count = 0
-    }
-
-    @usableFromInline
-    mutating func grow() {
-        let newCapacity = _capacity == 0 ? max(N, 1) : _capacity * 2
-        let newStorage = UnsafeMutablePointer<Element>.allocate(capacity: newCapacity)
-
-        if let oldStorage = unsafe _storage {
-            unsafe newStorage.moveInitialize(from: oldStorage, count: _count)
-            unsafe oldStorage.deallocate()
-        }
-
-        unsafe _storage = newStorage
-        _capacity = newCapacity
     }
 }
 
-// MARK: - Iteration
+// MARK: - Subscript Access (Copyable elements only)
 
-extension Array.Unbounded {
-    /// Iterates over all elements.
+extension Array.Unbounded where Element: Copyable {
+    /// Accesses the element at the specified index.
+    ///
+    /// - Parameter index: The index of the element.
+    /// - Precondition: The index must be in bounds.
     @inlinable
-    public func forEach(_ body: (borrowing Element) throws -> Void) rethrows {
-        guard let storage = unsafe _storage else { return }
-        for i in 0..<_count {
-            try unsafe body((storage + i).pointee)
+    public subscript(index: Int) -> Element {
+        get {
+            precondition(index >= 0 && index < count, "Index out of bounds")
+            return _storage._readElement(at: index)
+        }
+        set {
+            precondition(index >= 0 && index < count, "Index out of bounds")
+            makeUnique()
+            _ = _storage._moveElement(at: index)
+            _storage._initializeElement(at: index, to: newValue)
+        }
+    }
+}
+
+// MARK: - Borrowed Element Access (for ~Copyable elements)
+
+extension Array.Unbounded where Element: ~Copyable {
+    /// Accesses the element at the given index via closure (for ~Copyable elements).
+    ///
+    /// - Parameters:
+    ///   - index: The index of the element.
+    ///   - body: A closure that receives a borrowed reference to the element.
+    /// - Returns: The result of the closure.
+    /// - Precondition: The index must be in bounds.
+    @inlinable
+    public func withElement<R>(at index: Int, _ body: (borrowing Element) -> R) -> R {
+        precondition(index >= 0 && index < count, "Index out of bounds")
+        return unsafe _storage.withUnsafeMutablePointerToElements { elements in
+            body(unsafe (elements + index).pointee)
+        }
+    }
+
+    /// Iterates over all elements in the array.
+    ///
+    /// - Parameter body: A closure that receives each borrowed element.
+    @inlinable
+    public func forEach<E: Swift.Error>(_ body: (borrowing Element) throws(E) -> Void) throws(E) {
+        let count = _storage.header
+        guard count > 0 else { return }
+        _ = try unsafe _storage.withUnsafeMutablePointerToElements { (elements) throws(E) in
+            for i in 0..<count {
+                try unsafe body((elements + i).pointee)
+            }
         }
     }
 
     /// Removes and consumes all elements.
+    ///
+    /// - Parameter body: A closure that receives each consumed element.
     @inlinable
     public mutating func drain(_ body: (consuming Element) -> Void) {
-        guard let storage = unsafe _storage else { return }
-        for i in 0..<_count {
-            unsafe body((storage + i).move())
+        let count = _storage.header
+        guard count > 0 else { return }
+        _ = unsafe _storage.withUnsafeMutablePointerToElements { elements in
+            for i in 0..<count {
+                unsafe body((elements + i).move())
+            }
         }
-        _count = 0
+        _storage.header = 0
     }
 }
 
-// MARK: - Span Access (Normative, Closure-Based)
+// MARK: - Span Access
 
-extension Array.Unbounded {
-    /// Provides read-only span access to the array elements.
+extension Array.Unbounded where Element: ~Copyable {
+    /// Read-only span of the array elements.
     ///
     /// ## Lifetime Contract
     ///
-    /// - The span is valid ONLY for the duration of the closure.
+    /// - The span is valid ONLY for the duration of the borrow of `self`.
     /// - The span MUST NOT be stored, returned, or allowed to escape.
+    /// - The returned span is lifetime-dependent; the compiler is expected to diagnose escapes.
     /// - Violating this contract is undefined behavior.
-    ///
-    /// - Parameter body: A closure that receives a span view of the elements.
-    /// - Returns: The value returned by `body`.
-    /// - Throws: The error thrown by the closure.
     @inlinable
-    public func withSpan<R, E: Swift.Error>(
-        _ body: (Span<Element>) throws(E) -> R
-    ) throws(E) -> R {
-        if let storage = unsafe _storage {
-            let span = unsafe Span(_unsafeStart: storage, count: _count)
-            return try body(span)
-        } else {
-            // Empty array: use stdlib Array's span for empty case
-            let empty: [Element] = []
-            return try body(empty.span)
+    public var span: Span<Element> {
+        @_lifetime(borrow self)
+        borrowing get {
+            let count = _storage.header
+            // _cachedPtr from ManagedBuffer is always valid; pointer irrelevant when count == 0
+            return unsafe Span(_unsafeStart: _cachedPtr, count: count)
         }
     }
 
-    /// Provides mutable span access to the array elements.
+    /// Mutable span of the array elements.
     ///
     /// ## Lifetime Contract
     ///
-    /// - The span is valid ONLY for the duration of the closure.
+    /// - The span is valid ONLY for the duration of the exclusive mutable borrow.
     /// - The span MUST NOT be stored, returned, or allowed to escape.
+    /// - The returned span is lifetime-dependent; the compiler is expected to diagnose escapes.
     /// - No concurrent mutable borrows are permitted.
+    /// - No mutable + immutable borrow overlap is permitted.
     /// - Violating this contract is undefined behavior.
-    ///
-    /// - Parameter body: A closure that receives a mutable span view of the elements.
-    /// - Returns: The value returned by `body`.
-    /// - Throws: The error thrown by the closure.
     @inlinable
-    public mutating func withMutableSpan<R, E: Swift.Error>(
-        _ body: (inout MutableSpan<Element>) throws(E) -> R
-    ) throws(E) -> R {
-        if let storage = unsafe _storage {
-            var span = unsafe MutableSpan(_unsafeStart: storage, count: _count)
-            return try body(&span)
-        } else {
-            // Empty array: create empty MutableSpan using global sentinel
-            let sentinel = unsafe _emptyContainerSentinel.assumingMemoryBound(to: Element.self)
-            var span = unsafe MutableSpan(_unsafeStart: sentinel, count: 0)
-            return try body(&span)
+    public var mutableSpan: MutableSpan<Element> {
+        @_lifetime(&self)
+        mutating get {
+            let count = _storage.header
+            // _cachedPtr from ManagedBuffer is always valid; pointer irrelevant when count == 0
+            return unsafe MutableSpan(_unsafeStart: _cachedPtr, count: count)
         }
     }
 }
 
-// MARK: - Buffer Access (Escape Hatch)
+// MARK: - Buffer Access (Escape Hatch for C Interop)
 
-extension Array.Unbounded {
+@_spi(Unsafe)
+extension Array.Unbounded where Element: ~Copyable {
     /// Provides read-only access to the underlying contiguous storage.
     ///
     /// - Warning: This is an escape hatch for C interop. Prefer `span` for safe access.
     /// - Warning: The pointer must not escape the closure scope.
     @unsafe
     @inlinable
-    public func withUnsafeBufferPointer<R, E: Error>(
+    public func withUnsafeBufferPointer<R, E: Swift.Error>(
         _ body: (UnsafeBufferPointer<Element>) throws(E) -> R
     ) throws(E) -> R {
-        if let storage = unsafe _storage {
-            return try unsafe body(UnsafeBufferPointer(start: storage, count: _count))
+        let count = _storage.header
+        if count > 0 {
+            return try unsafe body(UnsafeBufferPointer(start: _cachedPtr, count: count))
         } else {
             return try unsafe body(UnsafeBufferPointer(start: nil, count: 0))
         }
@@ -218,25 +325,14 @@ extension Array.Unbounded {
     /// - Warning: The pointer must not escape the closure scope.
     @unsafe
     @inlinable
-    public mutating func withUnsafeMutableBufferPointer<R, E: Error>(
+    public mutating func withUnsafeMutableBufferPointer<R, E: Swift.Error>(
         _ body: (UnsafeMutableBufferPointer<Element>) throws(E) -> R
     ) throws(E) -> R {
-        if let storage = unsafe _storage {
-            return try unsafe body(UnsafeMutableBufferPointer(start: storage, count: _count))
+        let count = _storage.header
+        if count > 0 {
+            return try unsafe body(UnsafeMutableBufferPointer(start: _cachedPtr, count: count))
         } else {
             return try unsafe body(UnsafeMutableBufferPointer(start: nil, count: 0))
         }
     }
-}
-
-// MARK: - Sendable
-
-extension Array.Unbounded: @unchecked Sendable where Element: Sendable {}
-
-// MARK: - Convenience Typealiases
-
-extension Array {
-    public typealias Small1 = Unbounded<1>
-    public typealias Small4 = Unbounded<4>
-    public typealias Small8 = Unbounded<8>
 }

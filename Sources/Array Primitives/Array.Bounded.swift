@@ -1,37 +1,17 @@
 // ===----------------------------------------------------------------------===//
 //
-// This source file is part of the swift-standards open source project
+// This source file is part of the swift-primitives open source project
 //
-// Copyright (c) 2024-2025 Coen ten Thije Boonkkamp and the swift-standards project authors
+// Copyright (c) 2024-2026 Coen ten Thije Boonkkamp and the swift-primitives project authors
 // Licensed under Apache License v2.0
 //
 // See LICENSE for license information
 //
 // ===----------------------------------------------------------------------===//
 
-extension Array {
-    /// A non-resizable array that is always fully initialized.
-    ///
-    /// Unlike standard `Array`, `Bounded` cannot grow or shrink after creation.
-    /// All elements are initialized at construction time.
-    @safe
-    public struct Bounded: ~Copyable {
-        @usableFromInline
-        var storage: UnsafeMutablePointer<Element>
-
-        /// The number of elements in the array.
-        public let count: Int
-
-        deinit {
-            for i in 0..<count {
-                unsafe (storage + i).deinitialize(count: 1)
-            }
-            if count > 0 {
-                unsafe storage.deallocate()
-            }
-        }
-    }
-}
+// Note: Array.Bounded is declared INSIDE the Array enum body (in Array.swift)
+// due to Swift's ~Copyable constraint propagation rules. This file contains
+// only extensions to Array.Bounded.
 
 // MARK: - Initialization (Checked)
 
@@ -52,8 +32,8 @@ extension Array.Bounded {
         }
 
         if count == 0 {
-            // Use global sentinel for empty arrays - provides defense in depth over bitPattern
-            unsafe self.storage = _emptyContainerSentinel.assumingMemoryBound(to: Element.self)
+            // Empty array: pointer is semantically irrelevant when count == 0
+            unsafe self.storage = UnsafeMutablePointer<Element>(bitPattern: 1)!
             self.count = 0
             return
         }
@@ -88,7 +68,7 @@ extension Array.Bounded {
         precondition(count >= 0, "Count must be non-negative")
 
         if count == 0 {
-            unsafe self.storage = _emptyContainerSentinel.assumingMemoryBound(to: Element.self)
+            unsafe self.storage = UnsafeMutablePointer<Element>(bitPattern: 1)!
             self.count = 0
             return
         }
@@ -223,8 +203,9 @@ extension Array.Bounded {
     }
 }
 
-// MARK: - Pointer Access (Escape Hatch)
+// MARK: - Pointer Access (Escape Hatch for C Interop)
 
+@_spi(Unsafe)
 extension Array.Bounded {
     /// Provides read-only access to the underlying contiguous storage.
     ///
@@ -251,9 +232,35 @@ extension Array.Bounded {
     }
 }
 
-// MARK: - Sendable
+// MARK: - Borrowed Element Access (for ~Copyable elements)
 
-extension Array.Bounded: @unchecked Sendable where Element: Sendable {}
+extension Array.Bounded where Element: ~Copyable {
+    /// Accesses the element at the given index via closure (for ~Copyable elements).
+    ///
+    /// This method provides borrowed access to elements, enabling safe read access
+    /// to move-only types without consuming them.
+    ///
+    /// - Parameters:
+    ///   - index: The index of the element.
+    ///   - body: A closure that receives a borrowed reference to the element.
+    /// - Returns: The result of the closure.
+    /// - Precondition: The index must be in bounds.
+    @inlinable
+    public func withElement<R>(at index: Int, _ body: (borrowing Element) -> R) -> R {
+        precondition(index >= 0 && index < count, "Index out of bounds")
+        return unsafe body((storage + index).pointee)
+    }
+
+    /// Iterates over all elements in the array.
+    ///
+    /// - Parameter body: A closure that receives each borrowed element.
+    @inlinable
+    public func forEach(_ body: (borrowing Element) -> Void) {
+        for i in 0..<count {
+            unsafe body((storage + i).pointee)
+        }
+    }
+}
 
 // MARK: - Error
 
