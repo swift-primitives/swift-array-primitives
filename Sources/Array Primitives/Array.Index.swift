@@ -25,6 +25,21 @@ extension Array where Element: ~Copyable {
     /// print(array[arrayIdx])  // 5
     /// ```
     public typealias Index = Index_Primitives.Index<Element>
+
+    /// Signed offset type for index arithmetic.
+    ///
+    /// Follows affine space semantics:
+    /// - `index2 - index1 → offset` (displacement between indices)
+    /// - `index + offset → index?` (translation, nil if negative result)
+    ///
+    /// ## Example
+    ///
+    /// ```swift
+    /// let idx: Array<Int>.Index = try Array<Int>.Index(5)
+    /// let offset: Array<Int>.Offset = 3
+    /// let newIdx = (idx + offset)!  // Index at position 8
+    /// ```
+    public typealias Offset = Index_Primitives.Index<Element>.Offset
 }
 
 // MARK: - Typed Subscript (Array.Bounded)
@@ -130,6 +145,113 @@ extension Array.Small where Element: ~Copyable {
             } else {
                 yield &(unsafe _inlinePointerToElement(at: index.position.rawValue).pointee)
             }
+        }
+    }
+}
+
+// MARK: - Bounded Index (Inline Arrays)
+
+extension Array.Inline where Element: ~Copyable {
+    /// Bounded index type for inline arrays.
+    ///
+    /// Guarantees index is in `0..<capacity` at compile time,
+    /// eliminating runtime bounds checks for subscript access.
+    ///
+    /// ## Example
+    ///
+    /// ```swift
+    /// var inline = Array<Int>.Inline<8>()
+    /// // Fill with 8 elements...
+    /// let idx: Array<Int>.Inline<8>.BoundedIndex = 3
+    /// print(inline[idx])  // No runtime bounds check
+    /// ```
+    public typealias BoundedIndex = Index_Primitives.Index<Element>.Bounded<capacity>
+}
+
+extension Array.Inline where Element: ~Copyable {
+    /// Accesses the element at the given bounded index (no runtime bounds check).
+    ///
+    /// - Parameter index: A bounded index guaranteed to be in `0..<capacity`.
+    /// - Precondition: The array must have at least `index.rawValue + 1` elements.
+    @inlinable
+    public subscript(index: BoundedIndex) -> Element {
+        _read {
+            precondition(index.rawValue < _count, "Index exceeds current count")
+            yield unsafe _readPointerToElement(at: index.rawValue).pointee
+        }
+        _modify {
+            precondition(index.rawValue < _count, "Index exceeds current count")
+            yield &(unsafe _pointerToElement(at: index.rawValue).pointee)
+        }
+    }
+}
+
+// MARK: - Offset Navigation
+
+extension Array.Bounded where Element: Copyable {
+    /// Returns element at index offset from given base index.
+    ///
+    /// - Parameters:
+    ///   - base: The starting index.
+    ///   - offset: The signed offset from the base.
+    /// - Returns: The element at the computed position, or `nil` if out of bounds.
+    @inlinable
+    public func element(at base: Array<Element>.Index, offsetBy offset: Array<Element>.Offset) -> Element? {
+        guard let newIndex = base + offset else { return nil }
+        let pos = newIndex.position.rawValue
+        guard pos >= 0 && pos < count else { return nil }
+        return unsafe storage[pos]
+    }
+}
+
+extension Array.Unbounded where Element: Copyable {
+    /// Returns element at index offset from given base index.
+    ///
+    /// - Parameters:
+    ///   - base: The starting index.
+    ///   - offset: The signed offset from the base.
+    /// - Returns: The element at the computed position, or `nil` if out of bounds.
+    @inlinable
+    public func element(at base: Array<Element>.Index, offsetBy offset: Array<Element>.Offset) -> Element? {
+        guard let newIndex = base + offset else { return nil }
+        let pos = newIndex.position.rawValue
+        guard pos >= 0 && pos < count else { return nil }
+        return _cachedPtr[pos]
+    }
+}
+
+extension Array.Inline where Element: Copyable {
+    /// Returns element at index offset from given base index.
+    ///
+    /// - Parameters:
+    ///   - base: The starting index.
+    ///   - offset: The signed offset from the base.
+    /// - Returns: The element at the computed position, or `nil` if out of bounds.
+    @inlinable
+    public func element(at base: Array<Element>.Index, offsetBy offset: Array<Element>.Offset) -> Element? {
+        guard let newIndex = base + offset else { return nil }
+        let pos = newIndex.position.rawValue
+        guard pos >= 0 && pos < _count else { return nil }
+        return unsafe _readPointerToElement(at: pos).pointee
+    }
+}
+
+extension Array.Small where Element: Copyable {
+    /// Returns element at index offset from given base index.
+    ///
+    /// - Parameters:
+    ///   - base: The starting index.
+    ///   - offset: The signed offset from the base.
+    /// - Returns: The element at the computed position, or `nil` if out of bounds.
+    @inlinable
+    public func element(at base: Array<Element>.Index, offsetBy offset: Array<Element>.Offset) -> Element? {
+        guard let newIndex = base + offset else { return nil }
+        let pos = newIndex.position.rawValue
+        guard pos >= 0 && pos < _count else { return nil }
+        if let heapPtr = _heapPtr {
+            return unsafe heapPtr[pos]
+        } else {
+            return unsafe _inlineReadPointerToElement(at: pos).pointee
         }
     }
 }

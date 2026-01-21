@@ -12,14 +12,14 @@
 import Testing
 @testable import Array_Primitives
 
-@Suite("Bit.Array")
-struct BitArrayTests {
+@Suite("Array<Bit>.Packed")
+struct PackedBitArrayTests {
 
     // MARK: - Basic Operations
 
     @Test("Append and subscript")
     func appendAndSubscript() {
-        var bits = Bit.Array()
+        var bits = Array<Bit>.Packed()
 
         bits.append(true)
         bits.append(false)
@@ -33,7 +33,7 @@ struct BitArrayTests {
 
     @Test("Subscript set")
     func subscriptSet() {
-        var bits = Bit.Array([true, true, true])
+        var bits = Array<Bit>.Packed([true, true, true])
 
         bits[1] = false
 
@@ -44,7 +44,7 @@ struct BitArrayTests {
 
     @Test("popLast")
     func popLast() {
-        var bits = Bit.Array([true, false, true])
+        var bits = Array<Bit>.Packed([true, false, true])
 
         let last = bits.popLast()
         #expect(last == true)
@@ -64,7 +64,7 @@ struct BitArrayTests {
 
     @Test("removeLast")
     func removeLast() {
-        var bits = Bit.Array([true, false])
+        var bits = Array<Bit>.Packed([true, false])
 
         bits.removeLast()
         #expect(bits.count == 1)
@@ -73,7 +73,7 @@ struct BitArrayTests {
 
     @Test("removeAll")
     func removeAll() {
-        var bits = Bit.Array([true, false, true])
+        var bits = Array<Bit>.Packed([true, false, true])
 
         bits.removeAll()
         #expect(bits.isEmpty)
@@ -83,7 +83,7 @@ struct BitArrayTests {
 
     @Test("count and isEmpty")
     func countAndIsEmpty() {
-        var bits = Bit.Array()
+        var bits = Array<Bit>.Packed()
         #expect(bits.isEmpty)
 
         bits.append(true)
@@ -93,7 +93,7 @@ struct BitArrayTests {
 
     @Test("first and last")
     func firstAndLast() {
-        var bits = Bit.Array()
+        var bits = Array<Bit>.Packed()
         #expect(bits.first == nil)
         #expect(bits.last == nil)
 
@@ -110,7 +110,7 @@ struct BitArrayTests {
 
     @Test("Init from sequence")
     func initFromSequence() {
-        let bits = Bit.Array([true, false, true, false])
+        let bits = Array<Bit>.Packed([true, false, true, false])
 
         #expect(bits.count == 4)
         #expect(bits[0] == true)
@@ -121,7 +121,7 @@ struct BitArrayTests {
 
     @Test("Init repeating true")
     func initRepeatingTrue() {
-        let bits = Bit.Array(repeating: true, count: 5)
+        let bits = Array<Bit>.Packed(repeating: true, count: 5)
 
         #expect(bits.count == 5)
         #expect(bits.allTrue)
@@ -132,7 +132,7 @@ struct BitArrayTests {
 
     @Test("Init repeating false")
     func initRepeatingFalse() {
-        let bits = Bit.Array(repeating: false, count: 5)
+        let bits = Array<Bit>.Packed(repeating: false, count: 5)
 
         #expect(bits.count == 5)
         #expect(bits.allFalse)
@@ -141,11 +141,46 @@ struct BitArrayTests {
         }
     }
 
+    // MARK: - Conversion
+
+    @Test("Conversion from [Bit]")
+    func conversionFromUnpacked() {
+        let unpacked: [Bit] = [true, false, true, false]
+        let packed = Array<Bit>.Packed(unpacked)
+
+        #expect(packed.count == 4)
+        #expect(packed[0] == true)
+        #expect(packed[1] == false)
+        #expect(packed[2] == true)
+        #expect(packed[3] == false)
+    }
+
+    @Test("Conversion to [Bit]")
+    func conversionToUnpacked() {
+        let packed = Array<Bit>.Packed([true, false, true, false])
+        let unpacked = [Bit](packed)
+
+        #expect(unpacked.count == 4)
+        #expect(unpacked[0] == true)
+        #expect(unpacked[1] == false)
+        #expect(unpacked[2] == true)
+        #expect(unpacked[3] == false)
+    }
+
+    @Test("Roundtrip conversion")
+    func roundtripConversion() {
+        let original: [Bit] = [true, false, true, true, false, false, true, false]
+        let packed = Array<Bit>.Packed(original)
+        let backToUnpacked = [Bit](packed)
+
+        #expect(original == backToUnpacked)
+    }
+
     // MARK: - Word Boundaries
 
     @Test("Word boundary: index 63 and 64")
     func wordBoundary63And64() {
-        var bits = Bit.Array(repeating: false, count: 100)
+        var bits = Array<Bit>.Packed(repeating: false, count: 100)
 
         bits[63] = true
         bits[64] = true
@@ -158,7 +193,7 @@ struct BitArrayTests {
 
     @Test("Large array")
     func largeArray() {
-        var bits = Bit.Array(repeating: false, count: 1000)
+        var bits = Array<Bit>.Packed(repeating: false, count: 1000)
 
         bits[0] = true
         bits[500] = true
@@ -173,7 +208,7 @@ struct BitArrayTests {
 
     @Test("toggle")
     func toggle() throws {
-        var bits = Bit.Array([true, false, true])
+        var bits = Array<Bit>.Packed([true, false, true])
 
         try bits.toggle(0)
         try bits.toggle(1)
@@ -186,7 +221,7 @@ struct BitArrayTests {
 
     @Test("trueCount and falseCount")
     func trueAndFalseCount() {
-        let bits = Bit.Array([true, false, true, false, true])
+        let bits = Array<Bit>.Packed([true, false, true, false, true])
 
         #expect(bits.trueCount == 3)
         #expect(bits.falseCount == 2)
@@ -194,9 +229,9 @@ struct BitArrayTests {
 
     @Test("allTrue and allFalse")
     func allTrueAndAllFalse() {
-        let allTrue = Bit.Array([true, true, true])
-        let allFalse = Bit.Array([false, false, false])
-        let mixed = Bit.Array([true, false, true])
+        let allTrue = Array<Bit>.Packed([true, true, true])
+        let allFalse = Array<Bit>.Packed([false, false, false])
+        let mixed = Array<Bit>.Packed([true, false, true])
 
         #expect(allTrue.allTrue)
         #expect(!allTrue.allFalse)
@@ -212,7 +247,7 @@ struct BitArrayTests {
 
     @Test("Iteration")
     func iteration() {
-        let bits = Bit.Array([true, false, true, false])
+        let bits = Array<Bit>.Packed([true, false, true, false])
 
         var values: [Bool] = []
         for bit in bits {
@@ -224,11 +259,10 @@ struct BitArrayTests {
 
     @Test("Collection conformance")
     func collectionConformance() {
-        let bits = Bit.Array([true, false, true])
+        let bits = Array<Bit>.Packed([true, false, true])
 
         #expect(bits.startIndex == 0)
         #expect(bits.endIndex == 3)
-//        #expect(bits.indices == 0..<3)
 
         #expect(Swift.Array(bits) == [true, false, true])
     }
@@ -237,9 +271,9 @@ struct BitArrayTests {
 
     @Test("Equality")
     func equality() {
-        let a = Bit.Array([true, false, true])
-        let b = Bit.Array([true, false, true])
-        let c = Bit.Array([true, true, true])
+        let a = Array<Bit>.Packed([true, false, true])
+        let b = Array<Bit>.Packed([true, false, true])
+        let c = Array<Bit>.Packed([true, true, true])
 
         #expect(a == b)
         #expect(a != c)
@@ -247,15 +281,15 @@ struct BitArrayTests {
 
     @Test("Empty arrays equal")
     func emptyArraysEqual() {
-        let a = Bit.Array()
-        let b = Bit.Array()
+        let a = Array<Bit>.Packed()
+        let b = Array<Bit>.Packed()
         #expect(a == b)
     }
 
     @Test("Different lengths not equal")
     func differentLengthsNotEqual() {
-        let a = Bit.Array([true, false])
-        let b = Bit.Array([true, false, true])
+        let a = Array<Bit>.Packed([true, false])
+        let b = Array<Bit>.Packed([true, false, true])
         #expect(a != b)
     }
 
@@ -263,9 +297,34 @@ struct BitArrayTests {
 
     @Test("Description")
     func description() {
-        let bits = Bit.Array([true, false, true])
+        let bits = Array<Bit>.Packed([true, false, true])
         let desc = bits.description
-        #expect(desc.contains("Bit.Array"))
+        #expect(desc.contains("Array<Bit>.Packed"))
         #expect(desc.contains("101"))
+    }
+
+    // MARK: - Bit Type
+
+    @Test("Append Bit type")
+    func appendBitType() {
+        var bits = Array<Bit>.Packed()
+        bits.append(Bit.one)
+        bits.append(Bit.zero)
+        bits.append(Bit.one)
+
+        #expect(bits.count == 3)
+        #expect(bits[0] == true)
+        #expect(bits[1] == false)
+        #expect(bits[2] == true)
+    }
+
+    @Test("Init from [Bit] sequence")
+    func initFromBitSequence() {
+        let bitArray: [Bit] = [.one, .zero, .one, .zero]
+        let packed = Array<Bit>.Packed(bitArray)
+
+        #expect(packed.count == 4)
+        #expect(packed[0] == true)
+        #expect(packed[1] == false)
     }
 }
