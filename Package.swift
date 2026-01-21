@@ -18,13 +18,21 @@ let package = Package(
         )
     ],
     dependencies: [
-        .package(path: "../swift-standard-library-extensions")
+        .package(path: "../swift-standard-library-extensions"),
+        .package(path: "../swift-bit-primitives"),
+        .package(path: "../swift-index-primitives"),
+        .package(path: "../swift-input-primitives"),
+        .package(path: "../swift-collection-primitives"),
     ],
     targets: [
         .target(
             name: "Array Primitives",
             dependencies: [
-                .product(name: "Standard Library Extensions", package: "swift-standard-library-extensions")
+                .product(name: "Standard Library Extensions", package: "swift-standard-library-extensions"),
+                .product(name: "Bit Primitives", package: "swift-bit-primitives"),
+                .product(name: "Index Primitives", package: "swift-index-primitives"),
+                .product(name: "Input Primitives", package: "swift-input-primitives"),
+                .product(name: "Collection Primitives", package: "swift-collection-primitives"),
             ]
         ),
         .testTarget(
