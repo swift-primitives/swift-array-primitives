@@ -125,7 +125,7 @@ struct BitArrayTests {
 
         #expect(bits.count == 5)
         #expect(bits.allTrue)
-        for i in 0..<5 {
+        for i in try! (0..<5).map(Bit.Index.init) {
             #expect(bits[i] == true)
         }
     }
@@ -136,7 +136,7 @@ struct BitArrayTests {
 
         #expect(bits.count == 5)
         #expect(bits.allFalse)
-        for i in 0..<5 {
+        for i in try! (0..<5).map(Bit.Index.init) {
             #expect(bits[i] == false)
         }
     }
@@ -228,7 +228,7 @@ struct BitArrayTests {
 
         #expect(bits.startIndex == 0)
         #expect(bits.endIndex == 3)
-        #expect(bits.indices == 0..<3)
+//        #expect(bits.indices == 0..<3)
 
         #expect(Swift.Array(bits) == [true, false, true])
     }

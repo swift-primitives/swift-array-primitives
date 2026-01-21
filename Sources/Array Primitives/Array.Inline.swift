@@ -38,7 +38,7 @@ extension Array.Inline where Element: ~Copyable {
     /// - Parameter element: The element to append (consumed).
     /// - Throws: ``Array/Inline/Error/overflow`` if the array is full.
     @inlinable
-    public mutating func append(_ element: consuming Element) throws(__ArrayInlineError) {
+    public mutating func append(_ element: consuming Element) throws(Array.Inline.Error) {
         guard _count < capacity else {
             throw .overflow
         }
@@ -253,7 +253,12 @@ public enum __ArrayInlineError: Swift.Error, Sendable, Equatable {
     case indexOutOfBounds(index: Int, count: Int)
 }
 
-extension __ArrayInlineError: CustomStringConvertible {
+extension Array.Inline {
+    /// Errors that can occur during inline array operations.
+    public typealias Error = __ArrayInlineError
+}
+
+extension Array.Inline.Error: CustomStringConvertible {
     public var description: String {
         switch self {
         case .overflow:
@@ -262,11 +267,4 @@ extension __ArrayInlineError: CustomStringConvertible {
             return "index \(index) out of bounds for count \(count)"
         }
     }
-}
-
-// MARK: - Error Typealias
-
-extension Array.Inline {
-    /// Errors that can occur during inline array operations.
-    public typealias Error = __ArrayInlineError
 }

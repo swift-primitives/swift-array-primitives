@@ -38,7 +38,7 @@ extension Bit.Array {
         }
 
         @inlinable
-        public init(count: Int) throws(__BitArrayInlineError) {
+        public init(count: Int) throws(Bit.Array.Bounded.Error) {
             guard count >= 0 && count <= Self.capacity else {
                 throw .overflow
             }
@@ -96,7 +96,7 @@ extension Bit.Array.Inline {
     }
 
     @inlinable
-    public func get(_ index: Int) throws(__BitArrayInlineError) -> Bool {
+    public func get(_ index: Int) throws(Bit.Array.Bounded.Error) -> Bool {
         guard index >= 0 && index < _count else {
             throw .bounds(index: index, count: _count)
         }
@@ -111,7 +111,7 @@ extension Bit.Array.Inline {
 
 extension Bit.Array.Inline {
     @inlinable
-    public mutating func set(_ index: Int) throws(__BitArrayInlineError) {
+    public mutating func set(_ index: Int) throws(Bit.Array.Bounded.Error) {
         guard index >= 0 && index < _count else {
             throw .bounds(index: index, count: _count)
         }
@@ -122,7 +122,7 @@ extension Bit.Array.Inline {
     }
 
     @inlinable
-    public mutating func clear(_ index: Int) throws(__BitArrayInlineError) {
+    public mutating func clear(_ index: Int) throws(Bit.Array.Bounded.Error) {
         guard index >= 0 && index < _count else {
             throw .bounds(index: index, count: _count)
         }
@@ -133,7 +133,7 @@ extension Bit.Array.Inline {
     }
 
     @inlinable
-    public mutating func toggle(_ index: Int) throws(__BitArrayInlineError) {
+    public mutating func toggle(_ index: Int) throws(Bit.Array.Bounded.Error) {
         guard index >= 0 && index < _count else {
             throw .bounds(index: index, count: _count)
         }
@@ -168,7 +168,7 @@ extension Bit.Array.Inline {
 
 extension Bit.Array.Inline {
     @inlinable
-    public mutating func resize(to newCount: Int, fill: Bool = false) throws(__BitArrayInlineError) {
+    public mutating func resize(to newCount: Int, fill: Bool = false) throws(Bit.Array.Bounded.Error) {
         guard newCount >= 0 && newCount <= Self.capacity else {
             throw .overflow
         }

@@ -32,7 +32,7 @@ extension Bit.Array {
         public let capacity: Int
 
         @inlinable
-        public init(capacity: Int) throws(__BitArrayBoundedError) {
+        public init(capacity: Int) throws(Bit.Array.Bounded.Error) {
             guard capacity >= 0 else {
                 throw .invalidCount
             }
@@ -43,7 +43,7 @@ extension Bit.Array {
         }
 
         @inlinable
-        public init(count: Int, capacity: Int) throws(__BitArrayBoundedError) {
+        public init(count: Int, capacity: Int) throws(Bit.Array.Bounded.Error) {
             guard count >= 0 && capacity >= 0 else {
                 throw .invalidCount
             }
@@ -106,7 +106,7 @@ extension Bit.Array.Bounded {
     }
 
     @inlinable
-    public func get(_ index: Int) throws(__BitArrayBoundedError) -> Bool {
+    public func get(_ index: Int) throws(Bit.Array.Bounded.Error) -> Bool {
         guard index >= 0 && index < _count else {
             throw .bounds(index: index, count: _count)
         }
@@ -121,7 +121,7 @@ extension Bit.Array.Bounded {
 
 extension Bit.Array.Bounded {
     @inlinable
-    public mutating func set(_ index: Int) throws(__BitArrayBoundedError) {
+    public mutating func set(_ index: Int) throws(Bit.Array.Bounded.Error) {
         guard index >= 0 && index < _count else {
             throw .bounds(index: index, count: _count)
         }
@@ -132,7 +132,7 @@ extension Bit.Array.Bounded {
     }
 
     @inlinable
-    public mutating func clear(_ index: Int) throws(__BitArrayBoundedError) {
+    public mutating func clear(_ index: Int) throws(Bit.Array.Bounded.Error) {
         guard index >= 0 && index < _count else {
             throw .bounds(index: index, count: _count)
         }
@@ -143,7 +143,7 @@ extension Bit.Array.Bounded {
     }
 
     @inlinable
-    public mutating func toggle(_ index: Int) throws(__BitArrayBoundedError) {
+    public mutating func toggle(_ index: Int) throws(Bit.Array.Bounded.Error) {
         guard index >= 0 && index < _count else {
             throw .bounds(index: index, count: _count)
         }
@@ -178,7 +178,7 @@ extension Bit.Array.Bounded {
 
 extension Bit.Array.Bounded {
     @inlinable
-    public mutating func resize(to newCount: Int, fill: Bool = false) throws(__BitArrayBoundedError) {
+    public mutating func resize(to newCount: Int, fill: Bool = false) throws(Bit.Array.Bounded.Error) {
         guard newCount >= 0 else {
             throw .invalidCount
         }

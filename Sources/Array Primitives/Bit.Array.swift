@@ -53,7 +53,7 @@ extension Bit {
         }
 
         @inlinable
-        public init(count: Int) throws(__BitArrayError) {
+        public init(count: Int) throws(Bit.Array.Error) {
             guard count >= 0 else {
                 throw .invalidCount
             }
@@ -90,18 +90,20 @@ extension Bit.Array {
 
 extension Bit.Array {
     @inlinable
-    public subscript(index: Int) -> Bool {
+    public subscript(index: Bit.Index) -> Bool {
         get {
-            precondition(index >= 0 && index < _count, "Index out of bounds")
-            let wordIndex = index / Self._bitsPerWord
-            let bitIndex = index % Self._bitsPerWord
+            let i = index.position.rawValue
+            precondition(i >= 0 && i < _count, "Index out of bounds")
+            let wordIndex = i / Self._bitsPerWord
+            let bitIndex = i % Self._bitsPerWord
             let mask: UInt = 1 << bitIndex
             return (_storage[wordIndex] & mask) != 0
         }
         set {
-            precondition(index >= 0 && index < _count, "Index out of bounds")
-            let wordIndex = index / Self._bitsPerWord
-            let bitIndex = index % Self._bitsPerWord
+            let i = index.position.rawValue
+            precondition(i >= 0 && i < _count, "Index out of bounds")
+            let wordIndex = i / Self._bitsPerWord
+            let bitIndex = i % Self._bitsPerWord
             let mask: UInt = 1 << bitIndex
             if newValue {
                 _storage[wordIndex] |= mask
@@ -112,12 +114,13 @@ extension Bit.Array {
     }
 
     @inlinable
-    public func get(_ index: Int) throws(__BitArrayError) -> Bool {
-        guard index >= 0 && index < _count else {
-            throw .bounds(index: index, count: _count)
+    public func get(_ index: Bit.Index) throws(Bit.Array.Error) -> Bool {
+        let i = index.position.rawValue
+        guard i >= 0 && i < _count else {
+            throw .bounds(index: i, count: _count)
         }
-        let wordIndex = index / Self._bitsPerWord
-        let bitIndex = index % Self._bitsPerWord
+        let wordIndex = i / Self._bitsPerWord
+        let bitIndex = i % Self._bitsPerWord
         let mask: UInt = 1 << bitIndex
         return (_storage[wordIndex] & mask) != 0
     }
@@ -127,34 +130,37 @@ extension Bit.Array {
 
 extension Bit.Array {
     @inlinable
-    public mutating func set(_ index: Int) throws(__BitArrayError) {
-        guard index >= 0 && index < _count else {
-            throw .bounds(index: index, count: _count)
+    public mutating func set(_ index: Bit.Index) throws(Bit.Array.Error) {
+        let i = index.position.rawValue
+        guard i >= 0 && i < _count else {
+            throw .bounds(index: i, count: _count)
         }
-        let wordIndex = index / Self._bitsPerWord
-        let bitIndex = index % Self._bitsPerWord
+        let wordIndex = i / Self._bitsPerWord
+        let bitIndex = i % Self._bitsPerWord
         let mask: UInt = 1 << bitIndex
         _storage[wordIndex] |= mask
     }
 
     @inlinable
-    public mutating func clear(_ index: Int) throws(__BitArrayError) {
-        guard index >= 0 && index < _count else {
-            throw .bounds(index: index, count: _count)
+    public mutating func clear(_ index: Bit.Index) throws(Bit.Array.Error) {
+        let i = index.position.rawValue
+        guard i >= 0 && i < _count else {
+            throw .bounds(index: i, count: _count)
         }
-        let wordIndex = index / Self._bitsPerWord
-        let bitIndex = index % Self._bitsPerWord
+        let wordIndex = i / Self._bitsPerWord
+        let bitIndex = i % Self._bitsPerWord
         let mask: UInt = 1 << bitIndex
         _storage[wordIndex] &= ~mask
     }
 
     @inlinable
-    public mutating func toggle(_ index: Int) throws(__BitArrayError) {
-        guard index >= 0 && index < _count else {
-            throw .bounds(index: index, count: _count)
+    public mutating func toggle(_ index: Bit.Index) throws(Bit.Array.Error) {
+        let i = index.position.rawValue
+        guard i >= 0 && i < _count else {
+            throw .bounds(index: i, count: _count)
         }
-        let wordIndex = index / Self._bitsPerWord
-        let bitIndex = index % Self._bitsPerWord
+        let wordIndex = i / Self._bitsPerWord
+        let bitIndex = i % Self._bitsPerWord
         let mask: UInt = 1 << bitIndex
         _storage[wordIndex] ^= mask
     }
@@ -184,7 +190,7 @@ extension Bit.Array {
 
 extension Bit.Array {
     @inlinable
-    public mutating func resize(to newCount: Int, fill: Bool = false) throws(__BitArrayError) {
+    public mutating func resize(to newCount: Int, fill: Bool = false) throws(Bit.Array.Error) {
         guard newCount >= 0 else {
             throw .invalidCount
         }
@@ -231,13 +237,13 @@ extension Bit.Array {
 
 extension Bit.Array {
     @inlinable
-    public func forEachSetBit(_ body: (Int) -> Void) {
+    public func forEachSetBit(_ body: (Bit.Index) -> Void) {
         for (wordIndex, var word) in _storage.enumerated() {
             while word != 0 {
                 let bitIndex = word.trailingZeroBitCount
                 let globalIndex = wordIndex * Self._bitsPerWord + bitIndex
                 if globalIndex < _count {
-                    body(globalIndex)
+                    body(Bit.Index(__unchecked: (), position: globalIndex))
                 }
                 word &= word - 1
             }
@@ -444,23 +450,44 @@ extension Bit.Array: Sequence {
 // MARK: - RandomAccessCollection
 
 extension Bit.Array: RandomAccessCollection {
-    public typealias Index = Int
+    public typealias Index = Bit.Index
     public typealias Element = Bool
 
     @inlinable
-    public var startIndex: Index { 0 }
+    public var startIndex: Index { Bit.Index(__unchecked: (), position: 0) }
 
     @inlinable
-    public var endIndex: Index { _count }
+    public var endIndex: Index { Bit.Index(__unchecked: (), position: _count) }
 
     @inlinable
-    public var indices: Range<Int> { 0..<_count }
+    public func index(after i: Index) -> Index {
+        Bit.Index(__unchecked: (), position: i.position.rawValue + 1)
+    }
 
     @inlinable
-    public func index(after i: Index) -> Index { i + 1 }
+    public func index(before i: Index) -> Index {
+        Bit.Index(__unchecked: (), position: i.position.rawValue - 1)
+    }
 
     @inlinable
-    public func index(before i: Index) -> Index { i - 1 }
+    public func distance(from start: Index, to end: Index) -> Int {
+        end.position.rawValue - start.position.rawValue
+    }
+
+    @inlinable
+    public func index(_ i: Index, offsetBy distance: Int) -> Index {
+        Bit.Index(__unchecked: (), position: i.position.rawValue + distance)
+    }
+
+    @inlinable
+    public func index(_ i: Index, offsetBy distance: Int, limitedBy limit: Index) -> Index? {
+        let result = i.position.rawValue + distance
+        if distance >= 0 {
+            return result <= limit.position.rawValue ? Bit.Index(__unchecked: (), position: result) : nil
+        } else {
+            return result >= limit.position.rawValue ? Bit.Index(__unchecked: (), position: result) : nil
+        }
+    }
 }
 
 // MARK: - Equatable
