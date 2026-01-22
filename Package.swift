@@ -24,13 +24,31 @@ let package = Package(
         .package(path: "../swift-collection-primitives"),
     ],
     targets: [
+        // Internal: Core types with ~Copyable support (no Sequence/Collection.Protocol conformances)
         .target(
-            name: "Array Primitives",
+            name: "Array Primitives Core",
             dependencies: [
                 .product(name: "Standard Library Extensions", package: "swift-standard-library-extensions"),
                 .product(name: "Bit Primitives", package: "swift-bit-primitives"),
                 .product(name: "Index Primitives", package: "swift-index-primitives"),
                 .product(name: "Collection Primitives", package: "swift-collection-primitives"),
+            ]
+        ),
+        // Internal: Sequence/Collection.Protocol conformances (Element: Copyable)
+        // Separate module to avoid constraint poisoning on Core types
+        .target(
+            name: "Array Primitives Sequence",
+            dependencies: [
+                "Array Primitives Core",
+                .product(name: "Collection Primitives", package: "swift-collection-primitives"),
+            ]
+        ),
+        // Public: Re-exports Core and Sequence for users
+        .target(
+            name: "Array Primitives",
+            dependencies: [
+                "Array Primitives Core",
+                "Array Primitives Sequence",
             ]
         ),
         .testTarget(

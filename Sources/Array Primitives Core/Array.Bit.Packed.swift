@@ -433,12 +433,12 @@ extension Array<Bit>.Packed {
 extension Swift.Array where Element == Bit {
     /// Creates an unpacked `[Bit]` array from a packed bit array.
     @inlinable
-    public init(_ packed: Array_Primitives.Array<Bit>.Packed) {
+    public init(_ packed: Array_Primitives_Core.Array<Bit>.Packed) {
         self.init()
         self.reserveCapacity(packed.count)
         for i in 0..<packed._count {
-            let wordIndex = i / Array_Primitives.Array<Bit>.Packed._bitsPerWord
-            let bitIndex = i % Array_Primitives.Array<Bit>.Packed._bitsPerWord
+            let wordIndex = i / Array_Primitives_Core.Array<Bit>.Packed._bitsPerWord
+            let bitIndex = i % Array_Primitives_Core.Array<Bit>.Packed._bitsPerWord
             let mask: UInt = 1 << bitIndex
             let value = (packed._storage[wordIndex] & mask) != 0
             self.append(Bit(value))

@@ -48,7 +48,7 @@ public enum Array<Element: ~Copyable>: ~Copyable {
     @safe
     public struct Bounded: ~Copyable {
         @usableFromInline
-        var storage: UnsafeMutablePointer<Element>
+        package var storage: UnsafeMutablePointer<Element>
 
         /// The number of elements in the array.
         public let count: Int
@@ -95,7 +95,7 @@ public enum Array<Element: ~Copyable>: ~Copyable {
         /// Declared as a nested class inside `Unbounded` so that the `Element` generic
         /// inherits the `~Copyable` suppression from the outer type.
         @usableFromInline
-        final class ElementStorage: ManagedBuffer<Int, Element> {
+        package final class ElementStorage: ManagedBuffer<Int, Element> {
 
             /// Creates empty storage with the specified minimum capacity.
             @usableFromInline
@@ -164,7 +164,7 @@ public enum Array<Element: ~Copyable>: ~Copyable {
         }
 
         @usableFromInline
-        var _storage: ElementStorage
+        package var _storage: ElementStorage
 
         /// Cached pointer to element storage. Stored in struct to enable property-based access.
         /// CRITICAL: Must be updated whenever _storage is replaced (reallocation, CoW copy).
@@ -214,7 +214,7 @@ public enum Array<Element: ~Copyable>: ~Copyable {
 
         /// Current element count.
         @usableFromInline
-        var _count: Int
+        package var _count: Int
 
         /// Workaround for Swift compiler bug where deinit element cleanup
         /// fails for ~Copyable structs that contain only value-type properties.
@@ -269,7 +269,7 @@ public enum Array<Element: ~Copyable>: ~Copyable {
         /// Returns a read-only pointer to the element at the given index.
         @usableFromInline
         @unsafe
-        func _readPointerToElement(at index: Int) -> UnsafePointer<Element> {
+        package func _readPointerToElement(at index: Int) -> UnsafePointer<Element> {
             let stride = MemoryLayout<Element>.stride
             return unsafe Swift.withUnsafePointer(to: _elements) { storagePtr in
                 let basePtr = unsafe UnsafeRawPointer(storagePtr)
@@ -306,19 +306,19 @@ public enum Array<Element: ~Copyable>: ~Copyable {
     public struct Small<let inlineCapacity: Int>: ~Copyable {
         /// Maximum element stride supported by inline storage (64 bytes per slot).
         @usableFromInline
-        static var _maxElementStride: Int { 64 }
+        package static var _maxElementStride: Int { 64 }
 
         /// Raw byte storage for inline elements.
         @usableFromInline
-        var _inlineElements: InlineArray<inlineCapacity, (Int, Int, Int, Int, Int, Int, Int, Int)>
+        package var _inlineElements: InlineArray<inlineCapacity, (Int, Int, Int, Int, Int, Int, Int, Int)>
 
         /// Current element count (valid in both inline and heap modes).
         @usableFromInline
-        var _count: Int
+        package var _count: Int
 
         /// Heap storage for elements when spilled. Nil when using inline storage.
         @usableFromInline
-        var _heapStorage: Unbounded<inlineCapacity>.ElementStorage?
+        package var _heapStorage: Unbounded<inlineCapacity>.ElementStorage?
 
         /// Cached pointer to heap elements. Only valid when _heapStorage is non-nil.
         @usableFromInline
@@ -385,7 +385,7 @@ public enum Array<Element: ~Copyable>: ~Copyable {
         /// Returns a read-only pointer to the inline element at the given index.
         @usableFromInline
         @unsafe
-        func _inlineReadPointerToElement(at index: Int) -> UnsafePointer<Element> {
+        package func _inlineReadPointerToElement(at index: Int) -> UnsafePointer<Element> {
             let stride = MemoryLayout<Element>.stride
             return unsafe Swift.withUnsafePointer(to: _inlineElements) { storagePtr in
                 let basePtr = unsafe UnsafeRawPointer(storagePtr)
@@ -476,7 +476,7 @@ extension Array {
 extension Array.Unbounded.ElementStorage where Element: Copyable {
     /// Reads element at the given index (Copyable elements only).
     @usableFromInline
-    func _readElement(at index: Int) -> Element {
+    package func _readElement(at index: Int) -> Element {
         unsafe withUnsafeMutablePointerToElements { elements in
             unsafe (elements + index).pointee
         }

@@ -1,4 +1,5 @@
 public import Collection_Primitives
+public import Array_Primitives_Core
 
 // MARK: - Iterator
 
