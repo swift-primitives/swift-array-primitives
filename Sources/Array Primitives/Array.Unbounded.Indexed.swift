@@ -70,8 +70,8 @@ extension Array.Unbounded where Element: Copyable {
         /// guard node < indexed.count else { return }
         /// ```
         @inlinable
-        public var count: Index<Tag>.Count {
-            Index<Tag>.Count(__unchecked: _storage.count)
+        public var count: Index_Primitives.Index<Tag>.Count {
+            Index_Primitives.Index<Tag>.Count(__unchecked: _storage.count)
         }
 
         /// Accesses the element at the given phantom-typed index.
@@ -79,7 +79,7 @@ extension Array.Unbounded where Element: Copyable {
         /// - Parameter index: The typed index of the element to access.
         /// - Precondition: `index` must be within bounds.
         @inlinable
-        public subscript(index: Index<Tag>) -> Element {
+        public subscript(index: Index_Primitives.Index<Tag>) -> Element {
             get { _storage[index.position.rawValue] }
             set { _storage[index.position.rawValue] = newValue }
         }
