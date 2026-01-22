@@ -53,11 +53,11 @@ extension Array.Bounded where Element: ~Copyable {
     public subscript(index: Array<Element>.Index) -> Element {
         _read {
             precondition(index < _count, "Index out of bounds")
-            yield unsafe storage[index.position.rawValue]
+            yield unsafe _cachedPtr[index.position.rawValue]
         }
         _modify {
             precondition(index < _count, "Index out of bounds")
-            yield &(unsafe storage[index.position.rawValue])
+            yield &(unsafe _cachedPtr[index.position.rawValue])
         }
     }
 }
@@ -71,11 +71,11 @@ extension Array.Bounded where Element: Copyable {
     public subscript(index: Array<Element>.Index) -> Element {
         get {
             precondition(index < _count, "Index out of bounds")
-            return unsafe storage[index.position.rawValue]
+            return unsafe _cachedPtr[index.position.rawValue]
         }
         set {
             precondition(index < _count, "Index out of bounds")
-            unsafe storage[index.position.rawValue] = newValue
+            unsafe _cachedPtr[index.position.rawValue] = newValue
         }
     }
 }
@@ -269,7 +269,7 @@ extension Array.Bounded where Element: Copyable {
     public func element(at base: Array<Element>.Index, offsetBy offset: Array<Element>.Offset) -> Element? {
         guard let newIndex = base + offset else { return nil }
         guard newIndex < _count else { return nil }
-        return unsafe storage[newIndex.position.rawValue]
+        return unsafe _cachedPtr[newIndex.position.rawValue]
     }
 }
 
@@ -332,7 +332,7 @@ extension Array.Bounded where Element: Copyable {
     @inlinable
     public func element(at index: Array<Element>.Index) -> Element? {
         guard index < _count else { return nil }
-        return unsafe storage[index.position.rawValue]
+        return unsafe _cachedPtr[index.position.rawValue]
     }
 }
 

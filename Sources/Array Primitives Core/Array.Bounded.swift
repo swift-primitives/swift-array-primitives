@@ -46,14 +46,14 @@ extension Array.Bounded {
         }
 
         if count == 0 {
-            self._storage = Storage.createEmpty()
-            self._cachedPtr = _storage._elementsPointer
+            self._storage = Array.Storage.createEmpty()
+            unsafe self._cachedPtr = _storage._elementsPointer
             self._count = .zero
             return
         }
 
-        self._storage = Storage.create(capacity: count, initializingWith: initializer)
-        self._cachedPtr = _storage._elementsPointer
+        self._storage = Array.Storage.create(capacity: count, initializingWith: initializer)
+        unsafe self._cachedPtr = _storage._elementsPointer
         self._count = Index_Primitives.Index<Element>.Count(__unchecked: count)
     }
 }
@@ -79,14 +79,14 @@ extension Array.Bounded {
         precondition(count >= 0, "Count must be non-negative")
 
         if count == 0 {
-            self._storage = Storage.createEmpty()
-            self._cachedPtr = _storage._elementsPointer
+            self._storage = Array.Storage.createEmpty()
+            unsafe self._cachedPtr = _storage._elementsPointer
             self._count = .zero
             return
         }
 
-        self._storage = Storage.create(capacity: count, initializingWith: initializer)
-        self._cachedPtr = _storage._elementsPointer
+        self._storage = Array.Storage.create(capacity: count, initializingWith: initializer)
+        unsafe self._cachedPtr = _storage._elementsPointer
         self._count = Index_Primitives.Index<Element>.Count(__unchecked: count)
     }
 }
@@ -154,7 +154,7 @@ extension Array.Bounded where Element: Copyable {
     mutating func makeUnique() {
         if !isKnownUniquelyReferenced(&_storage) {
             _storage = _storage.copy()
-            _cachedPtr = _storage._elementsPointer
+            unsafe _cachedPtr = _storage._elementsPointer
         }
     }
 }
