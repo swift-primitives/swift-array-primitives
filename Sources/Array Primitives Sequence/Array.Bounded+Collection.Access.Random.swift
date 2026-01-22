@@ -23,20 +23,20 @@ extension Array.Bounded where Element: Copyable {
         let end: Index_Primitives.Index<Element>.Count
 
         @usableFromInline
-        var position: Index_Primitives.Index<Element>
+        var index: Index_Primitives.Index<Element>
 
         @usableFromInline @unsafe
         init(base: UnsafePointer<Element>, count: Index_Primitives.Index<Element>.Count) {
             unsafe self.base = base
             self.end = count
-            self.position = .zero
+            self.index = .zero
         }
 
         @inlinable
         public mutating func next() -> Element? {
-            guard position < end else { return nil }
-            let result = unsafe base[position.rawValue.rawValue]
-            position = (position + 1)!
+            guard index < end else { return nil }
+            let result = unsafe base[index.position.rawValue]
+            index = (index + 1)!
             return result
         }
     }
