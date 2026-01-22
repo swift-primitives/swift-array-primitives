@@ -1,45 +1,59 @@
 public import Collection_Primitives
 public import Array_Primitives_Core
+public import Index_Primitives
 
 // MARK: - Iterator
 
 extension Array.Bounded where Element: Copyable {
-    /// Iterator for Array.Bounded that copies elements for safe iteration.
+    /// Pointer-based iterator for Array.Bounded.
+    ///
+    /// Zero-copy iteration using typed `Index<Element>` for position tracking.
+    /// The iterator holds a pointer to the storage, not a copy of the elements.
+    ///
+    /// ## Safety
+    ///
+    /// The iterator is only valid while the source array exists and is not mutated.
+    /// This matches the semantics of stdlib's Array.Iterator.
+    @safe
     public struct Iterator: IteratorProtocol {
         @usableFromInline
-        let elements: [Element]
+        let base: UnsafePointer<Element>
 
         @usableFromInline
-        var index: Int
+        let end: Index_Primitives.Index<Element>.Count
 
         @usableFromInline
-        init(elements: [Element]) {
-            self.elements = elements
-            self.index = 0
+        var position: Index_Primitives.Index<Element>
+
+        @usableFromInline @unsafe
+        init(base: UnsafePointer<Element>, count: Index_Primitives.Index<Element>.Count) {
+            unsafe self.base = base
+            self.end = count
+            self.position = .zero
         }
 
         @inlinable
         public mutating func next() -> Element? {
-            guard index < elements.count else { return nil }
-            defer { index += 1 }
-            return elements[index]
+            guard position < end else { return nil }
+            let result = unsafe base[position.rawValue.rawValue]
+            position = (position + 1)!
+            return result
         }
     }
 }
 
-extension Array.Bounded.Iterator: Sendable where Element: Sendable {}
+extension Array.Bounded.Iterator: @unchecked Sendable where Element: Sendable {}
 
 // MARK: - Sequence.Protocol Conformance
 
 extension Array.Bounded: Sequence.`Protocol` where Element: Copyable {
+    /// Returns a pointer-based iterator over the array elements.
+    ///
+    /// Zero-copy iteration - no allocation, no element copying.
+    /// Uses typed `Index<Element>` for position tracking.
     @inlinable
     public borrowing func makeIterator() -> Iterator {
-        var elements: [Element] = []
-        elements.reserveCapacity(count.rawValue)
-        for i in 0..<count.rawValue {
-            elements.append(unsafe storage[i])
-        }
-        return Iterator(elements: elements)
+        unsafe Iterator(base: UnsafePointer(storage), count: .init(__unchecked: _count.rawValue))
     }
 }
 

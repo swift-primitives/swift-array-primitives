@@ -117,7 +117,7 @@ public enum Array<Element: ~Copyable>: ~Copyable {
 
             /// Returns pointer to element storage.
             @usableFromInline
-            var _elementsPointer: UnsafeMutablePointer<Element> {
+            package var _elementsPointer: UnsafeMutablePointer<Element> {
                 unsafe withUnsafeMutablePointerToElements { unsafe $0 }
             }
 
@@ -170,7 +170,7 @@ public enum Array<Element: ~Copyable>: ~Copyable {
         /// Cached pointer to element storage. Stored in struct to enable property-based access.
         /// CRITICAL: Must be updated whenever _storage is replaced (reallocation, CoW copy).
         @usableFromInline
-        var _cachedPtr: UnsafeMutablePointer<Element>
+        package var _cachedPtr: UnsafeMutablePointer<Element>
 
         /// Creates an empty growable array.
         @inlinable
@@ -323,7 +323,7 @@ public enum Array<Element: ~Copyable>: ~Copyable {
 
         /// Cached pointer to heap elements. Only valid when _heapStorage is non-nil.
         @usableFromInline
-        var _heapPtr: UnsafeMutablePointer<Element>?
+        package var _heapPtr: UnsafeMutablePointer<Element>?
 
         /// Creates an empty small array.
         @inlinable
