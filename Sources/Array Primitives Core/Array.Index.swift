@@ -215,35 +215,42 @@ extension Array.Small where Element: Copyable {
 // MARK: - Bounded Index (Inline Arrays)
 
 extension Array.Inline where Element: ~Copyable {
-    /// Bounded index type for inline arrays.
+    /// Accesses the element at the given bounded index.
     ///
-    /// Guarantees index is in `0..<capacity` at compile time,
-    /// eliminating runtime bounds checks for subscript access.
+    /// The type `Index<Element>.Bounded<capacity>` proves `0 <= index < capacity`.
+    /// **No runtime bounds check is performed.**
+    ///
+    /// ## Type-Based Safety
+    ///
+    /// The TYPE encodes the bounds proof:
+    /// - `Index<Element>` subscript → has runtime bounds check
+    /// - `Index<Element>.Bounded<capacity>` subscript → NO bounds check (type proves it)
+    ///
+    /// ## Contract
+    ///
+    /// For full arrays (`count == capacity`), this subscript is completely safe.
+    /// For partial arrays (`count < capacity`), caller must ensure `index < count`.
     ///
     /// ## Example
     ///
     /// ```swift
     /// var inline = Array<Int>.Inline<8>()
-    /// // Fill with 8 elements...
-    /// let idx: Array<Int>.Inline<8>.BoundedIndex = 3
-    /// print(inline[idx])  // No runtime bounds check
-    /// ```
-    public typealias BoundedIndex = Index_Primitives.Index<Element>.Bounded<capacity>
-}
-
-extension Array.Inline where Element: ~Copyable {
-    /// Accesses the element at the given bounded index (no runtime bounds check).
+    /// // Fill to capacity...
+    /// assert(inline.isFull)
     ///
-    /// - Parameter index: A bounded index guaranteed to be in `0..<capacity`.
-    /// - Precondition: The array must have at least `index.rawValue + 1` elements.
+    /// let idx: Index<Int>.Bounded<8> = 3
+    /// print(inline[idx])  // No runtime bounds check - type proves 0 <= 3 < 8
+    /// ```
+    ///
+    /// - Parameter index: A bounded index where the type proves `0 <= index < capacity`.
     @inlinable
-    public subscript(index: BoundedIndex) -> Element {
+    public subscript(_ index: Index_Primitives.Index<Element>.Bounded<capacity>) -> Element {
         _read {
-            precondition(index.rawValue < _count.rawValue, "Index exceeds current count")
+            // Type proves: 0 <= index < capacity
+            // For full arrays: count == capacity, so 0 <= index < count ✓
             yield unsafe _readPointerToElement(at: index.rawValue).pointee
         }
         _modify {
-            precondition(index.rawValue < _count.rawValue, "Index exceeds current count")
             yield &(unsafe _pointerToElement(at: index.rawValue).pointee)
         }
     }
