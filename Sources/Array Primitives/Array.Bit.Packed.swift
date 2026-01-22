@@ -377,7 +377,7 @@ extension Array<Bit>.Packed {
 extension Array<Bit>.Packed {
     /// Creates a packed bit array from a sequence of booleans.
     @inlinable
-    public init<S: Sequence>(_ elements: S) where S.Element == Bool {
+    public init<S: Swift.Sequence>(_ elements: S) where S.Element == Bool {
         self.init()
         for element in elements {
             append(element)
@@ -386,7 +386,7 @@ extension Array<Bit>.Packed {
 
     /// Creates a packed bit array from a sequence of `Bit` values.
     @inlinable
-    public init<S: Sequence>(_ elements: S) where S.Element == Bit {
+    public init<S: Swift.Sequence>(_ elements: S) where S.Element == Bit {
         self.init()
         for element in elements {
             append(element.boolValue)
@@ -448,7 +448,7 @@ extension Swift.Array where Element == Bit {
 
 // MARK: - Sequence
 
-extension Array<Bit>.Packed: Sequence {
+extension Array<Bit>.Packed: Swift.Sequence {
     /// An iterator over the elements of a packed bit array.
     public struct Iterator: IteratorProtocol, Sendable {
         @usableFromInline

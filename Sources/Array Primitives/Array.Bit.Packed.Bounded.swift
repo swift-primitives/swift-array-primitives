@@ -323,7 +323,7 @@ extension Array<Bit>.Packed.Bounded {
 extension Array<Bit>.Packed.Bounded {
     /// Creates a bounded bit array from a sequence of booleans.
     @inlinable
-    public init<S: Sequence>(capacity: Int, _ elements: S) throws(Error) where S.Element == Bool {
+    public init<S: Swift.Sequence>(capacity: Int, _ elements: S) throws(Error) where S.Element == Bool {
         try self.init(capacity: capacity)
         for element in elements {
             try append(element)
@@ -367,7 +367,7 @@ extension Array<Bit>.Packed {
 
 // MARK: - Sequence
 
-extension Array<Bit>.Packed.Bounded: Sequence {
+extension Array<Bit>.Packed.Bounded: Swift.Sequence {
     public struct Iterator: IteratorProtocol, Sendable {
         @usableFromInline let storage: ContiguousArray<UInt>
         @usableFromInline let count: Int

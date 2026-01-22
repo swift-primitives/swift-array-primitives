@@ -342,7 +342,7 @@ extension Array<Bit>.Packed.Inline {
 
 // MARK: - Sequence
 
-extension Array<Bit>.Packed.Inline: Sequence {
+extension Array<Bit>.Packed.Inline: Swift.Sequence {
     public struct Iterator: IteratorProtocol, Sendable {
         @usableFromInline let storage: InlineArray<wordCount, UInt>
         @usableFromInline let count: Int
