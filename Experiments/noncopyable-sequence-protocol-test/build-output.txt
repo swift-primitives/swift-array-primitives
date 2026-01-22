@@ -1,0 +1,113 @@
+Building for debugging...
+[0/13] Write sources
+[7/13] Write noncopyable-sequence-protocol-test-entitlement.plist
+[7/13] Write sources
+[9/13] Write swift-version--58304C5D6DBC2206.txt
+[11/29] Compiling Affine_Primitives Affine.Discrete.Displacement.swift
+[12/30] Compiling Affine_Primitives exports.swift
+[13/30] Compiling Property_Primitives Property.swift
+[14/30] Compiling Affine_Primitives Affine.Discrete+Arithmetic.swift
+[15/30] Compiling Affine_Primitives Affine.Discrete.Bounded+Arithmetic.swift
+[16/30] Emitting module Affine_Primitives
+[17/30] Compiling Affine_Primitives Affine.Discrete.Bounded.swift
+[18/30] Compiling Property_Primitives Property.Typed.swift
+[19/30] Compiling Property_Primitives Property.View.swift
+[20/30] Compiling Affine_Primitives Affine.swift
+[21/30] Compiling Affine_Primitives Affine.Discrete.Count.swift
+[22/30] Emitting module Property_Primitives
+[23/30] Compiling Property_Primitives Property.Consuming.swift
+[24/30] Compiling Affine_Primitives Affine.Discrete.Position.swift
+[25/30] Compiling Affine_Primitives Affine.Discrete.swift
+[26/30] Emitting module Identity_Primitives
+[27/30] Compiling Identity_Primitives Tagged.swift
+[28/53] Compiling Index_Primitives Index.Safe+Collection.swift
+[29/53] Compiling Index_Primitives Index.Safe.swift
+[30/54] Compiling Index_Primitives exports.swift
+[31/54] Compiling Index_Primitives Index+Arithmetic.swift
+[32/54] Compiling Index_Primitives Index.Bounded+Arithmetic.swift
+[33/54] Compiling Index_Primitives Index.Bounded.swift
+[34/54] Compiling Index_Primitives Index.swift
+[35/54] Compiling Index_Primitives Index.Count.swift
+[36/54] Compiling Comparison_Primitives Comparison.Result+BooleanProperties.swift
+[37/54] Compiling Comparison_Primitives Comparison.Result+Chaining.swift
+[38/54] Compiling Comparison_Primitives Comparison.swift
+[39/54] Compiling Comparison_Primitives Comparison.Result+Comparable.swift
+[40/54] Compiling Comparison_Primitives Comparison.Result+Reversal.swift
+[41/54] Compiling Comparison_Primitives Comparison.Protocol+Property.View.swift
+[42/54] Compiling Comparison_Primitives Comparison.Protocol.swift
+[45/54] Compiling Comparison_Primitives Comparison.Clamp+Property.View.swift
+[46/54] Compiling Comparison_Primitives Comparison.Clamp.swift
+[47/54] Emitting module Comparison_Primitives
+[48/54] Compiling Comparison_Primitives Comparison.Result+Swift.Comparable.swift
+[49/54] Compiling Comparison_Primitives Comparison.Result.swift
+[50/55] Compiling Index_Primitives Index.Safe+subscript.swift
+[51/55] Emitting module Index_Primitives
+[52/55] Compiling Comparison_Primitives exports.swift
+[53/74] Compiling Sequence_Primitives Sequence.ForEach+Property.View.swift
+[54/74] Compiling Sequence_Primitives Sequence.ForEach.swift
+[55/74] Compiling Sequence_Primitives Sequence.Map+Property.View.swift
+[56/74] Compiling Sequence_Primitives Sequence.Protocol.swift
+[57/74] Compiling Sequence_Primitives Sequence.Reduce+Property.View.swift
+[58/74] Compiling Sequence_Primitives Sequence.Filter.swift
+[59/74] Compiling Sequence_Primitives Sequence.First+Property.View.swift
+[60/74] Compiling Sequence_Primitives Sequence.First.swift
+[61/74] Compiling Sequence_Primitives Sequence.Clearable.swift
+[62/74] Compiling Sequence_Primitives Sequence.Contains+Property.View.swift
+[63/74] Compiling Sequence_Primitives Sequence.Contains.swift
+[64/74] Emitting module Sequence_Primitives
+[65/74] Compiling Sequence_Primitives Sequence.Count+Property.View.swift
+[66/74] Compiling Sequence_Primitives Sequence.Count.swift
+[67/74] Compiling Sequence_Primitives Sequence.Filter+Property.View.swift
+[68/74] Compiling Sequence_Primitives Sequence.Map.swift
+[69/74] Compiling Sequence_Primitives Sequence.Protocol+Swift.Sequence.swift
+[70/74] Compiling Sequence_Primitives Sequence.Reduce.swift
+[71/74] Compiling Sequence_Primitives Sequence.Satisfies+Property.View.swift
+[72/76] Compiling Sequence_Primitives Sequence.Satisfies.swift
+[73/76] Compiling Sequence_Primitives Sequence.swift
+[74/101] Compiling Collection_Primitives Collection.Clearable.swift
+[75/101] Compiling Collection_Primitives Collection.Contains+Property.View.swift
+[76/101] Compiling Collection_Primitives Collection.Contains.swift
+[77/101] Compiling Collection_Primitives Collection.Count+Property.View.swift
+[78/101] Compiling Collection_Primitives Collection.Protocol+Swift.Collection.swift
+[79/101] Compiling Collection_Primitives Collection.Protocol.swift
+[80/101] Compiling Collection_Primitives Collection.Reduce+Property.View.swift
+[81/101] Compiling Collection_Primitives Collection.Indexed.swift
+[82/101] Compiling Collection_Primitives Collection.Map+Property.View.swift
+[83/101] Compiling Collection_Primitives Collection.Map.swift
+[84/104] Compiling Collection_Primitives Collection.Access.Random+Swift.RandomAccessCollection.swift
+[85/104] Compiling Collection_Primitives Collection.Access.Random.swift
+[86/104] Compiling Collection_Primitives Collection.Bidirectional+Swift.BidirectionalCollection.swift
+[87/104] Compiling Collection_Primitives Collection.Bidirectional.swift
+[88/104] Compiling Collection_Primitives Collection.Count.swift
+[89/104] Compiling Collection_Primitives Collection.Filter+Property.View.swift
+[90/104] Compiling Collection_Primitives Collection.Filter.swift
+[91/104] Compiling Collection_Primitives Collection.First+Property.View.swift
+[92/104] Compiling Collection_Primitives Collection.First.swift
+[93/104] Compiling Collection_Primitives Collection.ForEach+Property.View.swift
+[94/104] Compiling Collection_Primitives Collection.ForEach.swift
+[95/104] Emitting module Collection_Primitives
+[96/104] Compiling Collection_Primitives Collection.Reduce.swift
+[97/104] Compiling Collection_Primitives Collection.Rotated.swift
+[98/104] Compiling Collection_Primitives Collection.Satisfies+Property.View.swift
+[99/104] Compiling Collection_Primitives Collection.Satisfies.swift
+[100/104] Compiling Collection_Primitives Collection.swift
+[101/104] Compiling Collection_Primitives exports.swift
+error: emit-module command failed with exit code 1 (use -v to see invocation)
+[102/108] Compiling noncopyable_sequence_protocol_test Array.swift
+[103/108] Emitting module noncopyable_sequence_protocol_test
+/Users/coen/Developer/swift-primitives/swift-array-primitives/Experiments/noncopyable-sequence-protocol-test/Sources/noncopyable-sequence-protocol-test/Array.swift:14:43: error: type 'Element' does not conform to protocol 'Copyable'
+12 |     public struct Bounded: ~Copyable {
+13 |         @usableFromInline
+14 |         var storage: UnsafeMutablePointer<Element>
+   |                                           `- error: type 'Element' does not conform to protocol 'Copyable'
+15 | 
+16 |         public let count: Int
+[104/108] Compiling noncopyable_sequence_protocol_test main.swift
+[105/108] Compiling noncopyable_sequence_protocol_test Array+Sequence.swift
+/Users/coen/Developer/swift-primitives/swift-array-primitives/Experiments/noncopyable-sequence-protocol-test/Sources/noncopyable-sequence-protocol-test/Array.swift:14:43: error: type 'Element' does not conform to protocol 'Copyable'
+12 |     public struct Bounded: ~Copyable {
+13 |         @usableFromInline
+14 |         var storage: UnsafeMutablePointer<Element>
+   |                                           `- error: type 'Element' does not conform to protocol 'Copyable'
+15 | 
+16 |         public let count: Int
