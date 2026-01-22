@@ -17,7 +17,7 @@ public import Index_Primitives
 
 // MARK: - Properties
 
-extension Array.Bounded where Element: ~Copyable {
+extension Array.Bounded {
     /// The number of elements in the array.
     @inlinable
     public var count: Index_Primitives.Index<Element>.Count { _count }
@@ -47,13 +47,13 @@ extension Array.Bounded {
 
         if count == 0 {
             self._storage = Storage.createEmpty()
-            unsafe (self._cachedPtr = _storage._elementsPointer)
+            self._cachedPtr = _storage._elementsPointer
             self._count = .zero
             return
         }
 
         self._storage = Storage.create(capacity: count, initializingWith: initializer)
-        unsafe (self._cachedPtr = _storage._elementsPointer)
+        self._cachedPtr = _storage._elementsPointer
         self._count = Index_Primitives.Index<Element>.Count(__unchecked: count)
     }
 }
@@ -80,13 +80,13 @@ extension Array.Bounded {
 
         if count == 0 {
             self._storage = Storage.createEmpty()
-            unsafe (self._cachedPtr = _storage._elementsPointer)
+            self._cachedPtr = _storage._elementsPointer
             self._count = .zero
             return
         }
 
         self._storage = Storage.create(capacity: count, initializingWith: initializer)
-        unsafe (self._cachedPtr = _storage._elementsPointer)
+        self._cachedPtr = _storage._elementsPointer
         self._count = Index_Primitives.Index<Element>.Count(__unchecked: count)
     }
 }
@@ -154,7 +154,7 @@ extension Array.Bounded where Element: Copyable {
     mutating func makeUnique() {
         if !isKnownUniquelyReferenced(&_storage) {
             _storage = _storage.copy()
-            unsafe (_cachedPtr = _storage._elementsPointer)
+            _cachedPtr = _storage._elementsPointer
         }
     }
 }

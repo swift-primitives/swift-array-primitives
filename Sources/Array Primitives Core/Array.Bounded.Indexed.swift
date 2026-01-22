@@ -42,8 +42,7 @@ extension Array.Bounded {
     ///
     /// ## Note
     ///
-    /// `Indexed` is `~Copyable` due to Swift compiler constraints requiring
-    /// Copyable conformances to be in the same file as type declarations.
+    /// `Array.Bounded` is `~Copyable` unconditionally, so `Indexed` is also `~Copyable`.
     public struct Indexed<Tag: ~Copyable>: ~Copyable {
         @usableFromInline
         var _storage: Array<Element>.Bounded
