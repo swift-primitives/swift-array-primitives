@@ -1,0 +1,50 @@
+Building for debugging...
+[0/6] Write sources
+[0/6] Write noncopyable-pointer-propagation-entitlement.plist
+[2/6] Write swift-version--58304C5D6DBC2206.txt
+error: emit-module command failed with exit code 1 (use -v to see invocation)
+[4/8] Emitting module noncopyable_pointer_propagation
+/Users/coen/Developer/swift-primitives/swift-array-primitives/Experiments/noncopyable-pointer-propagation/Sources/noncopyable-pointer-propagation/main.swift:69:1: error: type 'V4_Outer<Element>.Bounded' does not conform to protocol 'Copyable'
+ 54 | // MARK: - Variant 4: Nested type with protocol conformance IN SAME FILE
+ 55 | 
+ 56 | protocol V4_Indexed {
+    |          `- note: type 'V4_Outer<Element>.Bounded' does not conform to inherited protocol 'Copyable'
+ 57 |     associatedtype Index
+ 58 |     var startIndex: Index { get }
+    :
+ 67 | }
+ 68 | 
+ 69 | extension V4_Outer.Bounded: V4_Indexed {
+    | `- error: type 'V4_Outer<Element>.Bounded' does not conform to protocol 'Copyable'
+ 70 |     typealias Index = Int
+ 71 |     var startIndex: Int { 0 }
+[5/8] Compiling noncopyable_pointer_propagation main.swift
+/Users/coen/Developer/swift-primitives/swift-array-primitives/Experiments/noncopyable-pointer-propagation/Sources/noncopyable-pointer-propagation/main.swift:69:1: error: type 'V4_Outer<Element>.Bounded' does not conform to protocol 'Copyable'
+ 54 | // MARK: - Variant 4: Nested type with protocol conformance IN SAME FILE
+ 55 | 
+ 56 | protocol V4_Indexed {
+    |          `- note: type 'V4_Outer<Element>.Bounded' does not conform to inherited protocol 'Copyable'
+ 57 |     associatedtype Index
+ 58 |     var startIndex: Index { get }
+    :
+ 67 | }
+ 68 | 
+ 69 | extension V4_Outer.Bounded: V4_Indexed {
+    | `- error: type 'V4_Outer<Element>.Bounded' does not conform to protocol 'Copyable'
+ 70 |     typealias Index = Int
+ 71 |     var startIndex: Int { 0 }
+
+/Users/coen/Developer/swift-primitives/swift-array-primitives/Experiments/noncopyable-pointer-propagation/Sources/noncopyable-pointer-propagation/main.swift:113:45: error: property 'startIndex' requires that 'TestNonCopyable' conform to 'Copyable'
+ 67 | }
+ 68 | 
+ 69 | extension V4_Outer.Bounded: V4_Indexed {
+    | `- note: 'where Element: Copyable' is implicit here
+ 70 |     typealias Index = Int
+ 71 |     var startIndex: Int { 0 }
+    :
+111 |         ptr4.initialize(to: TestNonCopyable(value: 4))
+112 |         let v4 = V4_Outer<TestNonCopyable>.Bounded(ptr: ptr4, count: 1)
+113 |         print("V4 passed: startIndex = \(v4.startIndex), endIndex = \(v4.endIndex)")
+    |                                             `- error: property 'startIndex' requires that 'TestNonCopyable' conform to 'Copyable'
+114 | 
+115 |         print("\n=== Variant 5: Extension with where Element: ~Copyable ===")
