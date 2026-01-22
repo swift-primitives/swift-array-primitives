@@ -1,0 +1,116 @@
+Building for debugging...
+[0/6] Write sources
+[1/6] Write noncopyable-multifile-poisoning-entitlement.plist
+[2/6] Write swift-version--58304C5D6DBC2206.txt
+error: emit-module command failed with exit code 1 (use -v to see invocation)
+[4/10] Emitting module noncopyable_multifile_poisoning
+/Users/coen/Developer/swift-primitives/swift-array-primitives/Experiments/noncopyable-multifile-poisoning/Sources/noncopyable-multifile-poisoning/Array.swift:17:43: error: unsupported recursion for reference to type alias 'Element' of type 'Array<Element>.Bounded'
+15 |     public struct Bounded: ~Copyable {
+16 |         @usableFromInline
+17 |         var storage: UnsafeMutablePointer<Element>  // <-- Does this fail?
+   |                                           `- error: unsupported recursion for reference to type alias 'Element' of type 'Array<Element>.Bounded'
+18 | 
+19 |         public let count: Int
+
+/Users/coen/Developer/swift-primitives/swift-array-primitives/Experiments/noncopyable-multifile-poisoning/Sources/noncopyable-multifile-poisoning/Array.swift:17:43: error: type 'Element' does not conform to protocol 'Copyable'
+15 |     public struct Bounded: ~Copyable {
+16 |         @usableFromInline
+17 |         var storage: UnsafeMutablePointer<Element>  // <-- Does this fail?
+   |                                           `- error: type 'Element' does not conform to protocol 'Copyable'
+18 | 
+19 |         public let count: Int
+
+/Users/coen/Developer/swift-primitives/swift-array-primitives/Experiments/noncopyable-multifile-poisoning/Sources/noncopyable-multifile-poisoning/Array+Sequence.swift:29:1: error: type 'Array<Element>.Bounded' does not conform to protocol 'Copyable'
+27 | 
+28 | // Sequence conformance - only for Copyable elements
+29 | extension Array.Bounded: Sequence where Element: Copyable {
+   | `- error: type 'Array<Element>.Bounded' does not conform to protocol 'Copyable'
+30 |     public func makeIterator() -> Iterator {
+31 |         var elements: [Element] = []
+
+Swift.Sequence:1:17: note: type 'Array<Element>.Bounded' does not conform to inherited protocol 'Copyable'
+ 1 | public protocol Sequence<Element> {
+   |                 `- note: type 'Array<Element>.Bounded' does not conform to inherited protocol 'Copyable'
+ 2 |     associatedtype Element where Self.Element == Self.Iterator.Element
+ 3 |     associatedtype Iterator : IteratorProtocol
+
+/Users/coen/Developer/swift-primitives/swift-array-primitives/Experiments/noncopyable-multifile-poisoning/Sources/noncopyable-multifile-poisoning/Array+Sequence.swift:29:1: error: type 'Array<Element>.Bounded' does not conform to protocol 'Sequence'
+27 | 
+28 | // Sequence conformance - only for Copyable elements
+29 | extension Array.Bounded: Sequence where Element: Copyable {
+   | |- error: type 'Array<Element>.Bounded' does not conform to protocol 'Sequence'
+   | `- note: add stubs for conformance
+30 |     public func makeIterator() -> Iterator {
+31 |         var elements: [Element] = []
+
+Swift.Sequence.Element:2:16: note: protocol requires nested type 'Element'
+1 | protocol Sequence {
+2 | associatedtype Element where Self.Element == Self.Iterator.Element}
+  |                `- note: protocol requires nested type 'Element'
+3 | 
+
+/Users/coen/Developer/swift-primitives/swift-array-primitives/Experiments/noncopyable-multifile-poisoning/Sources/noncopyable-multifile-poisoning/Array.swift:37:29: error: values in generic types are only available in macOS 26.0.0 or newer
+35 | 
+36 |     // Nested type with ManagedBuffer storage
+37 |     public struct Unbounded<let N: Int>: ~Copyable {
+   |                   |         `- error: values in generic types are only available in macOS 26.0.0 or newer
+   |                   |- note: add '@available' attribute to enclosing generic struct
+   |                   `- note: add '@available' attribute to enclosing generic struct
+38 | 
+39 |         @usableFromInline
+[5/10] Compiling noncopyable_multifile_poisoning Array+Sequence.swift
+/Users/coen/Developer/swift-primitives/swift-array-primitives/Experiments/noncopyable-multifile-poisoning/Sources/noncopyable-multifile-poisoning/Array+Sequence.swift:29:1: error: type 'Array<Element>.Bounded' does not conform to protocol 'Copyable'
+27 | 
+28 | // Sequence conformance - only for Copyable elements
+29 | extension Array.Bounded: Sequence where Element: Copyable {
+   | `- error: type 'Array<Element>.Bounded' does not conform to protocol 'Copyable'
+30 |     public func makeIterator() -> Iterator {
+31 |         var elements: [Element] = []
+
+Swift.Sequence:1:17: note: type 'Array<Element>.Bounded' does not conform to inherited protocol 'Copyable'
+ 1 | public protocol Sequence<Element> {
+   |                 `- note: type 'Array<Element>.Bounded' does not conform to inherited protocol 'Copyable'
+ 2 |     associatedtype Element where Self.Element == Self.Iterator.Element
+ 3 |     associatedtype Iterator : IteratorProtocol
+
+/Users/coen/Developer/swift-primitives/swift-array-primitives/Experiments/noncopyable-multifile-poisoning/Sources/noncopyable-multifile-poisoning/Array.swift:17:43: error: type 'Element' does not conform to protocol 'Copyable'
+15 |     public struct Bounded: ~Copyable {
+16 |         @usableFromInline
+17 |         var storage: UnsafeMutablePointer<Element>  // <-- Does this fail?
+   |                                           `- error: type 'Element' does not conform to protocol 'Copyable'
+18 | 
+19 |         public let count: Int
+[6/10] Compiling noncopyable_multifile_poisoning Array.swift
+/Users/coen/Developer/swift-primitives/swift-array-primitives/Experiments/noncopyable-multifile-poisoning/Sources/noncopyable-multifile-poisoning/Array.swift:37:29: error: values in generic types are only available in macOS 26.0.0 or newer
+35 | 
+36 |     // Nested type with ManagedBuffer storage
+37 |     public struct Unbounded<let N: Int>: ~Copyable {
+   |                   |         `- error: values in generic types are only available in macOS 26.0.0 or newer
+   |                   |- note: add '@available' attribute to enclosing generic struct
+   |                   `- note: add '@available' attribute to enclosing generic struct
+38 | 
+39 |         @usableFromInline
+
+/Users/coen/Developer/swift-primitives/swift-array-primitives/Experiments/noncopyable-multifile-poisoning/Sources/noncopyable-multifile-poisoning/Array.swift:21:16: error: type 'Array<Element>.Bounded' does not conform to protocol 'Sequence'
+19 |         public let count: Int
+20 | 
+21 |         public init(storage: UnsafeMutablePointer<Element>, count: Int) {
+   |                `- error: type 'Array<Element>.Bounded' does not conform to protocol 'Sequence'
+22 |             self.storage = storage
+23 |             self.count = count
+[7/10] Compiling noncopyable_multifile_poisoning main.swift
+/Users/coen/Developer/swift-primitives/swift-array-primitives/Experiments/noncopyable-multifile-poisoning/Sources/noncopyable-multifile-poisoning/Array+Sequence.swift:29:1: error: type 'Array<Element>.Bounded' does not conform to protocol 'Sequence'
+27 | 
+28 | // Sequence conformance - only for Copyable elements
+29 | extension Array.Bounded: Sequence where Element: Copyable {
+   | `- error: type 'Array<Element>.Bounded' does not conform to protocol 'Sequence'
+30 |     public func makeIterator() -> Iterator {
+31 |         var elements: [Element] = []
+
+/Users/coen/Developer/swift-primitives/swift-array-primitives/Experiments/noncopyable-multifile-poisoning/Sources/noncopyable-multifile-poisoning/Array.swift:17:43: error: type 'Element' does not conform to protocol 'Copyable'
+15 |     public struct Bounded: ~Copyable {
+16 |         @usableFromInline
+17 |         var storage: UnsafeMutablePointer<Element>  // <-- Does this fail?
+   |                                           `- error: type 'Element' does not conform to protocol 'Copyable'
+18 | 
+19 |         public let count: Int
