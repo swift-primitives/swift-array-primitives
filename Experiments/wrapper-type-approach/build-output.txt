@@ -1,0 +1,10 @@
+[0/1] Planning build
+Building for debugging...
+[0/5] Write sources
+[1/5] Write swift-version--58304C5D6DBC2206.txt
+[3/7] Compiling wrapper_type_approach main.swift
+[4/7] Emitting module wrapper_type_approach
+[4/7] Write Objects.LinkFileList
+[5/7] Linking wrapper-type-approach
+[6/7] Applying wrapper-type-approach
+Build complete! (0.42s)

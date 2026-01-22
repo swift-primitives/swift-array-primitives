@@ -1,0 +1,37 @@
+Building for debugging...
+[0/6] Write sources
+[1/6] Write conditional-copyable-type-entitlement.plist
+[2/6] Write swift-version--58304C5D6DBC2206.txt
+[4/8] Emitting module conditional_copyable_type
+[5/8] Compiling conditional_copyable_type main.swift
+/Users/coen/Developer/swift-primitives/swift-array-primitives/Experiments/conditional-copyable-type/Sources/conditional-copyable-type/main.swift:41:60: error: type 'Element' does not conform to protocol 'Copyable'
+ 39 |         public init(count: Int, initializer: (Int) throws -> Element) rethrows {
+ 40 |             if count == 0 {
+ 41 |                 unsafe self.storage = UnsafeMutablePointer<Element>(bitPattern: 1)!
+    |                                                            `- error: type 'Element' does not conform to protocol 'Copyable'
+ 42 |                 self.count = 0
+ 43 |                 return
+
+/Users/coen/Developer/swift-primitives/swift-array-primitives/Experiments/conditional-copyable-type/Sources/conditional-copyable-type/main.swift:46:48: error: type 'Element' does not conform to protocol 'Copyable'
+ 44 |             }
+ 45 | 
+ 46 |             let storage = UnsafeMutablePointer<Element>.allocate(capacity: count)
+    |                                                `- error: type 'Element' does not conform to protocol 'Copyable'
+ 47 |             for i in 0..<count {
+ 48 |                 try unsafe (storage + i).initialize(to: initializer(i))
+
+/Users/coen/Developer/swift-primitives/swift-array-primitives/Experiments/conditional-copyable-type/Sources/conditional-copyable-type/main.swift:41:17: warning: no unsafe operations occur within 'unsafe' expression
+ 39 |         public init(count: Int, initializer: (Int) throws -> Element) rethrows {
+ 40 |             if count == 0 {
+ 41 |                 unsafe self.storage = UnsafeMutablePointer<Element>(bitPattern: 1)!
+    |                 `- warning: no unsafe operations occur within 'unsafe' expression
+ 42 |                 self.count = 0
+ 43 |                 return
+
+/Users/coen/Developer/swift-primitives/swift-array-primitives/Experiments/conditional-copyable-type/Sources/conditional-copyable-type/main.swift:50:13: warning: no unsafe operations occur within 'unsafe' expression
+ 48 |                 try unsafe (storage + i).initialize(to: initializer(i))
+ 49 |             }
+ 50 |             unsafe self.storage = storage
+    |             `- warning: no unsafe operations occur within 'unsafe' expression
+ 51 |             self.count = count
+ 52 |         }
