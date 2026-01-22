@@ -12,10 +12,23 @@
 import Testing
 @testable import Array_Primitives
 
-@Suite("Array<Bit>.Packed")
-struct PackedBitArrayTests {
+// MARK: - Test Suite Structure
+//
+// Note: Swift Testing's @Suite/@Test macros cannot be applied within generic extensions.
+// Since Array<Bit>.Packed is nested inside a generic type, we use a dedicated test enum.
+// This follows [TEST-ORG-005] for types that cannot have nested Test types.
 
-    // MARK: - Basic Operations
+/// Test namespace for Array<Bit>.Packed
+enum ArrayBitPackedTests {
+    @Suite struct Unit {}
+    @Suite struct EdgeCase {}
+    @Suite struct Integration {}
+    @Suite struct Performance {}
+}
+
+// MARK: - Unit Tests
+
+extension ArrayBitPackedTests.Unit {
 
     @Test("Append and subscript")
     func appendAndSubscript() {
@@ -79,8 +92,6 @@ struct PackedBitArrayTests {
         #expect(bits.isEmpty)
     }
 
-    // MARK: - Properties
-
     @Test("count and isEmpty")
     func countAndIsEmpty() {
         var bits = Array<Bit>.Packed()
@@ -105,8 +116,6 @@ struct PackedBitArrayTests {
         #expect(bits.first == true)
         #expect(bits.last == false)
     }
-
-    // MARK: - Initialization
 
     @Test("Init from sequence")
     func initFromSequence() {
@@ -141,8 +150,6 @@ struct PackedBitArrayTests {
         }
     }
 
-    // MARK: - Conversion
-
     @Test("Conversion from [Bit]")
     func conversionFromUnpacked() {
         let unpacked: [Bit] = [true, false, true, false]
@@ -175,36 +182,6 @@ struct PackedBitArrayTests {
 
         #expect(original == backToUnpacked)
     }
-
-    // MARK: - Word Boundaries
-
-    @Test("Word boundary: index 63 and 64")
-    func wordBoundary63And64() {
-        var bits = Array<Bit>.Packed(repeating: false, count: 100)
-
-        bits[63] = true
-        bits[64] = true
-
-        #expect(bits[63] == true)
-        #expect(bits[64] == true)
-        #expect(bits[62] == false)
-        #expect(bits[65] == false)
-    }
-
-    @Test("Large array")
-    func largeArray() {
-        var bits = Array<Bit>.Packed(repeating: false, count: 1000)
-
-        bits[0] = true
-        bits[500] = true
-        bits[999] = true
-
-        #expect(bits.count == 1000)
-        #expect(bits.trueCount == 3)
-        #expect(bits.falseCount == 997)
-    }
-
-    // MARK: - Bitwise Operations
 
     @Test("toggle")
     func toggle() throws {
@@ -243,8 +220,6 @@ struct PackedBitArrayTests {
         #expect(!mixed.allFalse)
     }
 
-    // MARK: - Iteration
-
     @Test("Iteration")
     func iteration() {
         let bits = Array<Bit>.Packed([true, false, true, false])
@@ -267,8 +242,6 @@ struct PackedBitArrayTests {
         #expect(Swift.Array(bits) == [true, false, true])
     }
 
-    // MARK: - Equality
-
     @Test("Equality")
     func equality() {
         let a = Array<Bit>.Packed([true, false, true])
@@ -279,22 +252,6 @@ struct PackedBitArrayTests {
         #expect(a != c)
     }
 
-    @Test("Empty arrays equal")
-    func emptyArraysEqual() {
-        let a = Array<Bit>.Packed()
-        let b = Array<Bit>.Packed()
-        #expect(a == b)
-    }
-
-    @Test("Different lengths not equal")
-    func differentLengthsNotEqual() {
-        let a = Array<Bit>.Packed([true, false])
-        let b = Array<Bit>.Packed([true, false, true])
-        #expect(a != b)
-    }
-
-    // MARK: - Description
-
     @Test("Description")
     func description() {
         let bits = Array<Bit>.Packed([true, false, true])
@@ -302,8 +259,6 @@ struct PackedBitArrayTests {
         #expect(desc.contains("Array<Bit>.Packed"))
         #expect(desc.contains("101"))
     }
-
-    // MARK: - Bit Type
 
     @Test("Append Bit type")
     func appendBitType() {
@@ -327,4 +282,61 @@ struct PackedBitArrayTests {
         #expect(packed[0] == true)
         #expect(packed[1] == false)
     }
+}
+
+// MARK: - Edge Case Tests
+
+extension ArrayBitPackedTests.EdgeCase {
+
+    @Test("Empty arrays equal")
+    func emptyArraysEqual() {
+        let a = Array<Bit>.Packed()
+        let b = Array<Bit>.Packed()
+        #expect(a == b)
+    }
+
+    @Test("Different lengths not equal")
+    func differentLengthsNotEqual() {
+        let a = Array<Bit>.Packed([true, false])
+        let b = Array<Bit>.Packed([true, false, true])
+        #expect(a != b)
+    }
+
+    @Test("Word boundary: index 63 and 64")
+    func wordBoundary63And64() {
+        var bits = Array<Bit>.Packed(repeating: false, count: 100)
+
+        bits[63] = true
+        bits[64] = true
+
+        #expect(bits[63] == true)
+        #expect(bits[64] == true)
+        #expect(bits[62] == false)
+        #expect(bits[65] == false)
+    }
+
+    @Test("Large array")
+    func largeArray() {
+        var bits = Array<Bit>.Packed(repeating: false, count: 1000)
+
+        bits[0] = true
+        bits[500] = true
+        bits[999] = true
+
+        #expect(bits.count == 1000)
+        #expect(bits.trueCount == 3)
+        #expect(bits.falseCount == 997)
+    }
+}
+
+// MARK: - Integration Tests
+
+extension ArrayBitPackedTests.Integration {
+    // Integration tests for cross-type interactions
+}
+
+// MARK: - Performance Tests
+
+extension ArrayBitPackedTests.Performance {
+    // Performance tests with .timed() trait
 }
