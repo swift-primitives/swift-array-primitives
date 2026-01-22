@@ -1,60 +1,26 @@
 public import Collection_Primitives
 
-// MARK: - Iterator
+// ===----------------------------------------------------------------------===//
+// IMPORTANT: Sequence.Protocol and Collection.Protocol conformances REMOVED
+// ===----------------------------------------------------------------------===//
+//
+// These conformances caused constraint poisoning errors:
+//   "type 'Element' does not conform to protocol 'Copyable'"
+//   on UnsafeMutablePointer<Element> in Array.swift
+//
+// ROOT CAUSE (confirmed via experiments):
+//   Having conditional conformances like `where Element: Copyable` on types
+//   that are themselves `~Copyable` causes the compiler to incorrectly
+//   propagate Copyable requirements to the base type definition.
+//
+// WORKAROUND:
+//   - Use Collection.Indexed and Collection.Bidirectional for index-based access
+//   - Use direct forEach methods for iteration
+//   - Sequence/Collection protocol conformance not available for ~Copyable array types
+//
+// See: swift-array-primitives/Experiments/noncopyable-multifile-poisoning/
+// ===----------------------------------------------------------------------===//
 
-extension Array.Small where Element: Copyable {
-    /// Iterator for Array.Small that copies elements for safe iteration.
-    public struct Iterator: IteratorProtocol {
-        @usableFromInline
-        let elements: [Element]
-
-        @usableFromInline
-        var index: Int
-
-        @usableFromInline
-        init(elements: [Element]) {
-            self.elements = elements
-            self.index = 0
-        }
-
-        @inlinable
-        public mutating func next() -> Element? {
-            guard index < elements.count else { return nil }
-            defer { index += 1 }
-            return elements[index]
-        }
-    }
-}
-
-extension Array.Small.Iterator: Sendable where Element: Sendable {}
-
-// MARK: - Sequence.Protocol Conformance
-
-extension Array.Small: Sequence.`Protocol` where Element: Copyable {
-    @inlinable
-    public borrowing func makeIterator() -> Iterator {
-        var elements: [Element] = []
-        elements.reserveCapacity(_count)
-        if let heapStorage = _heapStorage {
-            for i in 0..<_count {
-                elements.append(heapStorage._readElement(at: i))
-            }
-        } else {
-            for i in 0..<_count {
-                elements.append(unsafe _inlineReadPointerToElement(at: i).pointee)
-            }
-        }
-        return Iterator(elements: elements)
-    }
-}
-
-// MARK: - Collection.Protocol Conformance
-// Note: Index, startIndex, endIndex, index(after:) defined in Collection.Indexed conformance
-
-extension Array.Small: Collection.`Protocol` where Element: Copyable {}
-
-// MARK: - Collection.Access.Random Conformance
-// Note: Collection.Bidirectional conformance is provided in +Collection.Indexed.swift
-// for ALL element types (including ~Copyable) via `where Element: ~Copyable`.
-
-extension Array.Small: Collection.Access.Random where Element: Copyable {}
+// NOTE: Iterator, Sequence.Protocol, Collection.Protocol, and Collection.Access.Random
+// conformances have been removed due to constraint poisoning issues.
+// The array types provide direct subscript and forEach methods instead.
