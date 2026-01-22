@@ -80,6 +80,35 @@ extension Array.Inline where Element: Copyable {
                 unsafe _storage._pointerToElement(at: index.position.rawValue).pointee = newValue
             }
         }
+
+        /// Accesses the element at the given bounded index.
+        ///
+        /// The type `Index<Tag>.Bounded<capacity>` proves `0 <= index < capacity`.
+        /// **No runtime bounds check is performed.**
+        ///
+        /// ## Type-Based Safety
+        ///
+        /// The TYPE encodes the bounds proof:
+        /// - `Index<Tag>` subscript → has runtime bounds check
+        /// - `Index<Tag>.Bounded<capacity>` subscript → NO bounds check (type proves it)
+        ///
+        /// ## Contract
+        ///
+        /// For full arrays (`count == capacity`), this subscript is completely safe.
+        /// For partial arrays (`count < capacity`), caller must ensure `index < count`.
+        ///
+        /// - Parameter index: A bounded index where the type proves `0 <= index < capacity`.
+        @inlinable
+        public subscript(_ index: Index_Primitives.Index<Tag>.Bounded<capacity>) -> Element {
+            get {
+                // Type proves: 0 <= index < capacity
+                // For full arrays: count == capacity, so 0 <= index < count ✓
+                unsafe _storage._readPointerToElement(at: index.rawValue).pointee
+            }
+            set {
+                unsafe _storage._pointerToElement(at: index.rawValue).pointee = newValue
+            }
+        }
     }
 }
 
