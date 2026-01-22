@@ -1,9 +1,13 @@
 // ===----------------------------------------------------------------------===//
 // FILE: Array.Bounded+Indexed.swift (protocol conformance - SEPARATE FILE)
 // ===----------------------------------------------------------------------===//
+//
+// Multi-file test: Conformance in separate file from type definition.
+// This is the scenario that failed before.
+//
+// ===----------------------------------------------------------------------===//
 
-// VARIANT 1: Conforming to IndexedNoElement (works!)
-extension Array.Bounded: IndexedNoElement where Element: ~Copyable {
+extension Array.Bounded: Indexed where Element: ~Copyable {
     public typealias Index = Int
 
     @inlinable
@@ -14,14 +18,8 @@ extension Array.Bounded: IndexedNoElement where Element: ~Copyable {
 
     @inlinable
     public func index(after i: Int) -> Int { i + 1 }
-}
 
-// VARIANT 2: Conforming to Indexed WITH Element associated type
-// TESTING: Does this FAIL due to implicit 'where Element: Copyable'?
-extension Array.Bounded: Indexed where Element: ~Copyable {
-    // Index already defined from IndexedNoElement
-    // startIndex, endIndex, index(after:) already provided
-
+    // Subscript as direct member (not protocol requirement)
     public subscript(position: Int) -> Element {
         _read { yield storage[position] }
     }

@@ -1,25 +1,25 @@
 // ===----------------------------------------------------------------------===//
 // FILE: Protocol.swift (protocol definition)
 // ===----------------------------------------------------------------------===//
+//
+// WORKAROUND: Remove `associatedtype Element` from protocol.
+// Conformers provide subscript as direct member instead.
+//
+// ===----------------------------------------------------------------------===//
 
-/// Protocol WITHOUT explicit Element associated type
-/// Testing if subscript can still work with inferred Element
+/// Index-based collection protocol WITHOUT Element associated type.
+/// This allows ~Copyable types to conform without implicit Copyable constraints.
 public protocol Indexed: ~Copyable {
-    associatedtype Index
-    associatedtype Element  // Keep this but test conformance
+    associatedtype Index: Equatable
 
     var startIndex: Index { get }
     var endIndex: Index { get }
-    subscript(position: Index) -> Element { get }
     func index(after i: Index) -> Index
+    // NOTE: No `associatedtype Element`, no `subscript`
+    //       Conformers provide their own subscript directly.
 }
 
-// ALTERNATIVE: Protocol without Element, using Self.Element constraint
-public protocol IndexedNoElement: ~Copyable {
-    associatedtype Index
-
-    var startIndex: Index { get }
-    var endIndex: Index { get }
-    func index(after i: Index) -> Index
-    // No subscript - conformers provide their own element access
+// CRITICAL: Protocol extensions must have `where Self: ~Copyable`
+extension Indexed where Self: ~Copyable {
+    public var isEmpty: Bool { startIndex == endIndex }
 }
