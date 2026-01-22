@@ -27,12 +27,33 @@ public import Standard_Library_Extensions
 /// - ``Array/Small``: Inline storage with automatic spill to heap (SmallVec pattern)
 public enum Array<Element: ~Copyable>: ~Copyable {
 
-    // MARK: - Bounded (Fixed-Capacity)
+    // MARK: - Bounded (Fixed-Capacity, Conditionally Copyable)
 
     /// A non-resizable array that is always fully initialized.
     ///
     /// Unlike standard `Array`, `Bounded` cannot grow or shrink after creation.
     /// All elements are initialized at construction time.
+    ///
+    /// ## Conditional Copyable
+    ///
+    /// When `Element` is `Copyable`, `Bounded` is also `Copyable`:
+    ///
+    /// ```swift
+    /// let a = try Array<Int>.Bounded(count: 3) { $0 }
+    /// let b = a  // Copy works!
+    /// ```
+    ///
+    /// ## Sequence Conformance
+    ///
+    /// When `Element` is `Copyable`, `Bounded` conforms to `Sequence`:
+    ///
+    /// ```swift
+    /// for element in array {
+    ///     print(element)
+    /// }
+    /// ```
+    ///
+    /// For `~Copyable` elements, use ``forEach(_:)`` instead.
     ///
     /// ## Move-Only Support
     ///
@@ -45,23 +66,76 @@ public enum Array<Element: ~Copyable>: ~Copyable {
     ///
     /// ## Copy-on-Write
     ///
-    /// When `Element` is `Copyable`, `Bounded` uses copy-on-write semantics.
+    /// When `Element` is `Copyable`, `Bounded` uses copy-on-write semantics:
+    /// copies share storage until mutation.
     @safe
     public struct Bounded: ~Copyable {
+
+        // MARK: - Nested Storage (inherits Element's ~Copyable context)
+
+        /// Internal storage class using ManagedBuffer.
+        ///
+        /// Declared as a nested class so that `Element` inherits the `~Copyable`
+        /// suppression from the outer type. This enables conditional Copyable.
         @usableFromInline
-        package var storage: UnsafeMutablePointer<Element>
+        final class Storage: ManagedBuffer<Int, Element> {
+
+            /// Creates storage with the specified capacity, initialized with elements.
+            @usableFromInline
+            static func create(
+                capacity: Int,
+                initializingWith initializer: (Int) -> Element
+            ) -> Storage {
+                let storage = Storage.create(minimumCapacity: capacity) { _ in 0 }
+                let typed = unsafe unsafeDowncast(storage, to: Storage.self)
+
+                _ = unsafe typed.withUnsafeMutablePointerToElements { elements in
+                    for i in 0..<capacity {
+                        unsafe (elements + i).initialize(to: initializer(i))
+                    }
+                }
+                typed.header = capacity
+
+                return typed
+            }
+
+            /// Creates empty storage (for zero-count arrays).
+            @usableFromInline
+            static func createEmpty() -> Storage {
+                let storage = Storage.create(minimumCapacity: 0) { _ in 0 }
+                return unsafe unsafeDowncast(storage, to: Storage.self)
+            }
+
+            deinit {
+                let count = header
+                guard count > 0 else { return }
+                _ = unsafe withUnsafeMutablePointerToElements { elements in
+                    for i in 0..<count {
+                        unsafe (elements + i).deinitialize(count: 1)
+                    }
+                }
+            }
+
+            /// Returns pointer to element storage.
+            @usableFromInline
+            var _elementsPointer: UnsafeMutablePointer<Element> {
+                unsafe withUnsafeMutablePointerToElements { unsafe $0 }
+            }
+        }
+
+        // MARK: - Properties
+
+        @usableFromInline
+        package var _storage: Storage
+
+        /// Cached pointer for Span access.
+        @usableFromInline
+        package var _cachedPtr: UnsafeMutablePointer<Element>
 
         /// The number of elements in the array.
         public let _count: Index_Primitives.Index<Element>.Count
 
-        deinit {
-            for i in 0..<_count.rawValue {
-                unsafe (storage + i).deinitialize(count: 1)
-            }
-            if _count.rawValue > 0 {
-                unsafe storage.deallocate()
-            }
-        }
+        // Note: NO deinit - Storage handles cleanup via its own deinit
     }
 
     // MARK: - Unbounded (Dynamically-Growing)
@@ -117,7 +191,7 @@ public enum Array<Element: ~Copyable>: ~Copyable {
 
             /// Returns pointer to element storage.
             @usableFromInline
-            package var _elementsPointer: UnsafeMutablePointer<Element> {
+            var _elementsPointer: UnsafeMutablePointer<Element> {
                 unsafe withUnsafeMutablePointerToElements { unsafe $0 }
             }
 
@@ -445,12 +519,96 @@ public enum Array<Element: ~Copyable>: ~Copyable {
 
 // MARK: - Conditional Copyable
 
+/// `Array.Bounded` is `Copyable` when its elements are `Copyable`.
+/// Uses ManagedBuffer storage, enabling copy-on-write semantics.
+extension Array.Bounded: Copyable where Element: Copyable {}
+
 /// `Array.Unbounded` is `Copyable` when its elements are `Copyable`.
 /// Uses ManagedBuffer storage, so no deinit needed in the struct itself.
 extension Array.Unbounded: Copyable where Element: Copyable {}
 
-// Note: Array.Bounded, Array.Inline, and Array.Small are UNCONDITIONALLY ~Copyable
-// due to their deinit requirements for storage cleanup.
+// Note: Array.Inline and Array.Small are UNCONDITIONALLY ~Copyable
+// due to their deinit requirements for inline storage cleanup.
+
+// MARK: - Sequence (Copyable elements only)
+
+/// `Array.Bounded` conforms to `Sequence` when `Element` is `Copyable`.
+///
+/// This enables `for-in` loops, `map`, `filter`, and other sequence operations.
+/// For `~Copyable` elements, use ``forEach(_:)`` instead.
+///
+/// - Note: This conformance must be in the same file as the type declaration
+///   due to a Swift compiler bug where protocol conformances for nested types
+///   in separate files cause `~Copyable` constraint propagation to fail.
+extension Array.Bounded: Swift.Sequence where Element: Copyable {
+
+    /// An iterator over the elements of a bounded array.
+    public struct Iterator: IteratorProtocol {
+        @usableFromInline
+        let _storage: Array<Element>.Bounded.Storage
+
+        @usableFromInline
+        var _index: Int = 0
+
+        @usableFromInline
+        init(storage: Array<Element>.Bounded.Storage) {
+            self._storage = storage
+        }
+
+        /// Advances to the next element and returns it, or nil if no next element exists.
+        @inlinable
+        public mutating func next() -> Element? {
+            guard _index < _storage.header else { return nil }
+            defer { _index += 1 }
+            return _storage._readElement(at: _index)
+        }
+    }
+
+    /// Returns an iterator over the elements of the array.
+    @inlinable
+    public func makeIterator() -> Iterator {
+        Iterator(storage: _storage)
+    }
+}
+
+/// `Array.Unbounded` conforms to `Sequence` when `Element` is `Copyable`.
+///
+/// This enables `for-in` loops, `map`, `filter`, and other sequence operations.
+/// For `~Copyable` elements, use ``forEach(_:)`` instead.
+///
+/// - Note: This conformance must be in the same file as the type declaration
+///   due to a Swift compiler bug where protocol conformances for nested types
+///   in separate files cause `~Copyable` constraint propagation to fail.
+extension Array.Unbounded: Swift.Sequence where Element: Copyable {
+
+    /// An iterator over the elements of an unbounded array.
+    public struct Iterator: IteratorProtocol {
+        @usableFromInline
+        let _storage: Array<Element>.Unbounded<N>.ElementStorage
+
+        @usableFromInline
+        var _index: Int = 0
+
+        @usableFromInline
+        init(storage: Array<Element>.Unbounded<N>.ElementStorage) {
+            self._storage = storage
+        }
+
+        /// Advances to the next element and returns it, or nil if no next element exists.
+        @inlinable
+        public mutating func next() -> Element? {
+            guard _index < _storage.header else { return nil }
+            defer { _index += 1 }
+            return _storage._readElement(at: _index)
+        }
+    }
+
+    /// Returns an iterator over the elements of the array.
+    @inlinable
+    public func makeIterator() -> Iterator {
+        Iterator(storage: _storage)
+    }
+}
 
 // MARK: - Sendable
 
@@ -472,7 +630,30 @@ extension Array {
     public typealias Small8 = Unbounded<8>
 }
 
-// MARK: - ElementStorage Copyable Extension
+// MARK: - Storage Copyable Extensions
+
+extension Array.Bounded.Storage where Element: Copyable {
+    /// Creates a copy of this storage.
+    @usableFromInline
+    func copy() -> Array<Element>.Bounded.Storage {
+        let count = header
+        guard count > 0 else {
+            return Array<Element>.Bounded.Storage.createEmpty()
+        }
+
+        return Array<Element>.Bounded.Storage.create(capacity: count) { i in
+            _readElement(at: i)
+        }
+    }
+
+    /// Reads element at the given index (Copyable elements only).
+    @usableFromInline
+    package func _readElement(at index: Int) -> Element {
+        unsafe withUnsafeMutablePointerToElements { elements in
+            unsafe (elements + index).pointee
+        }
+    }
+}
 
 extension Array.Unbounded.ElementStorage where Element: Copyable {
     /// Reads element at the given index (Copyable elements only).

@@ -42,7 +42,8 @@ extension Array.Bounded {
     ///
     /// ## Note
     ///
-    /// `Array.Bounded` is `~Copyable` unconditionally, so `Indexed` is also `~Copyable`.
+    /// `Indexed` is `~Copyable` due to Swift compiler constraints requiring
+    /// Copyable conformances to be in the same file as type declarations.
     public struct Indexed<Tag: ~Copyable>: ~Copyable {
         @usableFromInline
         var _storage: Array<Element>.Bounded
@@ -74,11 +75,11 @@ extension Array.Bounded {
         public subscript(index: Index_Primitives.Index<Tag>) -> Element {
             _read {
                 precondition(index.position.rawValue < _storage.count.rawValue, "Index out of bounds")
-                yield unsafe _storage.storage[index.position.rawValue]
+                yield unsafe _storage._cachedPtr[index.position.rawValue]
             }
             _modify {
                 precondition(index.position.rawValue < _storage.count.rawValue, "Index out of bounds")
-                yield &(unsafe _storage.storage[index.position.rawValue])
+                yield &(unsafe _storage._cachedPtr[index.position.rawValue])
             }
         }
     }

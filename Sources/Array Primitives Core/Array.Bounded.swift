@@ -17,7 +17,7 @@ public import Index_Primitives
 
 // MARK: - Properties
 
-extension Array.Bounded {
+extension Array.Bounded where Element: ~Copyable {
     /// The number of elements in the array.
     @inlinable
     public var count: Index_Primitives.Index<Element>.Count { _count }
@@ -46,17 +46,14 @@ extension Array.Bounded {
         }
 
         if count == 0 {
-            // Empty array: pointer is semantically irrelevant when count == 0
-            unsafe self.storage = UnsafeMutablePointer<Element>(bitPattern: 1)!
+            self._storage = Storage.createEmpty()
+            unsafe (self._cachedPtr = _storage._elementsPointer)
             self._count = .zero
             return
         }
 
-        let storage = UnsafeMutablePointer<Element>.allocate(capacity: count)
-        for i in 0..<count {
-            unsafe (storage + i).initialize(to: initializer(i))
-        }
-        unsafe self.storage = storage
+        self._storage = Storage.create(capacity: count, initializingWith: initializer)
+        unsafe (self._cachedPtr = _storage._elementsPointer)
         self._count = Index_Primitives.Index<Element>.Count(__unchecked: count)
     }
 }
@@ -82,23 +79,21 @@ extension Array.Bounded {
         precondition(count >= 0, "Count must be non-negative")
 
         if count == 0 {
-            unsafe self.storage = UnsafeMutablePointer<Element>(bitPattern: 1)!
+            self._storage = Storage.createEmpty()
+            unsafe (self._cachedPtr = _storage._elementsPointer)
             self._count = .zero
             return
         }
 
-        let storage = UnsafeMutablePointer<Element>.allocate(capacity: count)
-        for i in 0..<count {
-            unsafe (storage + i).initialize(to: initializer(i))
-        }
-        unsafe self.storage = storage
+        self._storage = Storage.create(capacity: count, initializingWith: initializer)
+        unsafe (self._cachedPtr = _storage._elementsPointer)
         self._count = Index_Primitives.Index<Element>.Count(__unchecked: count)
     }
 }
 
 // MARK: - Span Access (Normative)
 
-extension Array.Bounded {
+extension Array.Bounded where Element: ~Copyable {
     /// Read-only span of the array elements.
     ///
     /// ## Lifetime Contract
@@ -111,8 +106,7 @@ extension Array.Bounded {
     public var span: Span<Element> {
         @_lifetime(borrow self)
         borrowing get {
-            // Note: storage is always non-nil (sentinel pointer for empty case)
-            unsafe Span(_unsafeStart: storage, count: _count.rawValue)
+            unsafe Span(_unsafeStart: _cachedPtr, count: _count.rawValue)
         }
     }
 
@@ -130,8 +124,37 @@ extension Array.Bounded {
     public var mutableSpan: MutableSpan<Element> {
         @_lifetime(&self)
         mutating get {
-            // Note: storage is always non-nil (sentinel pointer for empty case)
-            unsafe MutableSpan(_unsafeStart: storage, count: _count.rawValue)
+            unsafe MutableSpan(_unsafeStart: _cachedPtr, count: _count.rawValue)
+        }
+    }
+}
+
+// MARK: - CoW-aware MutableSpan (Copyable elements)
+
+extension Array.Bounded where Element: Copyable {
+    /// Mutable span with copy-on-write semantics.
+    ///
+    /// This shadows the base `mutableSpan` when `Element: Copyable`,
+    /// ensuring the storage is unique before mutation.
+    @inlinable
+    public var mutableSpan: MutableSpan<Element> {
+        @_lifetime(&self)
+        mutating get {
+            makeUnique()
+            return unsafe MutableSpan(_unsafeStart: _cachedPtr, count: _count.rawValue)
+        }
+    }
+}
+
+// MARK: - Copy-on-Write (Copyable elements only)
+
+extension Array.Bounded where Element: Copyable {
+    /// Ensures the storage is uniquely referenced before mutation.
+    @usableFromInline
+    mutating func makeUnique() {
+        if !isKnownUniquelyReferenced(&_storage) {
+            _storage = _storage.copy()
+            unsafe (_cachedPtr = _storage._elementsPointer)
         }
     }
 }
@@ -139,7 +162,7 @@ extension Array.Bounded {
 // MARK: - Pointer Access (Escape Hatch for C Interop)
 
 @_spi(Unsafe)
-extension Array.Bounded {
+extension Array.Bounded where Element: ~Copyable {
     /// Provides read-only access to the underlying contiguous storage.
     ///
     /// - Warning: This is an escape hatch for C interop. Prefer `span` for safe access.
@@ -149,7 +172,7 @@ extension Array.Bounded {
     public func withUnsafeBufferPointer<R, E: Swift.Error>(
         _ body: (UnsafeBufferPointer<Element>) throws(E) -> R
     ) throws(E) -> R {
-        try unsafe body(UnsafeBufferPointer(start: _count.rawValue > 0 ? storage : nil, count: _count.rawValue))
+        try unsafe body(UnsafeBufferPointer(start: _count.rawValue > 0 ? _cachedPtr : nil, count: _count.rawValue))
     }
 
     /// Provides mutable access to the underlying contiguous storage.
@@ -161,7 +184,7 @@ extension Array.Bounded {
     public mutating func withUnsafeMutableBufferPointer<R, E: Swift.Error>(
         _ body: (UnsafeMutableBufferPointer<Element>) throws(E) -> R
     ) throws(E) -> R {
-        try unsafe body(UnsafeMutableBufferPointer(start: _count.rawValue > 0 ? storage : nil, count: _count.rawValue))
+        try unsafe body(UnsafeMutableBufferPointer(start: _count.rawValue > 0 ? _cachedPtr : nil, count: _count.rawValue))
     }
 }
 
@@ -181,7 +204,7 @@ extension Array.Bounded where Element: ~Copyable {
     @inlinable
     public func withElement<R>(at index: Index_Primitives.Index<Element>, _ body: (borrowing Element) -> R) -> R {
         precondition(index < _count, "Index out of bounds")
-        return unsafe body((storage + index.position.rawValue).pointee)
+        return unsafe body((_cachedPtr + index.position.rawValue).pointee)
     }
 
     /// Iterates over all elements in the array.
@@ -190,7 +213,7 @@ extension Array.Bounded where Element: ~Copyable {
     @inlinable
     public func forEach(_ body: (borrowing Element) -> Void) {
         for i in 0..<_count.rawValue {
-            unsafe body((storage + i).pointee)
+            unsafe body((_cachedPtr + i).pointee)
         }
     }
 }
