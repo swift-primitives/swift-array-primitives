@@ -14,12 +14,11 @@ import Testing
 import Index_Primitives
 
 // MARK: - Test Suite Structure
-//
-// Note: Swift Testing's @Suite/@Test macros cannot be applied within generic extensions.
-// Since Array.Inline is nested inside a generic type, we use a dedicated test enum.
-// This follows [TEST-ORG-005] for types that cannot have nested Test types.
 
 /// Test namespace for Array.Inline
+///
+/// Note: Array.Inline is ~Copyable, so it doesn't conform to Sequence.
+/// Use forEach for iteration instead of for-in loops.
 enum ArrayInlineTests {
     @Suite struct Unit {}
     @Suite struct EdgeCase {}
@@ -31,66 +30,159 @@ enum ArrayInlineTests {
 
 extension ArrayInlineTests.Unit {
 
-    @Test("Init empty")
-    func initEmpty() {
+    // MARK: - Capacity Invariants
+
+    @Test("Cannot exceed compile-time capacity")
+    func cannotExceedCompileTimeCapacity() throws {
+        var array = Array<Int>.Inline<3>()
+
+        try array.append(1)
+        try array.append(2)
+        try array.append(3)
+
+        #expect(throws: Array<Int>.Inline<3>.Error.self) {
+            try array.append(4)
+        }
+
+        // Count should still be 3
+        #expect(array.count.rawValue == 3)
+    }
+
+    @Test("isFull returns true at capacity")
+    func isFullReturnsTrueAtCapacity() throws {
+        var array = Array<Int>.Inline<2>()
+
+        #expect(array.isFull == false)
+
+        try array.append(1)
+        #expect(array.isFull == false)
+
+        try array.append(2)
+        #expect(array.isFull == true)
+    }
+
+    @Test("Capacity is compile-time constant")
+    func capacityIsCompileTimeConstant() throws {
+        #expect(Array<Int>.Inline<1>.capacity == 1)
+        #expect(Array<Int>.Inline<4>.capacity == 4)
+        #expect(Array<Int>.Inline<100>.capacity == 100)
+    }
+
+    // MARK: - Count Invariants
+
+    @Test("Empty array has count zero")
+    func emptyArrayHasCountZero() {
         let array = Array<Int>.Inline<8>()
-        #expect(array.count == 0)
+        #expect(array.count.rawValue == 0)
+        #expect(array.isEmpty == true)
     }
 
-    @Test("Append single element")
-    func appendSingleElement() throws {
+    @Test("Append increments count")
+    func appendIncrementsCount() throws {
         var array = Array<Int>.Inline<8>()
-        try array.append(42)
 
-        #expect(array.count == 1)
-        #expect(array[try Index<Int>(0)] == 42)
+        try array.append(1)
+        #expect(array.count.rawValue == 1)
+
+        try array.append(2)
+        #expect(array.count.rawValue == 2)
     }
 
-    @Test("Append multiple elements")
-    func appendMultipleElements() throws {
+    @Test("RemoveLast decrements count")
+    func removeLastDecrementsCount() throws {
         var array = Array<Int>.Inline<8>()
         try array.append(1)
         try array.append(2)
-        try array.append(3)
 
-        #expect(array.count == 3)
-        #expect(array[try Index<Int>(0)] == 1)
-        #expect(array[try Index<Int>(1)] == 2)
-        #expect(array[try Index<Int>(2)] == 3)
+        _ = array.removeLast()
+        #expect(array.count.rawValue == 1)
+
+        _ = array.removeLast()
+        #expect(array.count.rawValue == 0)
     }
 
-    @Test("Subscript write access")
-    func subscriptWriteAccess() throws {
+    @Test("RemoveLast on empty returns nil")
+    func removeLastOnEmptyReturnsNil() {
         var array = Array<Int>.Inline<8>()
-        try array.append(1)
-        try array.append(2)
-        try array.append(3)
-
-        array[try Index<Int>(1)] = 100
-
-        #expect(array[try Index<Int>(0)] == 1)
-        #expect(array[try Index<Int>(1)] == 100)
-        #expect(array[try Index<Int>(2)] == 3)
+        #expect(array.removeLast() == nil)
     }
 
-    @Test("Count property")
-    func countProperty() throws {
+    // MARK: - forEach Invariants
+
+    @Test("forEach yields exactly count elements")
+    func forEachYieldsExactlyCountElements() throws {
+        var array = Array<Int>.Inline<10>()
+        for i in 0..<5 { try array.append(i) }
+
+        var iteratedCount = 0
+        array.forEach { _ in iteratedCount += 1 }
+
+        #expect(iteratedCount == 5)
+    }
+
+    @Test("forEach yields elements in insertion order")
+    func forEachYieldsElementsInInsertionOrder() throws {
         var array = Array<Int>.Inline<8>()
-        #expect(array.count == 0)
+        try array.append(10)
+        try array.append(20)
+        try array.append(30)
 
-        try array.append(1)
-        #expect(array.count == 1)
+        var elements: [Int] = []
+        array.forEach { elements.append($0) }
+
+        #expect(elements == [10, 20, 30])
     }
 
-    @Test("Fill to capacity")
-    func fillToCapacity() throws {
+    @Test("Empty array forEach yields nothing")
+    func emptyArrayForEachYieldsNothing() {
+        let array = Array<Int>.Inline<8>()
+
+        var iteratedCount = 0
+        array.forEach { _ in iteratedCount += 1 }
+
+        #expect(iteratedCount == 0)
+    }
+
+    @Test("forEach matches subscript access")
+    func forEachMatchesSubscriptAccess() throws {
+        var array = Array<Int>.Inline<10>()
+        for i in 0..<5 { try array.append(i * 7) }
+
+        var index = 0
+        array.forEach { element in
+            #expect(element == array[try! Index<Int>(index)])
+            index += 1
+        }
+    }
+
+    @Test("Full array forEach yields all elements")
+    func fullArrayForEachYieldsAllElements() throws {
         var array = Array<Int>.Inline<4>()
         try array.append(1)
         try array.append(2)
         try array.append(3)
         try array.append(4)
 
-        #expect(array.count == 4)
+        var elements: [Int] = []
+        array.forEach { elements.append($0) }
+
+        #expect(elements == [1, 2, 3, 4])
+        #expect(elements.count == Array<Int>.Inline<4>.capacity)
+    }
+
+    // MARK: - Span Invariants
+
+    @Test("withSpan provides correct element access")
+    func withSpanProvidesCorrectElementAccess() throws {
+        var array = Array<Int>.Inline<8>()
+        for i in 0..<5 { try array.append(i * 2) }
+
+        array.withSpan { span in
+            #expect(span.count == 5)
+            for i in 0..<5 {
+                #expect(span[i] == i * 2)
+            }
+        }
     }
 }
 
@@ -98,31 +190,128 @@ extension ArrayInlineTests.Unit {
 
 extension ArrayInlineTests.EdgeCase {
 
-    @Test("Append beyond capacity throws")
-    func appendBeyondCapacityThrows() throws {
-        var array = Array<Int>.Inline<2>()
-        try array.append(1)
-        try array.append(2)
-
-        #expect(throws: (any Error).self) {
-            try array.append(3)
-        }
-    }
-
     @Test("Single element capacity")
     func singleElementCapacity() throws {
         var array = Array<Int>.Inline<1>()
-        try array.append(42)
 
-        #expect(array.count == 1)
+        try array.append(42)
+        #expect(array.count.rawValue == 1)
+        #expect(array.isFull == true)
         #expect(array[try Index<Int>(0)] == 42)
+
+        #expect(throws: Array<Int>.Inline<1>.Error.self) {
+            try array.append(999)
+        }
+
+        var elements: [Int] = []
+        array.forEach { elements.append($0) }
+        #expect(elements == [42])
+    }
+
+    @Test("Fill and empty multiple times")
+    func fillAndEmptyMultipleTimes() throws {
+        var array = Array<Int>.Inline<3>()
+
+        // First fill
+        try array.append(1)
+        try array.append(2)
+        try array.append(3)
+        #expect(array.isFull == true)
+
+        // Empty
+        array.removeAll()
+        #expect(array.count.rawValue == 0)
+        #expect(array.isFull == false)
+
+        // Second fill with different values
+        try array.append(10)
+        try array.append(20)
+        try array.append(30)
+        #expect(array.isFull == true)
+
+        var elements: [Int] = []
+        array.forEach { elements.append($0) }
+        #expect(elements == [10, 20, 30])
+    }
+
+    @Test("Append after partial removeLast")
+    func appendAfterPartialRemoveLast() throws {
+        var array = Array<Int>.Inline<4>()
+
+        try array.append(1)
+        try array.append(2)
+        try array.append(3)
+        try array.append(4)
+
+        _ = array.removeLast()
+        _ = array.removeLast()
+
+        try array.append(100)
+        try array.append(200)
+
+        var elements: [Int] = []
+        array.forEach { elements.append($0) }
+        #expect(elements == [1, 2, 100, 200])
+    }
+
+    @Test("removeAll clears all elements")
+    func removeAllClearsAllElements() throws {
+        var array = Array<Int>.Inline<5>()
+        for i in 0..<5 { try array.append(i) }
+
+        array.removeAll()
+
+        #expect(array.count.rawValue == 0)
+        #expect(array.isEmpty == true)
+        #expect(array.isFull == false)
+
+        var iterCount = 0
+        array.forEach { _ in iterCount += 1 }
+        #expect(iterCount == 0)
+    }
+
+    @Test("Large inline capacity")
+    func largeInlineCapacity() throws {
+        var array = Array<Int>.Inline<100>()
+
+        for i in 0..<100 {
+            try array.append(i * 3)
+        }
+
+        #expect(array.count.rawValue == 100)
+        #expect(array.isFull == true)
+
+        // Verify all elements via forEach
+        var index = 0
+        array.forEach { element in
+            #expect(element == index * 3)
+            index += 1
+        }
+        #expect(index == 100)
     }
 }
 
 // MARK: - Integration Tests
 
 extension ArrayInlineTests.Integration {
-    // Integration tests for cross-type interactions
+
+    @Test("forEach and withSpan yield same elements")
+    func forEachAndWithSpanYieldSameElements() throws {
+        var array = Array<Int>.Inline<10>()
+        for i in 0..<7 { try array.append(i * 2) }
+
+        var forEachElements: [Int] = []
+        array.forEach { forEachElements.append($0) }
+
+        var spanElements: [Int] = []
+        array.withSpan { span in
+            for i in 0..<span.count {
+                spanElements.append(span[i])
+            }
+        }
+
+        #expect(forEachElements == spanElements)
+    }
 }
 
 // MARK: - Performance Tests
