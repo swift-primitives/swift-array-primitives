@@ -53,11 +53,8 @@ extension Array.Small: Sequence.`Protocol` where Element: Copyable {
 
 extension Array.Small: Collection.`Protocol` where Element: Copyable {}
 
-// MARK: - Collection.Bidirectional Conformance
-// Note: index(before:) defined in Collection.Indexed_Bidirectional conformance
-
-extension Array.Small: Collection.Bidirectional where Element: Copyable {}
-
 // MARK: - Collection.Access.Random Conformance
+// Note: Collection.Bidirectional conformance is provided in +Collection.Indexed.swift
+// for ALL element types (including ~Copyable) via `where Element: ~Copyable`.
 
 extension Array.Small: Collection.Access.Random where Element: Copyable {}
