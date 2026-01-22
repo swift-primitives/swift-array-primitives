@@ -63,7 +63,7 @@ extension Array.Bounded {
         /// ```
         @inlinable
         public var count: Index_Primitives.Index<Tag>.Count {
-            Index_Primitives.Index<Tag>.Count(__unchecked: _storage.count)
+            Index_Primitives.Index<Tag>.Count(__unchecked: _storage.count.rawValue)
         }
 
         /// Accesses the element at the given phantom-typed index.
@@ -72,8 +72,14 @@ extension Array.Bounded {
         /// - Precondition: `index` must be within bounds.
         @inlinable
         public subscript(index: Index_Primitives.Index<Tag>) -> Element {
-            _read { yield _storage[index.position.rawValue] }
-            _modify { yield &_storage[index.position.rawValue] }
+            _read {
+                precondition(index.position.rawValue < _storage.count.rawValue, "Index out of bounds")
+                yield unsafe _storage.storage[index.position.rawValue]
+            }
+            _modify {
+                precondition(index.position.rawValue < _storage.count.rawValue, "Index out of bounds")
+                yield &(unsafe _storage.storage[index.position.rawValue])
+            }
         }
     }
 }

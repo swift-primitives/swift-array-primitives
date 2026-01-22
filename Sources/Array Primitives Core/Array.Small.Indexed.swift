@@ -62,7 +62,7 @@ extension Array.Small where Element: Copyable {
         /// ```
         @inlinable
         public var count: Index_Primitives.Index<Tag>.Count {
-            Index_Primitives.Index<Tag>.Count(__unchecked: _storage.count)
+            Index_Primitives.Index<Tag>.Count(__unchecked: _storage.count.rawValue)
         }
 
         /// Accesses the element at the given phantom-typed index.
@@ -71,8 +71,23 @@ extension Array.Small where Element: Copyable {
         /// - Precondition: `index` must be within bounds.
         @inlinable
         public subscript(index: Index_Primitives.Index<Tag>) -> Element {
-            get { _storage[index.position.rawValue] }
-            set { _storage[index.position.rawValue] = newValue }
+            get {
+                precondition(index.position.rawValue < _storage.count.rawValue, "Index out of bounds")
+                if let heapStorage = _storage._heapStorage {
+                    return heapStorage._readElement(at: index.position.rawValue)
+                } else {
+                    return unsafe _storage._inlineReadPointerToElement(at: index.position.rawValue).pointee
+                }
+            }
+            set {
+                precondition(index.position.rawValue < _storage.count.rawValue, "Index out of bounds")
+                if _storage._heapStorage != nil {
+                    _ = _storage._heapStorage!._moveElement(at: index.position.rawValue)
+                    _storage._heapStorage!._initializeElement(at: index.position.rawValue, to: newValue)
+                } else {
+                    unsafe _storage._inlinePointerToElement(at: index.position.rawValue).pointee = newValue
+                }
+            }
         }
     }
 }

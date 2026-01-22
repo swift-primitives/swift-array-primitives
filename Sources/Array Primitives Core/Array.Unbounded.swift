@@ -13,12 +13,16 @@
 // due to Swift's ~Copyable constraint propagation rules. This file contains
 // only extensions to Array.Unbounded.
 
+public import Index_Primitives
+
 // MARK: - Properties
 
 extension Array.Unbounded where Element: ~Copyable {
     /// The number of elements in the array.
     @inlinable
-    public var count: Int { _storage.header }
+    public var count: Index_Primitives.Index<Element>.Count {
+        Index_Primitives.Index<Element>.Count(__unchecked: _storage.header)
+    }
 
     /// Whether the array is empty.
     @inlinable
@@ -186,28 +190,6 @@ extension Array.Unbounded where Element: Copyable {
     }
 }
 
-// MARK: - Subscript Access (Copyable elements only)
-
-extension Array.Unbounded where Element: Copyable {
-    /// Accesses the element at the specified index.
-    ///
-    /// - Parameter index: The index of the element.
-    /// - Precondition: The index must be in bounds.
-    @inlinable
-    public subscript(index: Int) -> Element {
-        get {
-            precondition(index >= 0 && index < count, "Index out of bounds")
-            return _storage._readElement(at: index)
-        }
-        set {
-            precondition(index >= 0 && index < count, "Index out of bounds")
-            makeUnique()
-            _ = _storage._moveElement(at: index)
-            _storage._initializeElement(at: index, to: newValue)
-        }
-    }
-}
-
 // MARK: - Borrowed Element Access (for ~Copyable elements)
 
 extension Array.Unbounded where Element: ~Copyable {
@@ -219,10 +201,10 @@ extension Array.Unbounded where Element: ~Copyable {
     /// - Returns: The result of the closure.
     /// - Precondition: The index must be in bounds.
     @inlinable
-    public func withElement<R>(at index: Int, _ body: (borrowing Element) -> R) -> R {
-        precondition(index >= 0 && index < count, "Index out of bounds")
+    public func withElement<R>(at index: Index_Primitives.Index<Element>, _ body: (borrowing Element) -> R) -> R {
+        precondition(index < count, "Index out of bounds")
         return unsafe _storage.withUnsafeMutablePointerToElements { elements in
-            body(unsafe (elements + index).pointee)
+            body(unsafe (elements + index.position.rawValue).pointee)
         }
     }
 

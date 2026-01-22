@@ -9,6 +9,7 @@
 //
 // ===----------------------------------------------------------------------===//
 
+public import Index_Primitives
 public import Standard_Library_Extensions
 
 // MARK: - Array Namespace
@@ -51,13 +52,13 @@ public enum Array<Element: ~Copyable>: ~Copyable {
         package var storage: UnsafeMutablePointer<Element>
 
         /// The number of elements in the array.
-        public let count: Int
+        public let _count: Index_Primitives.Index<Element>.Count
 
         deinit {
-            for i in 0..<count {
+            for i in 0..<_count.rawValue {
                 unsafe (storage + i).deinitialize(count: 1)
             }
-            if count > 0 {
+            if _count.rawValue > 0 {
                 unsafe storage.deallocate()
             }
         }
@@ -214,7 +215,7 @@ public enum Array<Element: ~Copyable>: ~Copyable {
 
         /// Current element count.
         @usableFromInline
-        package var _count: Int
+        package var _count: Index_Primitives.Index<Element>.Count
 
         /// Workaround for Swift compiler bug where deinit element cleanup
         /// fails for ~Copyable structs that contain only value-type properties.
@@ -235,11 +236,11 @@ public enum Array<Element: ~Copyable>: ~Copyable {
                 "Element alignment (\(MemoryLayout<Element>.alignment)) exceeds inline storage alignment (\(MemoryLayout<Int>.alignment)). Use Array.Bounded instead."
             )
             self._elements = InlineArray(repeating: (0, 0, 0, 0, 0, 0, 0, 0))
-            self._count = 0
+            self._count = .zero
         }
 
         deinit {
-            let count = _count
+            let count = _count.rawValue
             guard count > 0 else { return }
 
             let stride = MemoryLayout<Element>.stride
@@ -314,7 +315,7 @@ public enum Array<Element: ~Copyable>: ~Copyable {
 
         /// Current element count (valid in both inline and heap modes).
         @usableFromInline
-        package var _count: Int
+        package var _count: Index_Primitives.Index<Element>.Count
 
         /// Heap storage for elements when spilled. Nil when using inline storage.
         @usableFromInline
@@ -336,13 +337,13 @@ public enum Array<Element: ~Copyable>: ~Copyable {
                 "Element alignment (\(MemoryLayout<Element>.alignment)) exceeds inline storage alignment (\(MemoryLayout<Int>.alignment)). Use Array.Unbounded instead."
             )
             self._inlineElements = InlineArray(repeating: (0, 0, 0, 0, 0, 0, 0, 0))
-            self._count = 0
+            self._count = .zero
             self._heapStorage = nil
             unsafe (self._heapPtr = nil)
         }
 
         deinit {
-            let count = _count
+            let count = _count.rawValue
             guard count > 0 else { return }
 
             if let heap = _heapStorage {
@@ -409,14 +410,14 @@ public enum Array<Element: ~Copyable>: ~Copyable {
             _ = unsafe Swift.withUnsafeBytes(of: _inlineElements) { bytes in
                 unsafe newStorage.withUnsafeMutablePointerToElements { heapPtr in
                     let inlineBase = unsafe UnsafeMutableRawPointer(mutating: bytes.baseAddress!)
-                    for i in 0..<_count {
+                    for i in 0..<_count.rawValue {
                         let inlineElement = unsafe (inlineBase + i * stride)
                             .assumingMemoryBound(to: Element.self)
                         unsafe (heapPtr + i).initialize(to: inlineElement.move())
                     }
                 }
             }
-            newStorage.header = _count
+            newStorage.header = _count.rawValue
 
             _heapStorage = newStorage
             unsafe (_heapPtr = newStorage._elementsPointer)

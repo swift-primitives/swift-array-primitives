@@ -35,8 +35,8 @@ extension Array.Bounded: Sequence.`Protocol` where Element: Copyable {
     @inlinable
     public borrowing func makeIterator() -> Iterator {
         var elements: [Element] = []
-        elements.reserveCapacity(count)
-        for i in 0..<count {
+        elements.reserveCapacity(count.rawValue)
+        for i in 0..<count.rawValue {
             elements.append(unsafe storage[i])
         }
         return Iterator(elements: elements)

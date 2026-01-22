@@ -13,6 +13,20 @@
 // due to Swift's ~Copyable constraint propagation rules. This file contains
 // only extensions to Array.Bounded.
 
+public import Index_Primitives
+
+// MARK: - Properties
+
+extension Array.Bounded {
+    /// The number of elements in the array.
+    @inlinable
+    public var count: Index_Primitives.Index<Element>.Count { _count }
+
+    /// Whether the array is empty.
+    @inlinable
+    public var isEmpty: Bool { _count == .zero }
+}
+
 // MARK: - Initialization (Checked)
 
 extension Array.Bounded {
@@ -34,7 +48,7 @@ extension Array.Bounded {
         if count == 0 {
             // Empty array: pointer is semantically irrelevant when count == 0
             unsafe self.storage = UnsafeMutablePointer<Element>(bitPattern: 1)!
-            self.count = 0
+            self._count = .zero
             return
         }
 
@@ -43,7 +57,7 @@ extension Array.Bounded {
             unsafe (storage + i).initialize(to: initializer(i))
         }
         unsafe self.storage = storage
-        self.count = count
+        self._count = Index_Primitives.Index<Element>.Count(__unchecked: count)
     }
 }
 
@@ -69,7 +83,7 @@ extension Array.Bounded {
 
         if count == 0 {
             unsafe self.storage = UnsafeMutablePointer<Element>(bitPattern: 1)!
-            self.count = 0
+            self._count = .zero
             return
         }
 
@@ -78,88 +92,7 @@ extension Array.Bounded {
             unsafe (storage + i).initialize(to: initializer(i))
         }
         unsafe self.storage = storage
-        self.count = count
-    }
-}
-
-// MARK: - Properties
-
-extension Array.Bounded {
-    /// Whether the array is empty.
-    @inlinable
-    public var isEmpty: Bool { count == 0 }
-}
-
-// MARK: - Subscript
-
-extension Array.Bounded {
-    /// Accesses the element at the specified index.
-    @inlinable
-    public subscript(index: Int) -> Element {
-        _read {
-            precondition(index >= 0 && index < count, "Index out of bounds")
-            yield unsafe storage[index]
-        }
-        _modify {
-            precondition(index >= 0 && index < count, "Index out of bounds")
-            yield &(unsafe storage[index])
-        }
-    }
-}
-
-// MARK: - Element Access (Checked)
-
-extension Array.Bounded {
-    /// Accesses the element at the specified index.
-    ///
-    /// - Parameter index: The index of the element to access.
-    /// - Returns: The element at the index.
-    /// - Throws: `Error.indexOutOfBounds` if the index is invalid.
-    @inlinable
-    public func element(at index: Int) throws(Error) -> Element {
-        guard index >= 0 && index < count else {
-            throw .indexOutOfBounds(index: index, count: count)
-        }
-        return unsafe storage[index]
-    }
-
-    /// Updates the element at the specified index.
-    ///
-    /// - Parameters:
-    ///   - index: The index of the element to update.
-    ///   - body: A closure that receives an inout reference to the element.
-    /// - Throws: `Error.indexOutOfBounds` if the index is invalid.
-    @inlinable
-    public mutating func update(
-        at index: Int,
-        _ body: (inout Element) throws -> Void
-    ) throws(Error) {
-        guard index >= 0 && index < count else {
-            throw .indexOutOfBounds(index: index, count: count)
-        }
-        try! unsafe body(&storage[index])
-    }
-}
-
-// MARK: - Element Access (Unchecked)
-
-extension Array.Bounded {
-    /// Updates the element at the specified index without bounds checking.
-    ///
-    /// Use this when the index has already been validated by an invariant.
-    ///
-    /// - Parameters:
-    ///   - __unchecked: Marker parameter indicating unchecked operation.
-    ///   - index: The index of the element to update. Must be in `0..<count`.
-    ///   - body: A closure that receives an inout reference to the element.
-    /// - Precondition: `index >= 0 && index < count`
-    @inlinable
-    public mutating func update<E: Swift.Error>(
-        __unchecked index: Int,
-        _ body: (inout Element) throws(E) -> Void
-    ) throws(E) {
-        precondition(index >= 0 && index < count, "Index out of bounds")
-        try unsafe body(&storage[index])
+        self._count = Index_Primitives.Index<Element>.Count(__unchecked: count)
     }
 }
 
@@ -179,7 +112,7 @@ extension Array.Bounded {
         @_lifetime(borrow self)
         borrowing get {
             // Note: storage is always non-nil (sentinel pointer for empty case)
-            unsafe Span(_unsafeStart: storage, count: count)
+            unsafe Span(_unsafeStart: storage, count: _count.rawValue)
         }
     }
 
@@ -198,7 +131,7 @@ extension Array.Bounded {
         @_lifetime(&self)
         mutating get {
             // Note: storage is always non-nil (sentinel pointer for empty case)
-            unsafe MutableSpan(_unsafeStart: storage, count: count)
+            unsafe MutableSpan(_unsafeStart: storage, count: _count.rawValue)
         }
     }
 }
@@ -216,7 +149,7 @@ extension Array.Bounded {
     public func withUnsafeBufferPointer<R, E: Swift.Error>(
         _ body: (UnsafeBufferPointer<Element>) throws(E) -> R
     ) throws(E) -> R {
-        try unsafe body(UnsafeBufferPointer(start: count > 0 ? storage : nil, count: count))
+        try unsafe body(UnsafeBufferPointer(start: _count.rawValue > 0 ? storage : nil, count: _count.rawValue))
     }
 
     /// Provides mutable access to the underlying contiguous storage.
@@ -228,7 +161,7 @@ extension Array.Bounded {
     public mutating func withUnsafeMutableBufferPointer<R, E: Swift.Error>(
         _ body: (UnsafeMutableBufferPointer<Element>) throws(E) -> R
     ) throws(E) -> R {
-        try unsafe body(UnsafeMutableBufferPointer(start: count > 0 ? storage : nil, count: count))
+        try unsafe body(UnsafeMutableBufferPointer(start: _count.rawValue > 0 ? storage : nil, count: _count.rawValue))
     }
 }
 
@@ -246,9 +179,9 @@ extension Array.Bounded where Element: ~Copyable {
     /// - Returns: The result of the closure.
     /// - Precondition: The index must be in bounds.
     @inlinable
-    public func withElement<R>(at index: Int, _ body: (borrowing Element) -> R) -> R {
-        precondition(index >= 0 && index < count, "Index out of bounds")
-        return unsafe body((storage + index).pointee)
+    public func withElement<R>(at index: Index_Primitives.Index<Element>, _ body: (borrowing Element) -> R) -> R {
+        precondition(index < _count, "Index out of bounds")
+        return unsafe body((storage + index.position.rawValue).pointee)
     }
 
     /// Iterates over all elements in the array.
@@ -256,7 +189,7 @@ extension Array.Bounded where Element: ~Copyable {
     /// - Parameter body: A closure that receives each borrowed element.
     @inlinable
     public func forEach(_ body: (borrowing Element) -> Void) {
-        for i in 0..<count {
+        for i in 0..<_count.rawValue {
             unsafe body((storage + i).pointee)
         }
     }
@@ -271,6 +204,6 @@ extension Array.Bounded {
         case invalidCount(Int)
 
         /// The index is out of bounds.
-        case indexOutOfBounds(index: Int, count: Int)
+        case indexOutOfBounds(index: Index_Primitives.Index<Element>, count: Index_Primitives.Index<Element>.Count)
     }
 }

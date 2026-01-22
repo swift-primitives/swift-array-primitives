@@ -35,7 +35,7 @@ extension Array.Unbounded: Sequence.`Protocol` where Element: Copyable {
     @inlinable
     public borrowing func makeIterator() -> Iterator {
         var elements: [Element] = []
-        let elementCount = self.count
+        let elementCount = self.count.rawValue
         elements.reserveCapacity(elementCount)
         for i in 0..<elementCount {
             elements.append(_storage._readElement(at: i))

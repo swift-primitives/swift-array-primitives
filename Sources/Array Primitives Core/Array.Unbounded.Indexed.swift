@@ -71,7 +71,7 @@ extension Array.Unbounded where Element: Copyable {
         /// ```
         @inlinable
         public var count: Index_Primitives.Index<Tag>.Count {
-            Index_Primitives.Index<Tag>.Count(__unchecked: _storage.count)
+            Index_Primitives.Index<Tag>.Count(__unchecked: _storage.count.rawValue)
         }
 
         /// Accesses the element at the given phantom-typed index.
@@ -80,8 +80,16 @@ extension Array.Unbounded where Element: Copyable {
         /// - Precondition: `index` must be within bounds.
         @inlinable
         public subscript(index: Index_Primitives.Index<Tag>) -> Element {
-            get { _storage[index.position.rawValue] }
-            set { _storage[index.position.rawValue] = newValue }
+            get {
+                precondition(index.position.rawValue < _storage.count.rawValue, "Index out of bounds")
+                return _storage._storage._readElement(at: index.position.rawValue)
+            }
+            set {
+                precondition(index.position.rawValue < _storage.count.rawValue, "Index out of bounds")
+                _storage.makeUnique()
+                _ = _storage._storage._moveElement(at: index.position.rawValue)
+                _storage._storage._initializeElement(at: index.position.rawValue, to: newValue)
+            }
         }
     }
 }

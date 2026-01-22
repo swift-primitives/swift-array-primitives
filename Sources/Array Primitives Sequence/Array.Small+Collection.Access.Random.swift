@@ -35,13 +35,13 @@ extension Array.Small: Sequence.`Protocol` where Element: Copyable {
     @inlinable
     public borrowing func makeIterator() -> Iterator {
         var elements: [Element] = []
-        elements.reserveCapacity(_count)
+        elements.reserveCapacity(_count.rawValue)
         if let heapStorage = _heapStorage {
-            for i in 0..<_count {
+            for i in 0..<_count.rawValue {
                 elements.append(heapStorage._readElement(at: i))
             }
         } else {
-            for i in 0..<_count {
+            for i in 0..<_count.rawValue {
                 elements.append(unsafe _inlineReadPointerToElement(at: i).pointee)
             }
         }

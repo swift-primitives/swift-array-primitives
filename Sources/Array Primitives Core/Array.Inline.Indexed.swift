@@ -62,7 +62,7 @@ extension Array.Inline where Element: Copyable {
         /// ```
         @inlinable
         public var count: Index_Primitives.Index<Tag>.Count {
-            Index_Primitives.Index<Tag>.Count(__unchecked: _storage.count)
+            Index_Primitives.Index<Tag>.Count(__unchecked: _storage.count.rawValue)
         }
 
         /// Accesses the element at the given phantom-typed index.
@@ -71,8 +71,14 @@ extension Array.Inline where Element: Copyable {
         /// - Precondition: `index` must be within bounds.
         @inlinable
         public subscript(index: Index_Primitives.Index<Tag>) -> Element {
-            get { _storage[index.position.rawValue] }
-            set { _storage[index.position.rawValue] = newValue }
+            get {
+                precondition(index.position.rawValue < _storage.count.rawValue, "Index out of bounds")
+                return unsafe _storage._readPointerToElement(at: index.position.rawValue).pointee
+            }
+            set {
+                precondition(index.position.rawValue < _storage.count.rawValue, "Index out of bounds")
+                unsafe _storage._pointerToElement(at: index.position.rawValue).pointee = newValue
+            }
         }
     }
 }

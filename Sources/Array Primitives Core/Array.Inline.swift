@@ -14,20 +14,22 @@
 // declared in extensions do not properly inherit ~Copyable constraints from
 // the outer type. This file contains only extensions to Array.Inline.
 
+public import Index_Primitives
+
 // MARK: - Properties
 
 extension Array.Inline where Element: ~Copyable {
     /// The number of elements in the array.
     @inlinable
-    public var count: Int { _count }
+    public var count: Index_Primitives.Index<Element>.Count { _count }
 
     /// Whether the array is empty.
     @inlinable
-    public var isEmpty: Bool { _count == 0 }
+    public var isEmpty: Bool { _count == .zero }
 
     /// Whether the array is at full capacity.
     @inlinable
-    public var isFull: Bool { _count >= capacity }
+    public var isFull: Bool { _count.rawValue >= capacity }
 }
 
 // MARK: - Core Operations
@@ -39,12 +41,12 @@ extension Array.Inline where Element: ~Copyable {
     /// - Throws: ``Array/Inline/Error/overflow`` if the array is full.
     @inlinable
     public mutating func append(_ element: consuming Element) throws(Array.Inline.Error) {
-        guard _count < capacity else {
+        guard _count.rawValue < capacity else {
             throw .overflow
         }
-        let ptr = unsafe _pointerToElement(at: _count)
+        let ptr = unsafe _pointerToElement(at: _count.rawValue)
         unsafe ptr.initialize(to: element)
-        _count += 1
+        _count = Index_Primitives.Index<Element>.Count(__unchecked: _count.rawValue + 1)
     }
 
     /// Removes and returns the last element.
@@ -52,47 +54,27 @@ extension Array.Inline where Element: ~Copyable {
     /// - Returns: The removed element, or `nil` if the array is empty.
     @inlinable
     public mutating func removeLast() -> Element? {
-        guard _count > 0 else { return nil }
-        _count -= 1
-        let ptr = unsafe _pointerToElement(at: _count)
+        guard _count.rawValue > 0 else { return nil }
+        let newCount = _count.rawValue - 1
+        _count = Index_Primitives.Index<Element>.Count(__unchecked: newCount)
+        let ptr = unsafe _pointerToElement(at: newCount)
         return unsafe ptr.move()
     }
 
     /// Removes all elements from the array.
     @inlinable
     public mutating func removeAll() {
-        guard _count > 0 else { return }
+        guard _count.rawValue > 0 else { return }
         let stride = MemoryLayout<Element>.stride
         unsafe Swift.withUnsafeMutablePointer(to: &_elements) { storagePtr in
             let basePtr = UnsafeMutableRawPointer(storagePtr)
-            for i in 0..<_count {
+            for i in 0..<_count.rawValue {
                 let elementPtr = unsafe (basePtr + i * stride)
                     .assumingMemoryBound(to: Element.self)
                 unsafe elementPtr.deinitialize(count: 1)
             }
         }
-        _count = 0
-    }
-}
-
-// MARK: - Subscript Access (Copyable elements only)
-
-extension Array.Inline where Element: Copyable {
-    /// Accesses the element at the specified index.
-    ///
-    /// - Parameter index: The index of the element.
-    /// - Precondition: The index must be in bounds.
-    @inlinable
-    public subscript(index: Int) -> Element {
-        get {
-            precondition(index >= 0 && index < _count, "Index out of bounds")
-            return unsafe _readPointerToElement(at: index).pointee
-        }
-        set {
-            precondition(index >= 0 && index < _count, "Index out of bounds")
-            let ptr = unsafe _pointerToElement(at: index)
-            unsafe ptr.pointee = newValue
-        }
+        _count = .zero
     }
 }
 
@@ -107,9 +89,9 @@ extension Array.Inline where Element: ~Copyable {
     /// - Returns: The result of the closure.
     /// - Precondition: The index must be in bounds.
     @inlinable
-    public func withElement<R>(at index: Int, _ body: (borrowing Element) -> R) -> R {
-        precondition(index >= 0 && index < _count, "Index out of bounds")
-        return unsafe body(_readPointerToElement(at: index).pointee)
+    public func withElement<R>(at index: Index_Primitives.Index<Element>, _ body: (borrowing Element) -> R) -> R {
+        precondition(index < _count, "Index out of bounds")
+        return unsafe body(_readPointerToElement(at: index.position.rawValue).pointee)
     }
 
     /// Iterates over all elements in the array.
@@ -120,7 +102,7 @@ extension Array.Inline where Element: ~Copyable {
         let stride = MemoryLayout<Element>.stride
         try unsafe withUnsafePointer(to: _elements) { storagePtr throws(E) in
             let basePtr = unsafe UnsafeRawPointer(storagePtr)
-            for i in 0..<_count {
+            for i in 0..<_count.rawValue {
                 let elementPtr = unsafe (basePtr + i * stride)
                     .assumingMemoryBound(to: Element.self)
                 try unsafe body(elementPtr.pointee)
@@ -133,17 +115,17 @@ extension Array.Inline where Element: ~Copyable {
     /// - Parameter body: A closure that receives each consumed element.
     @inlinable
     public mutating func drain(_ body: (consuming Element) -> Void) {
-        guard _count > 0 else { return }
+        guard _count.rawValue > 0 else { return }
         let stride = MemoryLayout<Element>.stride
         unsafe Swift.withUnsafeMutablePointer(to: &_elements) { storagePtr in
             let basePtr = UnsafeMutableRawPointer(storagePtr)
-            for i in 0..<_count {
+            for i in 0..<_count.rawValue {
                 let elementPtr = unsafe (basePtr + i * stride)
                     .assumingMemoryBound(to: Element.self)
                 unsafe body(elementPtr.move())
             }
         }
-        _count = 0
+        _count = .zero
     }
 }
 
@@ -170,7 +152,7 @@ extension Array.Inline where Element: ~Copyable {
         return try unsafe withUnsafePointer(to: _elements) { storagePtr throws(E) -> R in
             let basePtr = unsafe UnsafeRawPointer(storagePtr)
             let elementPtr = unsafe basePtr.assumingMemoryBound(to: Element.self)
-            let span = unsafe Span(_unsafeStart: elementPtr, count: _count)
+            let span = unsafe Span(_unsafeStart: elementPtr, count: _count.rawValue)
             return try body(span)
         }
     }
@@ -196,7 +178,7 @@ extension Array.Inline where Element: ~Copyable {
         return try unsafe withUnsafeMutablePointer(to: &_elements) { storagePtr throws(E) -> R in
             let basePtr = UnsafeMutableRawPointer(storagePtr)
             let elementPtr = unsafe basePtr.assumingMemoryBound(to: Element.self)
-            let span = unsafe MutableSpan(_unsafeStart: elementPtr, count: _count)
+            let span = unsafe MutableSpan(_unsafeStart: elementPtr, count: _count.rawValue)
             return try body(span)
         }
     }
@@ -218,7 +200,7 @@ extension Array.Inline where Element: ~Copyable {
         return try unsafe withUnsafePointer(to: _elements) { storagePtr throws(E) -> R in
             let basePtr = unsafe UnsafeRawPointer(storagePtr)
             let elementPtr = unsafe basePtr.assumingMemoryBound(to: Element.self)
-            return try unsafe body(UnsafeBufferPointer(start: _count > 0 ? elementPtr : nil, count: _count))
+            return try unsafe body(UnsafeBufferPointer(start: _count.rawValue > 0 ? elementPtr : nil, count: _count.rawValue))
         }
     }
 
@@ -234,7 +216,7 @@ extension Array.Inline where Element: ~Copyable {
         return try unsafe withUnsafeMutablePointer(to: &_elements) { storagePtr throws(E) -> R in
             let basePtr = UnsafeMutableRawPointer(storagePtr)
             let elementPtr = unsafe basePtr.assumingMemoryBound(to: Element.self)
-            return try unsafe body(UnsafeMutableBufferPointer(start: _count > 0 ? elementPtr : nil, count: _count))
+            return try unsafe body(UnsafeMutableBufferPointer(start: _count.rawValue > 0 ? elementPtr : nil, count: _count.rawValue))
         }
     }
 }
