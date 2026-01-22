@@ -147,7 +147,7 @@ public enum Array<Element: ~Copyable>: ~Copyable {
 
         /// Cached pointer for Span access.
         @usableFromInline
-        var _cachedPtr: UnsafeMutablePointer<Element>
+        package var _cachedPtr: UnsafeMutablePointer<Element>
 
         /// The number of elements in the array.
         public let _count: Index_Primitives.Index<Element>.Count
@@ -551,41 +551,9 @@ extension Array.Unbounded: Copyable where Element: Copyable {}
 
 // MARK: - Sequence (Copyable elements only)
 
-/// `Array.Bounded` conforms to `Sequence` when `Element` is `Copyable`.
-///
-/// This enables `for-in` loops, `map`, `filter`, and other sequence operations.
-/// For `~Copyable` elements, use ``forEach(_:)`` instead.
-extension Array.Bounded: Swift.Sequence where Element: Copyable {
-
-    /// An iterator over the elements of a bounded array.
-    public struct Iterator: Swift.IteratorProtocol {
-        @usableFromInline
-        let _storage: Array<Element>.Storage
-
-        @usableFromInline
-        var _index: Int = 0
-
-        @usableFromInline
-        init(storage: Array<Element>.Storage) {
-            self._storage = storage
-        }
-
-        /// Advances to the next element and returns it, or nil if no next element exists.
-        @inlinable
-        public mutating func next() -> Element? {
-            let count: Int = _storage.header
-            guard _index < count else { return nil }
-            defer { _index += 1 }
-            return _storage._readElement(at: _index)
-        }
-    }
-
-    /// Returns an iterator over the elements of the array.
-    @inlinable
-    public func makeIterator() -> Iterator {
-        Iterator(storage: _storage)
-    }
-}
+// NOTE: Swift.Sequence conformance is provided by the Sequence module
+// (Array Primitives Sequence) via Sequence.Protocol + Swift.Sequence bridge.
+// See Array.Bounded+Collection.Access.Random.swift for the Iterator definition.
 
 // MARK: - Sendable
 

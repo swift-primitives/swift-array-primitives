@@ -528,12 +528,35 @@ extension Array<Bit>.Packed: RandomAccessCollection {
 }
 
 // MARK: - Equatable
+//
+// Manual implementation to work around Swift compiler crash (signal 5) when
+// synthesizing Equatable for types nested in `Array<Element: ~Copyable>`
+// constrained extensions. The crash occurs during SIL generation for
+// `__derived_struct_equals` with "ambiguous use of operator '=='".
 
-extension Array<Bit>.Packed: Equatable {}
+extension Array<Bit>.Packed: Equatable {
+    @inlinable
+    public static func == (lhs: Self, rhs: Self) -> Bool {
+        guard lhs._count == rhs._count else { return false }
+        guard lhs._storage.count == rhs._storage.count else { return false }
+        for i in 0..<lhs._storage.count {
+            if lhs._storage[i] != rhs._storage[i] { return false }
+        }
+        return true
+    }
+}
 
 // MARK: - Hashable
+//
+// Manual implementation to work around the same compiler crash.
 
-extension Array<Bit>.Packed: Hashable {}
+extension Array<Bit>.Packed: Hashable {
+    @inlinable
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(_count)
+        hasher.combine(_storage)
+    }
+}
 
 // MARK: - CustomStringConvertible
 

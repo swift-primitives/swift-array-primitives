@@ -52,9 +52,21 @@ extension Array.Bounded: Sequence.`Protocol` where Element: Copyable {
     /// Zero-copy iteration - no allocation, no element copying.
     /// Uses typed `Index<Element>` for position tracking.
     @inlinable
-    public borrowing func makeIterator() -> Iterator {
-        unsafe Iterator(base: UnsafePointer(storage), count: .init(__unchecked: _count.rawValue))
+    public borrowing func makeIterator() -> Array.Bounded.Iterator {
+        unsafe Iterator(base: UnsafePointer(_cachedPtr), count: .init(__unchecked: _count.rawValue))
     }
+}
+
+// MARK: - Swift.Sequence Conformance
+//
+// Bridge to Swift.Sequence for `for-in` loops and stdlib algorithms.
+// Requires explicit underestimatedCount to resolve ambiguity with
+// Sequence.Protocol+Swift.Sequence default implementation.
+
+extension Array.Bounded: Swift.Sequence where Element: Copyable {
+    /// Returns the count as the underestimated count since we know the exact size.
+    @inlinable
+    public var underestimatedCount: Int { _count.rawValue }
 }
 
 // MARK: - Collection.Protocol Conformance
