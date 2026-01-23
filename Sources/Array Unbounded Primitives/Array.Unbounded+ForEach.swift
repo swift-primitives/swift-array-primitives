@@ -88,7 +88,7 @@ where Tag == Sequence.ForEach, Base == Array<Element>, Element: ~Copyable {
 
 // MARK: - ForEach: Consuming Operations (Copyable only)
 
-extension Property.View.Typed.Valued
+extension Property.View.Typed
 where Tag == Sequence.ForEach, Base == Array<Element>, Element: Copyable {
     /// Consuming iteration: `.forEach.consuming { }`
     ///

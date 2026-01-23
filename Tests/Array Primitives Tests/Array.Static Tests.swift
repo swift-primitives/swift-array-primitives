@@ -15,11 +15,11 @@ import Index_Primitives
 
 // MARK: - Test Suite Structure
 
-/// Test namespace for Array.Inline
+/// Test namespace for Array.Static
 ///
-/// Note: Array.Inline is ~Copyable, so it doesn't conform to Sequence.
+/// Note: Array.Static is ~Copyable, so it doesn't conform to Sequence.
 /// Use forEach for iteration instead of for-in loops.
-enum ArrayInlineTests {
+enum ArrayStaticTests {
     @Suite struct Unit {}
     @Suite struct EdgeCase {}
     @Suite struct Integration {}
@@ -28,7 +28,7 @@ enum ArrayInlineTests {
 
 // MARK: - Unit Tests
 
-extension ArrayInlineTests.Unit {
+extension ArrayStaticTests.Unit {
 
     // MARK: - Capacity Invariants
 
@@ -191,7 +191,7 @@ extension ArrayInlineTests.Unit {
 
 // MARK: - Edge Case Tests
 
-extension ArrayInlineTests.EdgeCase {
+extension ArrayStaticTests.EdgeCase {
 
     @Test("Single element capacity")
     func singleElementCapacity() throws {
@@ -274,7 +274,7 @@ extension ArrayInlineTests.EdgeCase {
     }
 
     @Test("Large inline capacity")
-    func largeInlineCapacity() throws {
+    func largeStaticCapacity() throws {
         var array = Array<Int>.Static<100>()
 
         for i in 0..<100 {
@@ -296,7 +296,7 @@ extension ArrayInlineTests.EdgeCase {
 
 // MARK: - Integration Tests
 
-extension ArrayInlineTests.Integration {
+extension ArrayStaticTests.Integration {
 
     @Test("forEach and withSpan yield same elements")
     func forEachAndWithSpanYieldSameElements() throws {
@@ -319,6 +319,6 @@ extension ArrayInlineTests.Integration {
 
 // MARK: - Performance Tests
 
-extension ArrayInlineTests.Performance {
+extension ArrayStaticTests.Performance {
     // Performance tests with .timed() trait
 }

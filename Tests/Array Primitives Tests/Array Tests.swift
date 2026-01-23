@@ -19,7 +19,7 @@ import Index_Primitives
 ///
 /// Note: Array is ~Copyable, so it doesn't conform to Sequence.
 /// Use forEach for iteration instead of for-in loops.
-enum ArrayUnboundedTests {
+enum ArrayTests {
     @Suite struct Unit {}
     @Suite struct EdgeCase {}
     @Suite struct Integration {}
@@ -28,20 +28,20 @@ enum ArrayUnboundedTests {
 
 // MARK: - Unit Tests
 
-extension ArrayUnboundedTests.Unit {
+extension ArrayTests.Unit {
 
     // MARK: - Count Invariants
 
     @Test("Empty array has count zero")
     func emptyArrayHasCountZero() {
-        let array = Array<Int>.Unbounded<4>()
+        let array = Array<Int>()
         #expect(array.count.rawValue == 0)
         #expect(array.isEmpty == true)
     }
 
     @Test("Append increments count")
     func appendIncrementsCount() {
-        var array = Array<Int>.Unbounded<4>()
+        var array = Array<Int>()
 
         array.append(1)
         #expect(array.count.rawValue == 1)
@@ -55,7 +55,7 @@ extension ArrayUnboundedTests.Unit {
 
     @Test("RemoveLast decrements count")
     func removeLastDecrementsCount() {
-        var array = Array<Int>.Unbounded<4>()
+        var array = Array<Int>()
         array.append(1)
         array.append(2)
         array.append(3)
@@ -72,7 +72,7 @@ extension ArrayUnboundedTests.Unit {
 
     @Test("RemoveLast on empty returns nil")
     func removeLastOnEmptyReturnsNil() {
-        var array = Array<Int>.Unbounded<4>()
+        var array = Array<Int>()
         #expect(array.removeLast() == nil)
         #expect(array.count.rawValue == 0)
     }
@@ -81,7 +81,7 @@ extension ArrayUnboundedTests.Unit {
 
     @Test("forEach yields exactly count elements")
     func forEachYieldsExactlyCountElements() {
-        var array = Array<Int>.Unbounded<4>()
+        var array = Array<Int>()
         for i in 0..<10 { array.append(i) }
 
         var iteratedCount = 0
@@ -92,7 +92,7 @@ extension ArrayUnboundedTests.Unit {
 
     @Test("forEach yields elements in insertion order")
     func forEachYieldsElementsInInsertionOrder() {
-        var array = Array<Int>.Unbounded<4>()
+        var array = Array<Int>()
         array.append(10)
         array.append(20)
         array.append(30)
@@ -106,7 +106,7 @@ extension ArrayUnboundedTests.Unit {
 
     @Test("Empty array forEach yields nothing")
     func emptyArrayForEachYieldsNothing() {
-        var array = Array<Int>.Unbounded<4>()
+        var array = Array<Int>()
 
         var iteratedCount = 0
         array.forEach { _ in iteratedCount += 1 }
@@ -116,7 +116,7 @@ extension ArrayUnboundedTests.Unit {
 
     @Test("forEach matches subscript access")
     func forEachMatchesSubscriptAccess() throws {
-        var array = Array<Int>.Unbounded<4>()
+        var array = Array<Int>()
         for i in 0..<20 { array.append(i * 5) }
 
         // Capture expected values first to avoid exclusivity violation
@@ -133,7 +133,7 @@ extension ArrayUnboundedTests.Unit {
 
     @Test("CoW: Copy shares storage initially")
     func cowCopySharesStorageInitially() {
-        var original = Array<Int>.Unbounded<4>()
+        var original = Array<Int>()
         original.append(1)
         original.append(2)
         original.append(3)
@@ -152,7 +152,7 @@ extension ArrayUnboundedTests.Unit {
 
     @Test("CoW: Mutation of copy does not affect original")
     func cowMutationOfCopyDoesNotAffectOriginal() throws {
-        var original = Array<Int>.Unbounded<4>()
+        var original = Array<Int>()
         original.append(1)
         original.append(2)
         original.append(3)
@@ -177,7 +177,7 @@ extension ArrayUnboundedTests.Unit {
 
     @Test("CoW: Mutation of original does not affect copy")
     func cowMutationOfOriginalDoesNotAffectCopy() throws {
-        var original = Array<Int>.Unbounded<4>()
+        var original = Array<Int>()
         original.append(1)
         original.append(2)
         original.append(3)
@@ -197,7 +197,7 @@ extension ArrayUnboundedTests.Unit {
 
     @Test("CoW: Multiple copies are independent")
     func cowMultipleCopiesAreIndependent() throws {
-        var original = Array<Int>.Unbounded<4>()
+        var original = Array<Int>()
         original.append(1)
         original.append(2)
 
@@ -217,7 +217,7 @@ extension ArrayUnboundedTests.Unit {
 
     @Test("Capacity grows to accommodate elements")
     func capacityGrowsToAccommodateElements() {
-        var array = Array<Int>.Unbounded<4>()
+        var array = Array<Int>()
 
         // Add elements beyond initial capacity hint
         for i in 0..<100 {
@@ -235,7 +235,7 @@ extension ArrayUnboundedTests.Unit {
 
     @Test("forEach visits all elements in order")
     func forEachVisitsAllElementsInOrder() {
-        var array = Array<Int>.Unbounded<4>()
+        var array = Array<Int>()
         array.append(10)
         array.append(20)
         array.append(30)
@@ -248,7 +248,7 @@ extension ArrayUnboundedTests.Unit {
 
     @Test("forEach visits count elements")
     func forEachVisitsCountElements() {
-        var array = Array<Int>.Unbounded<4>()
+        var array = Array<Int>()
         for i in 0..<50 { array.append(i) }
 
         var visitCount = 0
@@ -261,7 +261,7 @@ extension ArrayUnboundedTests.Unit {
 
     @Test("Span count matches array count")
     func spanCountMatchesArrayCount() {
-        var array = Array<Int>.Unbounded<4>()
+        var array = Array<Int>()
         for i in 0..<10 { array.append(i) }
 
         #expect(array.span.count == 10)
@@ -269,7 +269,7 @@ extension ArrayUnboundedTests.Unit {
 
     @Test("Span elements match subscript access")
     func spanElementsMatchSubscriptAccess() throws {
-        var array = Array<Int>.Unbounded<4>()
+        var array = Array<Int>()
         for i in 0..<5 { array.append(i * 7) }
 
         let span = array.span
@@ -281,11 +281,11 @@ extension ArrayUnboundedTests.Unit {
 
 // MARK: - Edge Case Tests
 
-extension ArrayUnboundedTests.EdgeCase {
+extension ArrayTests.EdgeCase {
 
     @Test("Single element operations")
     func singleElementOperations() throws {
-        var array = Array<Int>.Unbounded<4>()
+        var array = Array<Int>()
 
         array.append(42)
         #expect(array.count.rawValue == 1)
@@ -302,7 +302,7 @@ extension ArrayUnboundedTests.EdgeCase {
 
     @Test("Growth beyond initial capacity preserves elements")
     func growthBeyondInitialCapacityPreservesElements() throws {
-        var array = Array<Int>.Unbounded<2>()  // Small initial capacity
+        var array = Array<Int>()  // Small initial capacity
 
         // Add many elements
         for i in 0..<1000 {
@@ -327,7 +327,7 @@ extension ArrayUnboundedTests.EdgeCase {
 
     @Test("RemoveAll clears count")
     func removeAllClearsCount() {
-        var array = Array<Int>.Unbounded<4>()
+        var array = Array<Int>()
         for i in 0..<10 { array.append(i) }
 
         array.removeAll()
@@ -342,7 +342,7 @@ extension ArrayUnboundedTests.EdgeCase {
 
     @Test("Append after removeAll works")
     func appendAfterRemoveAllWorks() throws {
-        var array = Array<Int>.Unbounded<4>()
+        var array = Array<Int>()
         array.append(1)
         array.append(2)
 
@@ -359,11 +359,11 @@ extension ArrayUnboundedTests.EdgeCase {
 
 // MARK: - Integration Tests
 
-extension ArrayUnboundedTests.Integration {
+extension ArrayTests.Integration {
 
     @Test("forEach and withSpan yield same elements")
     func forEachAndWithSpanYieldSameElements() {
-        var array = Array<Int>.Unbounded<4>()
+        var array = Array<Int>()
         for i in 0..<10 { array.append(i * 2) }
 
         var forEachElements: [Int] = []
@@ -380,7 +380,7 @@ extension ArrayUnboundedTests.Integration {
 
     @Test("CoW preserves forEach correctness after copy mutation")
     func cowPreservesForEachCorrectnessAfterCopyMutation() {
-        var original = Array<Int>.Unbounded<4>()
+        var original = Array<Int>()
         for i in 0..<5 { original.append(i) }
 
         var copy = original
@@ -400,6 +400,6 @@ extension ArrayUnboundedTests.Integration {
 
 // MARK: - Performance Tests
 
-extension ArrayUnboundedTests.Performance {
+extension ArrayTests.Performance {
     // Performance tests with .timed() trait
 }

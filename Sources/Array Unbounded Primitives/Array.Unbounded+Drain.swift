@@ -28,7 +28,7 @@ extension Array where Element: ~Copyable {
     /// ## Example
     ///
     /// ```swift
-    /// var array = Array<Int>.Unbounded()
+    /// var array = Array<Int>()
     /// array.append(1)
     /// array.append(2)
     /// array.append(3)
@@ -54,7 +54,7 @@ extension Array where Element: ~Copyable {
 
 // MARK: - Drain: Operations (~Copyable)
 
-extension Property.View.Typed.Valued
+extension Property.View.Typed
 where Tag == Sequence.Drain, Base == Array<Element>, Element: ~Copyable {
     /// Drain iteration: `.drain { }`
     ///

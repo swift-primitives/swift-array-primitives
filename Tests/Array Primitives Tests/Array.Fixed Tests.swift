@@ -15,11 +15,11 @@ import Index_Primitives
 
 // MARK: - Test Suite Structure
 
-/// Test namespace for Array.Bounded
+/// Test namespace for Array.Fixed
 ///
-/// Note: Array.Bounded is ~Copyable, so it doesn't conform to Sequence.
+/// Note: Array.Fixed is ~Copyable, so it doesn't conform to Sequence.
 /// Use forEach for iteration instead of for-in loops.
-enum ArrayBoundedTests {
+enum ArrayFixedTests {
     @Suite struct Unit {}
     @Suite struct EdgeCase {}
     @Suite struct Integration {}
@@ -28,7 +28,7 @@ enum ArrayBoundedTests {
 
 // MARK: - Unit Tests
 
-extension ArrayBoundedTests.Unit {
+extension ArrayFixedTests.Unit {
 
     // MARK: - Initialization Invariants
 
@@ -175,7 +175,7 @@ extension ArrayBoundedTests.Unit {
 
 // MARK: - Edge Case Tests
 
-extension ArrayBoundedTests.EdgeCase {
+extension ArrayFixedTests.EdgeCase {
 
     @Test("Single element array")
     func singleElementArray() throws {
@@ -221,7 +221,7 @@ extension ArrayBoundedTests.EdgeCase {
 
 // MARK: - Integration Tests
 
-extension ArrayBoundedTests.Integration {
+extension ArrayFixedTests.Integration {
 
     @Test("forEach and withSpan yield same elements")
     func forEachAndWithSpanYieldSameElements() throws {
@@ -242,6 +242,6 @@ extension ArrayBoundedTests.Integration {
 
 // MARK: - Performance Tests
 
-extension ArrayBoundedTests.Performance {
+extension ArrayFixedTests.Performance {
     // Performance tests with .timed() trait
 }
