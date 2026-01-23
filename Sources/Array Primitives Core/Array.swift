@@ -158,13 +158,13 @@ public enum Array<Element: ~Copyable>: ~Copyable {
     ///   Swift compiler bug where nested types with value generic parameters declared
     ///   in extensions do not properly inherit `~Copyable` constraints from the outer type.
     public struct Inline<let capacity: Int>: ~Copyable {
-        /// Maximum element stride supported by inline storage (64 bytes per slot).
+        /// Inline storage for elements.
+        ///
+        /// Uses `Array.Storage.Inline` for consistency with `Array.Small`.
+        /// This provides a uniform API: `pointer(at:)`, `read(at:)`, `move(at:)`,
+        /// `initialize(to:at:)`, `deinitialize(count:)`.
         @usableFromInline
-        package static var maxElementStride: Int { 64 }
-
-        /// Raw byte storage for elements. Each slot is 64 bytes (8 Ints on 64-bit).
-        @usableFromInline
-        var _elements: InlineArray<capacity, (Int, Int, Int, Int, Int, Int, Int, Int)>
+        package var _storage: Array<Element>.Storage.Inline<capacity>
 
         /// Current element count.
         @usableFromInline
@@ -180,31 +180,14 @@ public enum Array<Element: ~Copyable>: ~Copyable {
         /// Creates an empty inline array.
         @inlinable
         public init() {
-            precondition(
-                MemoryLayout<Element>.stride <= Self.maxElementStride,
-                "Element stride (\(MemoryLayout<Element>.stride)) exceeds inline storage slot size (\(Self.maxElementStride) bytes). Use Array.Bounded instead."
-            )
-            precondition(
-                MemoryLayout<Element>.alignment <= MemoryLayout<Int>.alignment,
-                "Element alignment (\(MemoryLayout<Element>.alignment)) exceeds inline storage alignment (\(MemoryLayout<Int>.alignment)). Use Array.Bounded instead."
-            )
-            self._elements = InlineArray(repeating: (0, 0, 0, 0, 0, 0, 0, 0))
+            self._storage = Storage.Inline<capacity>()
             self._count = .zero
         }
 
         deinit {
             let count = _count.rawValue
             guard count > 0 else { return }
-
-            let stride = MemoryLayout<Element>.stride
-            unsafe Swift.withUnsafePointer(to: _elements) { storagePtr in
-                let basePtr = unsafe UnsafeMutableRawPointer(mutating: UnsafeRawPointer(storagePtr))
-                for i in 0..<count {
-                    let elementPtr = unsafe (basePtr + i * stride)
-                        .assumingMemoryBound(to: Element.self)
-                    unsafe elementPtr.deinitialize(count: 1)
-                }
-            }
+            _storage.deinitialize(count: count)
         }
     }
 }

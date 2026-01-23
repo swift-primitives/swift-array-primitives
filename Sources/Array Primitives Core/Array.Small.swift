@@ -31,13 +31,13 @@ extension Array where Element: ~Copyable {
     @safe
     public struct Small<let inlineCapacity: Int>: ~Copyable {
 
-        /// Inline storage for elements.
-        @usableFromInline
-        package var inline: Array<Element>.Storage.Inline<inlineCapacity>
-
         /// Current element count (valid in both inline and heap modes).
         @usableFromInline
         package var elementCount: Index_Primitives.Index<Element>.Count
+        
+        /// Inline storage for elements.
+        @usableFromInline
+        package var inline: Array<Element>.Storage.Inline<inlineCapacity>
 
         /// Heap storage state when spilled. Nil when using inline storage.
         ///
