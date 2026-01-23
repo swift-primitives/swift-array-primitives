@@ -16,7 +16,7 @@ public import Sequence_Primitives
 
 // MARK: - ForEach Property
 
-extension Array.Inline where Element: ~Copyable {
+extension Array.Static where Element: ~Copyable {
     /// Property view for iteration operations.
     ///
     /// Provides iteration patterns for ALL element types including `~Copyable`:
@@ -71,7 +71,7 @@ extension Array.Inline where Element: ~Copyable {
 // MARK: - ForEach: Borrowing Operations (~Copyable)
 
 extension Property.View.Typed.Valued
-where Tag == Sequence.ForEach, Base == Array<Element>.Inline<n>, Element: ~Copyable {
+where Tag == Sequence.ForEach, Base == Array<Element>.Static<n>, Element: ~Copyable {
     /// Borrowing iteration: `.forEach { }`
     ///
     /// Iterates over all elements without consuming them.
@@ -104,7 +104,7 @@ where Tag == Sequence.ForEach, Base == Array<Element>.Inline<n>, Element: ~Copya
 // MARK: - ForEach: Consuming Operations (Copyable only)
 
 extension Property.View.Typed.Valued
-where Tag == Sequence.ForEach, Base == Array<Element>.Inline<n>, Element: Copyable {
+where Tag == Sequence.ForEach, Base == Array<Element>.Static<n>, Element: Copyable {
     /// Consuming iteration: `.forEach.consuming { }`
     ///
     /// Iterates over all elements and then clears the array.

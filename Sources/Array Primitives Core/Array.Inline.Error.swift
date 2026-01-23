@@ -19,7 +19,7 @@ public enum __ArrayInlineError: Swift.Error, Sendable, Equatable {
     case indexOutOfBounds(index: Int, count: Int)
 }
 
-extension Array.Inline {
+extension Array.Static {
     /// Errors that can occur during inline array operations.
     public typealias Error = __ArrayInlineError
 }

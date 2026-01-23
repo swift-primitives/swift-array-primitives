@@ -16,7 +16,7 @@ public import Sequence_Primitives
 
 // MARK: - Drain Property
 
-extension Array.Inline where Element: ~Copyable {
+extension Array.Static where Element: ~Copyable {
     /// Property view for draining operations.
     ///
     /// Provides `.drain { }` via `callAsFunction`, which removes all elements
@@ -75,7 +75,7 @@ extension Array.Inline where Element: ~Copyable {
 // MARK: - Drain: Operations (~Copyable)
 
 extension Property.View.Typed.Valued
-where Tag == Sequence.Drain, Base == Array<Element>.Inline<n>, Element: ~Copyable {
+where Tag == Sequence.Drain, Base == Array<Element>.Static<n>, Element: ~Copyable {
     /// Drain iteration: `.drain { }`
     ///
     /// Removes all elements from the array, passing each to the closure

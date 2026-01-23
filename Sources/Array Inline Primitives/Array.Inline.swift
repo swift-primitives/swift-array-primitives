@@ -3,7 +3,7 @@ public import Index_Primitives
 
 // MARK: - Properties
 
-extension Array.Inline where Element: ~Copyable {
+extension Array.Static where Element: ~Copyable {
     /// The number of elements in the array.
     @inlinable
     public var count: Index_Primitives.Index<Element>.Count { _count }
@@ -19,13 +19,13 @@ extension Array.Inline where Element: ~Copyable {
 
 // MARK: - Core Operations
 
-extension Array.Inline where Element: ~Copyable {
+extension Array.Static where Element: ~Copyable {
     /// Appends an element to the array.
     ///
     /// - Parameter element: The element to append (consumed).
     /// - Throws: ``Array/Inline/Error/overflow`` if the array is full.
     @inlinable
-    public mutating func append(_ element: consuming Element) throws(Array.Inline.Error) {
+    public mutating func append(_ element: consuming Element) throws(Array.Static.Error) {
         guard _count.rawValue < capacity else {
             throw .overflow
         }
@@ -47,7 +47,7 @@ extension Array.Inline where Element: ~Copyable {
 
 // MARK: - Borrowed Element Access (for ~Copyable elements)
 
-extension Array.Inline where Element: ~Copyable {
+extension Array.Static where Element: ~Copyable {
     /// Accesses the element at the given index via closure (for ~Copyable elements).
     ///
     /// - Parameters:
@@ -64,7 +64,7 @@ extension Array.Inline where Element: ~Copyable {
 
 // MARK: - Safe Element Access (Copyable elements only)
 
-extension Array.Inline where Element: Copyable {
+extension Array.Static where Element: Copyable {
     /// Returns the element at the typed index, or nil if out of bounds.
     ///
     /// - Parameter index: The typed index of the element to access.
@@ -76,7 +76,7 @@ extension Array.Inline where Element: Copyable {
     }
 }
 
-extension Array.Inline where Element: Copyable {
+extension Array.Static where Element: Copyable {
     /// Returns element at index offset from given base index.
     ///
     /// - Parameters:
@@ -96,7 +96,7 @@ extension Array.Inline where Element: Copyable {
 
 // MARK: - Bounded Index (Inline Arrays)
 
-extension Array.Inline where Element: ~Copyable {
+extension Array.Static where Element: ~Copyable {
     /// Accesses the element at the given bounded index.
     ///
     /// The type `Index<Element>.Bounded<capacity>` proves `0 <= index < capacity`.
@@ -140,7 +140,7 @@ extension Array.Inline where Element: ~Copyable {
 
 // MARK: - Typed Subscript (Array.Inline)
 
-extension Array.Inline where Element: ~Copyable {
+extension Array.Static where Element: ~Copyable {
     /// Accesses the element at the given typed index (borrowing access for ~Copyable elements).
     ///
     /// - Parameter index: The typed index of the element to access.
@@ -158,7 +158,7 @@ extension Array.Inline where Element: ~Copyable {
     }
 }
 
-extension Array.Inline where Element: Copyable {
+extension Array.Static where Element: Copyable {
     /// Accesses the element at the given typed index (copy semantics for Copyable elements).
     ///
     /// - Parameter index: The typed index of the element to access.
@@ -178,7 +178,7 @@ extension Array.Inline where Element: Copyable {
 
 // MARK: - Error Description
 
-extension Array.Inline.Error: CustomStringConvertible {
+extension Array.Static.Error: CustomStringConvertible {
     public var description: String {
         switch self {
         case .overflow:

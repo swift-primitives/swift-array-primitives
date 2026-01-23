@@ -19,7 +19,7 @@ public import Index_Primitives
 
 // MARK: - Pointer Helpers
 
-extension Array.Inline where Element: ~Copyable {
+extension Array.Static where Element: ~Copyable {
 
     /// Returns a mutable pointer to the element at the given index.
     @usableFromInline
@@ -38,7 +38,7 @@ extension Array.Inline where Element: ~Copyable {
 
 // MARK: - Operations Requiring Direct _storage Access
 
-extension Array.Inline where Element: ~Copyable {
+extension Array.Static where Element: ~Copyable {
     /// Removes all elements from the array.
     @inlinable
     public mutating func removeAll() {
@@ -50,7 +50,7 @@ extension Array.Inline where Element: ~Copyable {
 
 // MARK: - Span Access
 
-extension Array.Inline where Element: ~Copyable {
+extension Array.Static where Element: ~Copyable {
     /// Provides read-only span access to the array elements.
     ///
     /// ## Lifetime Contract
@@ -106,7 +106,7 @@ extension Array.Inline where Element: ~Copyable {
 // MARK: - Buffer Access (Escape Hatch for C Interop)
 
 @_spi(Unsafe)
-extension Array.Inline where Element: ~Copyable {
+extension Array.Static where Element: ~Copyable {
     /// Provides read-only access to the underlying contiguous storage.
     ///
     /// - Warning: This is an escape hatch for C interop. Prefer `span` for safe access.

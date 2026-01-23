@@ -14,7 +14,7 @@ public import Array_Primitives_Core
 
 // MARK: - Array.Inline.Indexed
 
-extension Array.Inline where Element: Copyable {
+extension Array.Static where Element: Copyable {
     /// A wrapper providing phantom-typed index access to inline array storage.
     ///
     /// `Indexed<Tag>` wraps an `Array<Element>.Inline<capacity>` and provides subscript
@@ -45,13 +45,13 @@ extension Array.Inline where Element: Copyable {
     /// `Array.Inline` is `~Copyable` unconditionally, so `Indexed` is also `~Copyable`.
     public struct Indexed<Tag: ~Copyable>: ~Copyable {
         @usableFromInline
-        var _storage: Array<Element>.Inline<capacity>
+        var _storage: Array<Element>.Static<capacity>
 
         /// Creates an indexed wrapper around the given storage.
         ///
         /// - Parameter storage: The inline array to wrap.
         @inlinable
-        public init(_ storage: consuming Array<Element>.Inline<capacity>) {
+        public init(_ storage: consuming Array<Element>.Static<capacity>) {
             self._storage = storage
         }
 
@@ -115,7 +115,7 @@ extension Array.Inline where Element: Copyable {
 
 // MARK: - Passthrough Properties
 
-extension Array.Inline.Indexed where Element: Copyable {
+extension Array.Static.Indexed where Element: Copyable {
     /// Whether the array is empty.
     @inlinable
     public var isEmpty: Bool { _storage.isEmpty }
@@ -127,13 +127,13 @@ extension Array.Inline.Indexed where Element: Copyable {
 
 // MARK: - Mutating Operations
 
-extension Array.Inline.Indexed where Element: Copyable {
+extension Array.Static.Indexed where Element: Copyable {
     /// Appends an element to the array.
     ///
     /// - Parameter element: The element to append.
     /// - Throws: `Array.Inline.Error.overflow` if the array is full.
     @inlinable
-    public mutating func append(_ element: Element) throws(Array.Inline.Error) {
+    public mutating func append(_ element: Element) throws(Array.Static.Error) {
         try _storage.append(element)
     }
 
@@ -154,4 +154,4 @@ extension Array.Inline.Indexed where Element: Copyable {
 
 // MARK: - Sendable
 
-extension Array.Inline.Indexed: @unchecked Sendable where Element: Sendable, Tag: ~Copyable {}
+extension Array.Static.Indexed: @unchecked Sendable where Element: Sendable, Tag: ~Copyable {}

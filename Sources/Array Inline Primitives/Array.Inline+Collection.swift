@@ -5,17 +5,17 @@ public import Array_Primitives_Core
 // MARK: - Collection.Protocol Conformance
 // Note: Index, startIndex, endIndex, index(after:) defined in Collection.Indexed conformance
 
-extension Array.Inline: Collection.`Protocol` {}
+extension Array.Static: Collection.`Protocol` {}
 
 // MARK: - Collection.Access.Random Conformance
 // Note: Collection.Bidirectional conformance is provided below
 // for ALL element types (including ~Copyable) via `where Element: ~Copyable`.
 
-extension Array.Inline: Collection.Access.Random {}
+extension Array.Static: Collection.Access.Random {}
 
 // MARK: - Collection.Indexed Conformance
 
-extension Array.Inline: Collection.Indexed where Element: ~Copyable {
+extension Array.Static: Collection.Indexed where Element: ~Copyable {
     public typealias Index = Array<Element>.Index
 
     @inlinable
@@ -30,7 +30,7 @@ extension Array.Inline: Collection.Indexed where Element: ~Copyable {
 
 // MARK: - Collection.Bidirectional Conformance
 
-extension Array.Inline: Collection.Bidirectional where Element: ~Copyable {
+extension Array.Static: Collection.Bidirectional where Element: ~Copyable {
     @inlinable
     public func index(before i: Index) -> Index { (i - 1)! }
 }

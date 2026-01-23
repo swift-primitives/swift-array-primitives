@@ -157,7 +157,7 @@ public enum Array<Element: ~Copyable>: ~Copyable {
     /// - Note: This type is declared inside `Array` (not in an extension) due to a
     ///   Swift compiler bug where nested types with value generic parameters declared
     ///   in extensions do not properly inherit `~Copyable` constraints from the outer type.
-    public struct Inline<let capacity: Int>: ~Copyable {
+    public struct Static<let capacity: Int>: ~Copyable {
         /// Inline storage for elements.
         ///
         /// Uses `Array.Storage.Inline` for consistency with `Array.Small`.
@@ -210,5 +210,5 @@ extension Array.Unbounded: Copyable where Element: Copyable {}
 
 extension Array.Bounded: @unchecked Sendable where Element: Sendable {}
 extension Array.Unbounded: @unchecked Sendable where Element: Sendable {}
-extension Array.Inline: @unchecked Sendable where Element: Sendable {}
+extension Array.Static: @unchecked Sendable where Element: Sendable {}
 

@@ -4,7 +4,7 @@ public import Index_Primitives
 
 // MARK: - Iterator
 
-extension Array.Inline {
+extension Array.Static {
     /// Pointer-based iterator for Array.Inline.
     ///
     /// Zero-copy iteration using typed `Index<Element>` for position tracking.
@@ -43,11 +43,11 @@ extension Array.Inline {
     }
 }
 
-extension Array.Inline.Iterator: @unchecked Sendable where Element: Sendable {}
+extension Array.Static.Iterator: @unchecked Sendable where Element: Sendable {}
 
 // MARK: - Sequence.Protocol Conformance
 
-extension Array.Inline: Sequence.`Protocol` {
+extension Array.Static: Sequence.`Protocol` {
     /// Returns a pointer-based iterator over the array elements.
     ///
     /// Zero-copy iteration - no allocation, no element copying.
