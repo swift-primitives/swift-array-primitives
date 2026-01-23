@@ -37,10 +37,10 @@ extension Array.Unbounded where Element: ~Copyable {
         let newStorage = Array.Storage.create(minimumCapacity: newCapacity)
         let currentCount = _storage.header
 
-        _storage._moveAllElements(to: newStorage)
+        _storage.move(to: newStorage)
         newStorage.header = currentCount
         _storage = newStorage
-        unsafe (_cachedPtr = _storage._elementsPointer)  // CRITICAL: Update cached pointer
+        unsafe (_cachedPtr = _storage.pointer(at: 0))  // CRITICAL: Update cached pointer
     }
 }
 
@@ -52,7 +52,7 @@ extension Array.Unbounded where Element: Copyable {
     package mutating func makeUnique() {
         if !isKnownUniquelyReferenced(&_storage) {
             _storage = _storage.copy()
-            unsafe (_cachedPtr = _storage._elementsPointer)  // CRITICAL: Update cached pointer
+            unsafe (_cachedPtr = _storage.pointer(at: 0))  // CRITICAL: Update cached pointer
         }
     }
 }

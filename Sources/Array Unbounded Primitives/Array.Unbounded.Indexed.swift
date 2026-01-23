@@ -83,13 +83,13 @@ extension Array.Unbounded where Element: Copyable {
         public subscript(index: Index_Primitives.Index<Tag>) -> Element {
             get {
                 precondition(index.position.rawValue < _storage.count.rawValue, "Index out of bounds")
-                return _storage._storage._readElement(at: index.position.rawValue)
+                return unsafe _storage._storage.read(at: index.position.rawValue).pointee
             }
             set {
                 precondition(index.position.rawValue < _storage.count.rawValue, "Index out of bounds")
                 _storage.makeUnique()
-                _ = _storage._storage._moveElement(at: index.position.rawValue)
-                _storage._storage._initializeElement(at: index.position.rawValue, to: newValue)
+                _ = _storage._storage.move(at: index.position.rawValue)
+                _storage._storage.initialize(to: newValue, at: index.position.rawValue)
             }
         }
     }

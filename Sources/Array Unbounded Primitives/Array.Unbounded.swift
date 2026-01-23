@@ -49,7 +49,7 @@ extension Array.Unbounded where Element: ~Copyable {
     public mutating func append(_ element: consuming Element) {
         let count = _storage.header
         _ensureCapacity(count + 1)
-        _storage._initializeElement(at: count, to: element)
+        _storage.initialize(to: element, at: count)
         _storage.header = count + 1
     }
 
@@ -62,7 +62,7 @@ extension Array.Unbounded where Element: ~Copyable {
         let count = _storage.header
         guard count > 0 else { return nil }
         _storage.header = count - 1
-        return _storage._moveElement(at: count - 1)
+        return _storage.move(at: count - 1)
     }
 
     /// Removes all elements from the array.
@@ -70,10 +70,10 @@ extension Array.Unbounded where Element: ~Copyable {
     /// - Parameter keepingCapacity: Whether to keep the current capacity.
     @inlinable
     public mutating func removeAll(keepingCapacity: Bool = false) {
-        _storage._deinitializeAllElements()
+        _storage.deinitialize()
         if !keepingCapacity {
             _storage = Array.Storage.create(minimumCapacity: 0)
-            unsafe (_cachedPtr = _storage._elementsPointer)
+            unsafe (_cachedPtr = _storage.pointer(at: 0))
         }
     }
 }
@@ -90,7 +90,7 @@ extension Array.Unbounded where Element: Copyable {
         makeUnique()
         let count = _storage.header
         _ensureCapacity(count + 1)
-        _storage._initializeElement(at: count, to: element)
+        _storage.initialize(to: element, at: count)
         _storage.header = count + 1
     }
 
@@ -104,7 +104,7 @@ extension Array.Unbounded where Element: Copyable {
         let count = _storage.header
         guard count > 0 else { return nil }
         _storage.header = count - 1
-        return _storage._moveElement(at: count - 1)
+        return _storage.move(at: count - 1)
     }
 
     /// Removes all elements from the array (CoW-aware).
@@ -114,10 +114,10 @@ extension Array.Unbounded where Element: Copyable {
     @inlinable
     public mutating func removeAll(keepingCapacity: Bool = false) {
         makeUnique()
-        _storage._deinitializeAllElements()
+        _storage.deinitialize()
         if !keepingCapacity {
             _storage = Array.Storage.create(minimumCapacity: 0)
-            unsafe (_cachedPtr = _storage._elementsPointer)
+            unsafe (_cachedPtr = _storage.pointer(at: 0))
         }
     }
 }

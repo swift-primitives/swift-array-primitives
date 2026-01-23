@@ -48,13 +48,13 @@ extension Array.Bounded {
 
         if count == 0 {
             self._storage = Array.Storage.createEmpty()
-            unsafe self._cachedPtr = _storage._elementsPointer
+            unsafe self._cachedPtr = _storage.pointer(at: 0)
             self._count = .zero
             return
         }
 
         self._storage = Array.Storage.create(capacity: count, initializingWith: initializer)
-        unsafe self._cachedPtr = _storage._elementsPointer
+        unsafe self._cachedPtr = _storage.pointer(at: 0)
         self._count = Index_Primitives.Index<Element>.Count(__unchecked: count)
     }
 }
@@ -81,13 +81,13 @@ extension Array.Bounded {
 
         if count == 0 {
             self._storage = Array.Storage.createEmpty()
-            unsafe self._cachedPtr = _storage._elementsPointer
+            unsafe self._cachedPtr = _storage.pointer(at: 0)
             self._count = .zero
             return
         }
 
         self._storage = Array.Storage.create(capacity: count, initializingWith: initializer)
-        unsafe self._cachedPtr = _storage._elementsPointer
+        unsafe self._cachedPtr = _storage.pointer(at: 0)
         self._count = Index_Primitives.Index<Element>.Count(__unchecked: count)
     }
 }
@@ -155,7 +155,7 @@ extension Array.Bounded where Element: Copyable {
     package mutating func makeUnique() {
         if !isKnownUniquelyReferenced(&_storage) {
             _storage = _storage.copy()
-            unsafe _cachedPtr = _storage._elementsPointer
+            unsafe _cachedPtr = _storage.pointer(at: 0)
         }
     }
 }

@@ -131,7 +131,7 @@ public enum Array<Element: ~Copyable>: ~Copyable {
         @inlinable
         public init() {
             self._storage = Array.Storage.create(minimumCapacity: 0)
-            unsafe (self._cachedPtr = _storage._elementsPointer)
+            unsafe (self._cachedPtr = _storage.pointer(at: 0))
         }
     }
 

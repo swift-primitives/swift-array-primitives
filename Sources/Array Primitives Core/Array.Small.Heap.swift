@@ -33,7 +33,7 @@ extension Array.Small where Element: ~Copyable {
         @usableFromInline
         package init(_ storage: Array<Element>.Storage) {
             self.storage = storage
-            unsafe self.pointer = storage._elementsPointer
+            unsafe self.pointer = storage.pointer(at: 0)
         }
 
         /// Creates new heap storage with specified capacity.
@@ -52,11 +52,11 @@ extension Array.Small where Element: ~Copyable {
             let newStorage = Array<Element>.Storage.create(minimumCapacity: newCapacity)
             let currentCount = storage.header
 
-            storage._moveAllElements(to: newStorage)
+            storage.move(to: newStorage)
             newStorage.header = currentCount
 
             self.storage = newStorage
-            unsafe self.pointer = newStorage._elementsPointer
+            unsafe self.pointer = newStorage.pointer(at: 0)
         }
     }
 }

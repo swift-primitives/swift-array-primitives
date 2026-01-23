@@ -76,7 +76,7 @@ extension Array.Small where Element: ~Copyable {
             let currentCount = heapState.storage.header
             heapState.ensureCapacity(currentCount + 1)
             heap = heapState  // Write back mutation
-            heap!.storage._initializeElement(at: currentCount, to: element)
+            heap!.storage.initialize(to: element, at: currentCount)
             heap!.storage.header = currentCount + 1
             elementCount = Index_Primitives.Index<Element>.Count(__unchecked: count.rawValue + 1)
         } else if count.rawValue < inlineCapacity {
@@ -87,7 +87,7 @@ extension Array.Small where Element: ~Copyable {
         } else {
             // Need to spill
             spill(minimumCapacity: count.rawValue + 1)
-            heap!.storage._initializeElement(at: count.rawValue, to: element)
+            heap!.storage.initialize(to: element, at: count.rawValue)
             heap!.storage.header = count.rawValue + 1
             elementCount = Index_Primitives.Index<Element>.Count(__unchecked: count.rawValue + 1)
         }
@@ -105,7 +105,7 @@ extension Array.Small where Element: ~Copyable {
             let newCount = count.rawValue - 1
             elementCount = Index_Primitives.Index<Element>.Count(__unchecked: newCount)
             heap!.storage.header = newCount
-            return heapState.storage._moveElement(at: newCount)
+            return heapState.storage.move(at: newCount)
         } else {
             // Inline mode
             let newCount = count.rawValue - 1
@@ -124,7 +124,7 @@ extension Array.Small where Element: ~Copyable {
 
         if let heapState = heap {
             // Heap mode - deinitialize via storage
-            heapState.storage._deinitializeAllElements()
+            heapState.storage.deinitialize()
             if !keepingCapacity {
                 heap = nil
             }
@@ -389,8 +389,8 @@ extension Array.Small where Element: Copyable {
         set {
             precondition(index < count, "Index out of bounds")
             if heap != nil {
-                _ = heap!.storage._moveElement(at: index.position.rawValue)
-                heap!.storage._initializeElement(at: index.position.rawValue, to: newValue)
+                _ = heap!.storage.move(at: index.position.rawValue)
+                heap!.storage.initialize(to: newValue, at: index.position.rawValue)
             } else {
                 unsafe inline.pointer(at: index.position.rawValue).pointee = newValue
             }
