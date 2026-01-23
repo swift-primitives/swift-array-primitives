@@ -12,12 +12,12 @@
 public import Bit_Primitives
 public import Array_Primitives_Core
 
-// MARK: - Array<Bit>.Packed.Inline
+// MARK: - Array<Bit>.Vector.Inline
 
 extension Array<Bit>.Vector {
     /// Zero-allocation packed bit array with compile-time capacity.
     ///
-    /// `Array<Bit>.Packed.Inline` stores bits in inline storage using `InlineArray`,
+    /// `Array<Bit>.Vector.Inline` stores bits in inline storage using `InlineArray`,
     /// avoiding heap allocation entirely. The capacity is specified as a compile-time
     /// constant representing the number of `UInt` words.
     ///
@@ -25,7 +25,7 @@ extension Array<Bit>.Vector {
     ///
     /// ```swift
     /// // 2 words = 128 bits on 64-bit systems
-    /// var bits = Array<Bit>.Packed.Inline<2>()
+    /// var bits = Array<Bit>.Vector.Inline<2>()
     /// try bits.append(true)
     /// try bits.append(false)
     /// bits[0]  // true
@@ -406,7 +406,7 @@ extension Array<Bit>.Vector.Inline: CustomStringConvertible {
     public var description: String {
         let bits = prefix(64).map { $0 ? "1" : "0" }.joined()
         let suffix = _count > 64 ? "..." : ""
-        return "Array<Bit>.Packed.Inline<\(wordCount)>(\(bits)\(suffix))"
+        return "Array<Bit>.Vector.Inline<\(wordCount)>(\(bits)\(suffix))"
     }
 }
 
@@ -414,5 +414,5 @@ extension Array<Bit>.Vector.Inline: CustomStringConvertible {
 
 extension Array<Bit>.Vector.Inline {
     /// Errors that can occur during inline packed bit array operations.
-    public typealias Error = __ArrayBitPackedInlineError
+    public typealias Error = __ArrayBitVectorInlineError
 }

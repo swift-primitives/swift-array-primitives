@@ -15,23 +15,23 @@ public import Array_Primitives_Core
 // MARK: - Hoisted Error Types
 //
 // Error types are hoisted to module level for typed throws compatibility.
-// Use the typealias (e.g., `Array<Bit>.Packed.Error`) in your code.
+// Use the typealias (e.g., `Array<Bit>.Vector.Error`) in your code.
 
-/// Errors that can occur during `Array<Bit>.Packed` operations.
-public enum __ArrayBitPackedError: Swift.Error, Sendable, Equatable {
+/// Errors that can occur during `Array<Bit>.Vector` operations.
+public enum __ArrayBitVectorError: Swift.Error, Sendable, Equatable {
     case bounds(index: Int, count: Int)
     case invalidCount
 }
 
-/// Errors that can occur during `Array<Bit>.Packed.Bounded` operations.
-public enum __ArrayBitPackedBoundedError: Swift.Error, Sendable, Equatable {
+/// Errors that can occur during `Array<Bit>.Vector.Fixed` operations.
+public enum __ArrayBitVectorFixedError: Swift.Error, Sendable, Equatable {
     case bounds(index: Int, count: Int)
     case invalidCount
     case overflow
 }
 
-/// Errors that can occur during `Array<Bit>.Packed.Inline` operations.
-public enum __ArrayBitPackedInlineError: Swift.Error, Sendable, Equatable {
+/// Errors that can occur during `Array<Bit>.Vector.Inline` operations.
+public enum __ArrayBitVectorInlineError: Swift.Error, Sendable, Equatable {
     case bounds(index: Int, count: Int)
     case overflow
 }
@@ -39,6 +39,6 @@ public enum __ArrayBitPackedInlineError: Swift.Error, Sendable, Equatable {
 // MARK: - Canonical Error Typealiases
 
 extension Array<Bit>.Vector {
-    /// Errors that can occur during packed bit array operations.
-    public typealias Error = __ArrayBitPackedError
+    /// Errors that can occur during bit vector operations.
+    public typealias Error = __ArrayBitVectorError
 }

@@ -12,23 +12,23 @@
 public import Bit_Primitives
 public import Array_Primitives_Core
 
-// MARK: - Array<Bit>.Packed.Bounded
+// MARK: - Array<Bit>.Vector.Fixed
 
 extension Array<Bit>.Vector {
     /// Fixed-capacity packed bit array.
     ///
-    /// `Array<Bit>.Packed.Bounded` stores bits in a fixed-size buffer, throwing on overflow.
+    /// `Array<Bit>.Vector.Fixed` stores bits in a fixed-size buffer, throwing on overflow.
     /// Use when the maximum size is known and overflow should be an error.
     ///
     /// ## Example
     ///
     /// ```swift
-    /// var bits = try Array<Bit>.Packed.Bounded(capacity: 100)
+    /// var bits = try Array<Bit>.Vector.Fixed(capacity: 100)
     /// try bits.append(true)
     /// try bits.set(50)
     /// bits[50]  // true
     /// ```
-    public struct Bounded: Sendable {
+    public struct Fixed: Sendable {
         @usableFromInline
         static var _bitsPerWord: Int { UInt.bitWidth }
 
@@ -80,7 +80,7 @@ extension Array<Bit>.Vector {
 
 // MARK: - Properties
 
-extension Array<Bit>.Vector.Bounded {
+extension Array<Bit>.Vector.Fixed {
     /// The number of bits in the array.
     @inlinable
     public var count: Int { _count }
@@ -115,7 +115,7 @@ extension Array<Bit>.Vector.Bounded {
 
 // MARK: - Subscript Access
 
-extension Array<Bit>.Vector.Bounded {
+extension Array<Bit>.Vector.Fixed {
     @inlinable
     public subscript(index: Bit.Index) -> Bool {
         get {
@@ -161,7 +161,7 @@ extension Array<Bit>.Vector.Bounded {
 
 // MARK: - Bit Operations
 
-extension Array<Bit>.Vector.Bounded {
+extension Array<Bit>.Vector.Fixed {
     @inlinable
     public mutating func set(_ index: Bit.Index) throws(Error) {
         let i = index.position.rawValue
@@ -224,7 +224,7 @@ extension Array<Bit>.Vector.Bounded {
 
 // MARK: - Append and Remove
 
-extension Array<Bit>.Vector.Bounded {
+extension Array<Bit>.Vector.Fixed {
     /// Appends a boolean value to the array.
     ///
     /// - Parameter value: The value to append.
@@ -286,7 +286,7 @@ extension Array<Bit>.Vector.Bounded {
 
 // MARK: - Additional Properties
 
-extension Array<Bit>.Vector.Bounded {
+extension Array<Bit>.Vector.Fixed {
     @inlinable
     public var first: Bool? {
         guard _count > 0 else { return nil }
@@ -321,7 +321,7 @@ extension Array<Bit>.Vector.Bounded {
 
 // MARK: - Initializers
 
-extension Array<Bit>.Vector.Bounded {
+extension Array<Bit>.Vector.Fixed {
     /// Creates a bounded bit array from a sequence of booleans.
     @inlinable
     public init<S: Swift.Sequence>(capacity: Int, _ elements: S) throws(Error) where S.Element == Bool {
@@ -343,7 +343,7 @@ extension Array<Bit>.Vector.Bounded {
 
 // MARK: - Conversion
 
-extension Array<Bit>.Vector.Bounded {
+extension Array<Bit>.Vector.Fixed {
     /// Converts to a dynamically-sized packed bit array.
     @inlinable
     public func toPacked() -> Array<Bit>.Vector {
@@ -358,7 +358,7 @@ extension Array<Bit>.Vector.Bounded {
 extension Array<Bit>.Vector {
     /// Creates a packed bit array from a bounded packed bit array.
     @inlinable
-    public init(_ bounded: Array<Bit>.Vector.Bounded) {
+    public init(_ bounded: Array<Bit>.Vector.Fixed) {
         self.init()
         for i in 0..<bounded._count {
             append(bounded[i])
@@ -368,7 +368,7 @@ extension Array<Bit>.Vector {
 
 // MARK: - Sequence
 
-extension Array<Bit>.Vector.Bounded: Swift.Sequence {
+extension Array<Bit>.Vector.Fixed: Swift.Sequence {
     public struct Iterator: IteratorProtocol, Sendable {
         @usableFromInline let storage: ContiguousArray<UInt>
         @usableFromInline let count: Int
@@ -400,7 +400,7 @@ extension Array<Bit>.Vector.Bounded: Swift.Sequence {
 
 // MARK: - Equatable
 
-extension Array<Bit>.Vector.Bounded: Equatable {
+extension Array<Bit>.Vector.Fixed: Equatable {
     @inlinable
     public static func == (lhs: Self, rhs: Self) -> Bool {
         guard lhs._count == rhs._count else { return false }
@@ -414,7 +414,7 @@ extension Array<Bit>.Vector.Bounded: Equatable {
 
 // MARK: - Hashable
 
-extension Array<Bit>.Vector.Bounded: Hashable {
+extension Array<Bit>.Vector.Fixed: Hashable {
     @inlinable
     public func hash(into hasher: inout Hasher) {
         hasher.combine(_count)
@@ -427,17 +427,17 @@ extension Array<Bit>.Vector.Bounded: Hashable {
 
 // MARK: - CustomStringConvertible
 
-extension Array<Bit>.Vector.Bounded: CustomStringConvertible {
+extension Array<Bit>.Vector.Fixed: CustomStringConvertible {
     public var description: String {
         let bits = prefix(64).map { $0 ? "1" : "0" }.joined()
         let suffix = _count > 64 ? "..." : ""
-        return "Array<Bit>.Packed.Bounded(\(bits)\(suffix), capacity: \(_capacity))"
+        return "Array<Bit>.Vector.Fixed(\(bits)\(suffix), capacity: \(_capacity))"
     }
 }
 
 // MARK: - Error Typealias
 
-extension Array<Bit>.Vector.Bounded {
+extension Array<Bit>.Vector.Fixed {
     /// Errors that can occur during bounded packed bit array operations.
-    public typealias Error = __ArrayBitPackedBoundedError
+    public typealias Error = __ArrayBitVectorFixedError
 }

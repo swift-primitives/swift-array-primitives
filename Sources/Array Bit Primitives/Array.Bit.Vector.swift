@@ -12,19 +12,19 @@
 public import Bit_Primitives
 public import Array_Primitives_Core
 
-// MARK: - Array<Bit>.Packed
+// MARK: - Array<Bit>.Vector
 
 extension Array where Element == Bit {
     /// Packed bit array using word-sized storage.
     ///
-    /// `Array<Bit>.Packed` stores bits as individual bits in `UInt` words, providing 8x space
+    /// `Array<Bit>.Vector` stores bits as individual bits in `UInt` words, providing 8x space
     /// efficiency over `[Bit]`. Operations are O(1) for single bit access and O(n/64)
     /// for bulk operations.
     ///
     /// ## Example
     ///
     /// ```swift
-    /// var bits = try Array<Bit>.Packed(count: 100)
+    /// var bits = try Array<Bit>.Vector(count: 100)
     /// try bits.set(42)
     /// bits[42]           // true
     /// bits.popcount      // 1
@@ -37,7 +37,7 @@ extension Array where Element == Bit {
     /// ```swift
     /// // From unpacked to packed
     /// let unpacked: [Bit] = [true, false, true]
-    /// let packed = Array<Bit>.Packed(unpacked)
+    /// let packed = Array<Bit>.Vector(unpacked)
     ///
     /// // From packed to unpacked
     /// let backToUnpacked = [Bit](packed)
@@ -46,7 +46,7 @@ extension Array where Element == Bit {
     /// ## Variants
     ///
     /// - ``Array/Packed-swift.struct``: Dynamically-growing storage (this type)
-    /// - ``Array/Packed-swift.struct/Bounded``: Fixed-capacity, throws on overflow
+    /// - ``Array/Packed-swift.struct/Fixed``: Fixed-capacity, throws on overflow
     /// - ``Array/Packed-swift.struct/Inline``: Zero-allocation inline storage with compile-time capacity
     public struct Vector: Sendable {
         @usableFromInline
@@ -565,7 +565,7 @@ extension Array<Bit>.Vector: CustomStringConvertible {
     public var description: String {
         let bits = prefix(64).map { $0 ? "1" : "0" }.joined()
         let suffix = _count > 64 ? "..." : ""
-        return "Array<Bit>.Packed(\(bits)\(suffix))"
+        return "Array<Bit>.Vector(\(bits)\(suffix))"
     }
 }
 

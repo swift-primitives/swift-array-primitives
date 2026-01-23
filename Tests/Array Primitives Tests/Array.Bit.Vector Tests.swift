@@ -15,11 +15,11 @@ import Testing
 // MARK: - Test Suite Structure
 //
 // Note: Swift Testing's @Suite/@Test macros cannot be applied within generic extensions.
-// Since Array<Bit>.Packed is nested inside a generic type, we use a dedicated test enum.
+// Since Array<Bit>.Vector is nested inside a generic type, we use a dedicated test enum.
 // This follows [TEST-ORG-005] for types that cannot have nested Test types.
 
-/// Test namespace for Array<Bit>.Packed
-enum ArrayBitPackedTests {
+/// Test namespace for Array<Bit>.Vector
+enum ArrayBitVectorTests {
     @Suite struct Unit {}
     @Suite struct EdgeCase {}
     @Suite struct Integration {}
@@ -28,7 +28,7 @@ enum ArrayBitPackedTests {
 
 // MARK: - Unit Tests
 
-extension ArrayBitPackedTests.Unit {
+extension ArrayBitVectorTests.Unit {
 
     @Test("Append and subscript")
     func appendAndSubscript() {
@@ -256,7 +256,7 @@ extension ArrayBitPackedTests.Unit {
     func description() {
         let bits = Array<Bit>.Vector([true, false, true])
         let desc = bits.description
-        #expect(desc.contains("Array<Bit>.Packed"))
+        #expect(desc.contains("Array<Bit>.Vector"))
         #expect(desc.contains("101"))
     }
 
@@ -286,7 +286,7 @@ extension ArrayBitPackedTests.Unit {
 
 // MARK: - Edge Case Tests
 
-extension ArrayBitPackedTests.EdgeCase {
+extension ArrayBitVectorTests.EdgeCase {
 
     @Test("Empty arrays equal")
     func emptyArraysEqual() {
@@ -331,12 +331,12 @@ extension ArrayBitPackedTests.EdgeCase {
 
 // MARK: - Integration Tests
 
-extension ArrayBitPackedTests.Integration {
+extension ArrayBitVectorTests.Integration {
     // Integration tests for cross-type interactions
 }
 
 // MARK: - Performance Tests
 
-extension ArrayBitPackedTests.Performance {
+extension ArrayBitVectorTests.Performance {
     // Performance tests with .timed() trait
 }
