@@ -46,28 +46,6 @@ extension Array.Inline where Element: ~Copyable {
         _storage.deinitialize(count: _count.rawValue)
         _count = .zero
     }
-
-    /// Iterates over all elements in the array.
-    ///
-    /// - Parameter body: A closure that receives each borrowed element.
-    @inlinable
-    public func forEach<E: Swift.Error>(_ body: (borrowing Element) throws(E) -> Void) throws(E) {
-        for i in 0..<_count.rawValue {
-            try unsafe body(_storage.read(at: i).pointee)
-        }
-    }
-
-    /// Removes and consumes all elements.
-    ///
-    /// - Parameter body: A closure that receives each consumed element.
-    @inlinable
-    public mutating func drain(_ body: (consuming Element) -> Void) {
-        guard _count.rawValue > 0 else { return }
-        for i in 0..<_count.rawValue {
-            body(_storage.move(at: i))
-        }
-        _count = .zero
-    }
 }
 
 // MARK: - Span Access

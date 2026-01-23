@@ -135,7 +135,7 @@ extension ArrayInlineTests.Unit {
 
     @Test("Empty array forEach yields nothing")
     func emptyArrayForEachYieldsNothing() {
-        let array = Array<Int>.Inline<8>()
+        var array = Array<Int>.Inline<8>()
 
         var iteratedCount = 0
         array.forEach { _ in iteratedCount += 1 }
@@ -148,10 +148,13 @@ extension ArrayInlineTests.Unit {
         var array = Array<Int>.Inline<10>()
         for i in 0..<5 { try array.append(i * 7) }
 
-        var index = 0
-        array.forEach { element in
-            #expect(element == array[try! Index<Int>(index)])
-            index += 1
+        // Collect elements via forEach
+        var forEachElements: [Int] = []
+        array.forEach { forEachElements.append($0) }
+
+        // Compare with subscript access
+        for i in 0..<5 {
+            #expect(forEachElements[i] == array[try Index<Int>(i)])
         }
     }
 
