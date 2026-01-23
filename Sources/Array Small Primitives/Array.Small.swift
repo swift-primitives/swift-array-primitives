@@ -40,6 +40,27 @@ extension Array.Small where Element: ~Copyable {
     public var isSpilled: Bool { _heap != nil }
 }
 
+// MARK: - Internal Operations
+
+extension Array.Small where Element: ~Copyable {
+    /// Spills inline storage to heap.
+    ///
+    /// Called when appending would exceed inline capacity.
+    /// Moves all inline elements to newly allocated heap storage.
+    ///
+    /// - Parameter minimumCapacity: The minimum capacity for heap storage.
+    /// - Precondition: Must not already be in heap mode.
+    @usableFromInline
+    package mutating func spill(minimumCapacity: Int) {
+        precondition(_heap == nil, "Already spilled")
+
+        let newStorage = heap.create(minimumCapacity: minimumCapacity)
+        unsafe inline.moveAll(to: newStorage)
+        newStorage.header = _count.rawValue
+        heap.adopt(newStorage)
+    }
+}
+
 // MARK: - Core Operations (Base - for ~Copyable elements)
 
 extension Array.Small where Element: ~Copyable {
@@ -416,3 +437,5 @@ extension Array.Small where Element: ~Copyable {
         }
     }
 }
+
+extension Array.Small: @unchecked Sendable where Element: Sendable {}

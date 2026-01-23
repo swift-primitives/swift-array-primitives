@@ -89,5 +89,3 @@ extension Array where Element: ~Copyable {
         }
     }
 }
-
-extension Array.Small: @unchecked Sendable where Element: Sendable {}

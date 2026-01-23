@@ -9,6 +9,8 @@
 //
 // ===----------------------------------------------------------------------===//
 
+public import Array_Primitives_Core
+
 extension Array.Small where Element: ~Copyable {
     /// Accessor for inline storage operations.
     ///
@@ -68,23 +70,6 @@ extension Array.Small where Element: ~Copyable {
                             .assumingMemoryBound(to: Element.self)
                         unsafe (heapPtr + i).initialize(to: inlineElement.move())
                     }
-                }
-            }
-        }
-
-        /// Deinitializes all inline elements.
-        @usableFromInline
-        @unsafe
-        @_lifetime(&self)
-        package mutating func deinitializeAll() {
-            let stride = MemoryLayout<Element>.stride
-            let count = unsafe _base.pointee._count.rawValue
-            unsafe Swift.withUnsafeBytes(of: _base.pointee._inline) { bytes in
-                let basePtr = unsafe UnsafeMutableRawPointer(mutating: bytes.baseAddress!)
-                for i in 0..<count {
-                    let elementPtr = unsafe (basePtr + i * stride)
-                        .assumingMemoryBound(to: Element.self)
-                    unsafe elementPtr.deinitialize(count: 1)
                 }
             }
         }

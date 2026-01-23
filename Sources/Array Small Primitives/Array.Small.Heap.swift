@@ -9,6 +9,8 @@
 //
 // ===----------------------------------------------------------------------===//
 
+public import Array_Primitives_Core
+
 extension Array.Small where Element: ~Copyable {
     /// Accessor for heap storage operations.
     ///
