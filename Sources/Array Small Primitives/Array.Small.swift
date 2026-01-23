@@ -55,9 +55,9 @@ extension Array.Small where Element: ~Copyable {
         precondition(_heap == nil, "Already spilled")
 
         let newStorage = heap.create(minimumCapacity: minimumCapacity)
-        unsafe inline.moveAll(to: newStorage)
+        unsafe inline.move(to: newStorage)
         newStorage.header = _count.rawValue
-        _heap = Heap.State(newStorage)
+        _heap = Heap(newStorage)
     }
 }
 
@@ -128,16 +128,8 @@ extension Array.Small where Element: ~Copyable {
                 _heap = nil
             }
         } else {
-            // Inline mode - deinitialize manually
-            let stride = MemoryLayout<Element>.stride
-            unsafe Swift.withUnsafeMutablePointer(to: &_inline) { storagePtr in
-                let basePtr = UnsafeMutableRawPointer(storagePtr)
-                for i in 0..<_count.rawValue {
-                    let elementPtr = unsafe (basePtr + i * stride)
-                        .assumingMemoryBound(to: Element.self)
-                    unsafe elementPtr.deinitialize(count: 1)
-                }
-            }
+            // Inline mode - deinitialize via Storage.Inline
+            _inline.deinitialize(count: _count.rawValue)
         }
         _count = .zero
     }
@@ -213,14 +205,8 @@ extension Array.Small where Element: ~Copyable {
             }
             _heap!.storage.header = 0
         } else {
-            let stride = MemoryLayout<Element>.stride
-            unsafe Swift.withUnsafeMutablePointer(to: &_inline) { storagePtr in
-                let basePtr = UnsafeMutableRawPointer(storagePtr)
-                for i in 0..<_count.rawValue {
-                    let elementPtr = unsafe (basePtr + i * stride)
-                        .assumingMemoryBound(to: Element.self)
-                    unsafe body(elementPtr.move())
-                }
+            for i in 0..<_count.rawValue {
+                body(_inline.move(at: i))
             }
         }
         _count = .zero

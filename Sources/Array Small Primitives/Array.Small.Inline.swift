@@ -14,9 +14,8 @@ public import Array_Primitives_Core
 extension Array.Small where Element: ~Copyable {
     /// Accessor for inline storage operations.
     ///
-    /// Provides pointer-based access to inline elements. Uses a minimal custom
-    /// struct because Swift does not support introducing value generics in
-    /// extension where clauses, preventing use of Property.View.Typed pattern.
+    /// Provides pointer-based access to inline elements. Delegates to the
+    /// underlying `Storage.Inline` instance.
     @usableFromInline
     @safe
     package struct Inline: ~Copyable, ~Escapable {
@@ -33,45 +32,23 @@ extension Array.Small where Element: ~Copyable {
         @usableFromInline
         @unsafe
         package func pointer(at index: Int) -> UnsafeMutablePointer<Element> {
-            let stride = MemoryLayout<Element>.stride
-            return unsafe Swift.withUnsafeMutablePointer(to: &_base.pointee._inline) { storagePtr in
-                let basePtr = UnsafeMutableRawPointer(storagePtr)
-                let elementPtr = unsafe (basePtr + index * stride)
-                    .assumingMemoryBound(to: Element.self)
-                return unsafe elementPtr
-            }
+            unsafe _base.pointee._inline.pointer(at: index)
         }
 
         /// Returns a read-only pointer to the inline element at the given index.
         @usableFromInline
         @unsafe
         package func read(at index: Int) -> UnsafePointer<Element> {
-            let stride = MemoryLayout<Element>.stride
-            return unsafe Swift.withUnsafePointer(to: _base.pointee._inline) { storagePtr in
-                let basePtr = unsafe UnsafeRawPointer(storagePtr)
-                let elementPtr = unsafe (basePtr + index * stride)
-                    .assumingMemoryBound(to: Element.self)
-                return unsafe elementPtr
-            }
+            unsafe _base.pointee._inline.read(at: index)
         }
 
         /// Moves all inline elements to target heap storage.
         @usableFromInline
         @unsafe
         @_lifetime(&self)
-        package mutating func moveAll(to target: Array<Element>.Storage) {
-            let stride = MemoryLayout<Element>.stride
+        package mutating func move(to target: Array<Element>.Storage) {
             let count = unsafe _base.pointee._count.rawValue
-            _ = unsafe Swift.withUnsafeBytes(of: _base.pointee._inline) { bytes in
-                unsafe target.withUnsafeMutablePointerToElements { heapPtr in
-                    let inlineBase = unsafe UnsafeMutableRawPointer(mutating: bytes.baseAddress!)
-                    for i in 0..<count {
-                        let inlineElement = unsafe (inlineBase + i * stride)
-                            .assumingMemoryBound(to: Element.self)
-                        unsafe (heapPtr + i).initialize(to: inlineElement.move())
-                    }
-                }
-            }
+            unsafe _base.pointee._inline.move(to: target, count: count)
         }
     }
 

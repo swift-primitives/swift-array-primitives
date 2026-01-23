@@ -40,7 +40,7 @@ extension Array.Small.Heap where Element: ~Copyable {
         @usableFromInline
         @_lifetime(&self)
         package mutating func adopt(_ newStorage: Array<Element>.Storage) {
-            unsafe _base.pointee._heap = Array<Element>.Small<inlineCapacity>.Heap.State(newStorage)
+            unsafe _base.pointee._heap = Array<Element>.Small<inlineCapacity>.Heap(newStorage)
         }
 
         /// Ensures capacity, reallocating if needed.
@@ -58,7 +58,7 @@ extension Array.Small.Heap where Element: ~Copyable {
 
             heapState.storage._moveAllElements(to: newStorage)
             newStorage.header = currentCount
-            unsafe _base.pointee._heap = Array<Element>.Small<inlineCapacity>.Heap.State(newStorage)
+            unsafe _base.pointee._heap = Array<Element>.Small<inlineCapacity>.Heap(newStorage)
         }
     }
 }

@@ -10,11 +10,30 @@
 // ===----------------------------------------------------------------------===//
 
 extension Array.Small where Element: ~Copyable {
-    /// Namespace for heap-related types.
+    /// Combined heap storage reference and cached element pointer.
     ///
-    /// Contains:
-    /// - `Heap.State`: Storage reference with cached pointer (used as stored property)
-    /// - `Heap.View`: Non-escapable accessor for heap operations (in Array Small Primitives)
-    @frozen
-    public enum Heap {}
+    /// This type ensures storage and pointer are always consistent:
+    /// when `Array.Small._heap` is non-nil, both the storage reference
+    /// and the element pointer are valid. When nil, inline storage is used.
+    ///
+    /// This makes an inconsistent state (pointer without storage, or vice versa)
+    /// unrepresentable by construction.
+    @usableFromInline
+    @safe
+    package struct Heap {
+        /// The heap storage containing elements.
+        @usableFromInline
+        package let storage: Array<Element>.Storage
+
+        /// Cached pointer to heap elements for fast access.
+        @usableFromInline
+        package let pointer: UnsafeMutablePointer<Element>
+
+        /// Creates heap state from storage, caching the element pointer.
+        @usableFromInline
+        package init(_ storage: Array<Element>.Storage) {
+            self.storage = storage
+            unsafe self.pointer = storage._elementsPointer
+        }
+    }
 }

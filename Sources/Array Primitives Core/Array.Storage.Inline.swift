@@ -30,6 +30,7 @@ extension Array.Storage where Element: ~Copyable {
     /// The inline variant requires `count` to be passed explicitly since it
     /// doesn't store count internally (the containing type manages count).
     @safe
+    @usableFromInline
     package struct Inline<let capacity: Int>: ~Copyable {
 
         /// Raw byte storage (64 bytes per slot).
@@ -126,11 +127,12 @@ extension Array.Storage.Inline where Element: ~Copyable {
     /// - Parameter range: The range of indices to deinitialize.
     /// - Precondition: All slots in range must be initialized.
     /// - Postcondition: All slots in range are deinitialized.
+    /// - Note: Non-mutating to allow use from deinit contexts.
     @usableFromInline
-    package mutating func deinitialize(in range: Range<Int>) {
+    package func deinitialize(in range: Range<Int>) {
         let stride = MemoryLayout<Element>.stride
-        unsafe Swift.withUnsafeMutablePointer(to: &raw) { rawPointer in
-            let base = UnsafeMutableRawPointer(rawPointer)
+        unsafe Swift.withUnsafePointer(to: raw) { rawPointer in
+            let base = unsafe UnsafeMutableRawPointer(mutating: UnsafeRawPointer(rawPointer))
             for i in range {
                 unsafe (base + i * stride)
                     .assumingMemoryBound(to: Element.self)
@@ -144,8 +146,9 @@ extension Array.Storage.Inline where Element: ~Copyable {
     /// - Parameter count: The number of initialized elements.
     /// - Precondition: Elements at indices 0..<count must be initialized.
     /// - Postcondition: All elements are deinitialized.
+    /// - Note: Non-mutating to allow use from deinit contexts.
     @usableFromInline
-    package mutating func deinitialize(count: Int) {
+    package func deinitialize(count: Int) {
         guard count > 0 else { return }
         deinitialize(in: 0..<count)
     }

@@ -30,13 +30,10 @@ extension Array where Element: ~Copyable {
     ///   Swift compiler bug. Public API is in the Array Small Primitives module.
     @safe
     public struct Small<let inlineCapacity: Int>: ~Copyable {
-        /// Maximum element stride supported by inline storage (64 bytes per slot).
-        @usableFromInline
-        package static var maxElementStride: Int { 64 }
 
-        /// Raw byte storage for inline elements.
+        /// Inline storage for elements.
         @usableFromInline
-        package var _inline: InlineArray<inlineCapacity, (Int, Int, Int, Int, Int, Int, Int, Int)>
+        package var _inline: Storage.Inline<inlineCapacity>
 
         /// Current element count (valid in both inline and heap modes).
         @usableFromInline
@@ -47,7 +44,7 @@ extension Array where Element: ~Copyable {
         /// Contains both the storage reference and cached element pointer,
         /// ensuring they are always consistent by construction.
         @usableFromInline
-        package var _heap: Heap.State?
+        package var _heap: Heap?
 
         /// Creates an empty small array.
         ///
@@ -58,10 +55,10 @@ extension Array where Element: ~Copyable {
             let stride = MemoryLayout<Element>.stride
             let alignment = MemoryLayout<Element>.alignment
 
-            guard stride <= Self.maxElementStride else {
+            guard stride <= Storage.Inline<inlineCapacity>.maxStride else {
                 throw .strideExceedsSlotSize(
                     elementStride: stride,
-                    maxSlotSize: Self.maxElementStride
+                    maxSlotSize: Storage.Inline<inlineCapacity>.maxStride
                 )
             }
             guard alignment <= MemoryLayout<Int>.alignment else {
@@ -71,7 +68,7 @@ extension Array where Element: ~Copyable {
                 )
             }
 
-            self._inline = InlineArray(repeating: (0, 0, 0, 0, 0, 0, 0, 0))
+            self._inline = Storage.Inline<inlineCapacity>()
             self._count = .zero
             self._heap = nil
         }
@@ -84,16 +81,8 @@ extension Array where Element: ~Copyable {
                 // Elements are on heap - ElementStorage handles cleanup via its deinit
                 heap.storage.header = count
             } else {
-                // Elements are inline - clean up manually
-                let stride = MemoryLayout<Element>.stride
-                unsafe Swift.withUnsafeBytes(of: _inline) { bytes in
-                    let basePtr = unsafe UnsafeMutableRawPointer(mutating: bytes.baseAddress!)
-                    for i in 0..<count {
-                        let elementPtr = unsafe (basePtr + i * stride)
-                            .assumingMemoryBound(to: Element.self)
-                        unsafe elementPtr.deinitialize(count: 1)
-                    }
-                }
+                // Elements are inline - clean up via Storage.Inline
+                _inline.deinitialize(count: count)
             }
         }
     }
