@@ -4,7 +4,7 @@ public import Index_Primitives
 
 // MARK: - Properties
 
-extension Array.Bounded {
+extension Array.Fixed {
     /// The number of elements in the array.
     @inlinable
     public var count: Index_Primitives.Index<Element>.Count { _count }
@@ -16,7 +16,7 @@ extension Array.Bounded {
 
 // MARK: - Safe Element Access (Copyable elements only)
 
-extension Array.Bounded where Element: Copyable {
+extension Array.Fixed where Element: Copyable {
     /// Returns the element at the typed index, or nil if out of bounds.
     ///
     /// - Parameter index: The typed index of the element to access.
@@ -28,7 +28,7 @@ extension Array.Bounded where Element: Copyable {
     }
 }
 
-extension Array.Bounded where Element: Copyable {
+extension Array.Fixed where Element: Copyable {
     /// Returns element at index offset from given base index.
     ///
     /// - Parameters:
@@ -48,7 +48,7 @@ extension Array.Bounded where Element: Copyable {
 
 // MARK: - Span Access (Normative)
 
-extension Array.Bounded where Element: ~Copyable {
+extension Array.Fixed where Element: ~Copyable {
     /// Read-only span of the array elements.
     ///
     /// ## Lifetime Contract
@@ -86,7 +86,7 @@ extension Array.Bounded where Element: ~Copyable {
 
 // MARK: - CoW-aware MutableSpan (Copyable elements)
 
-extension Array.Bounded where Element: Copyable {
+extension Array.Fixed where Element: Copyable {
     /// Mutable span with copy-on-write semantics.
     ///
     /// This shadows the base `mutableSpan` when `Element: Copyable`,
@@ -104,7 +104,7 @@ extension Array.Bounded where Element: Copyable {
 // MARK: - Pointer Access (Escape Hatch for C Interop)
 
 @_spi(Unsafe)
-extension Array.Bounded where Element: ~Copyable {
+extension Array.Fixed where Element: ~Copyable {
     /// Provides read-only access to the underlying contiguous storage.
     ///
     /// - Warning: This is an escape hatch for C interop. Prefer `span` for safe access.
@@ -132,7 +132,7 @@ extension Array.Bounded where Element: ~Copyable {
 
 // MARK: - Borrowed Element Access (for ~Copyable elements)
 
-extension Array.Bounded where Element: ~Copyable {
+extension Array.Fixed where Element: ~Copyable {
     /// Accesses the element at the given index via closure (for ~Copyable elements).
     ///
     /// This method provides borrowed access to elements, enabling safe read access
@@ -153,7 +153,7 @@ extension Array.Bounded where Element: ~Copyable {
 
 // MARK: - Typed Subscript (Array.Bounded)
 
-extension Array.Bounded where Element: ~Copyable {
+extension Array.Fixed where Element: ~Copyable {
     /// Accesses the element at the given typed index (borrowing access for ~Copyable elements).
     ///
     /// - Parameter index: The typed index of the element to access.
@@ -171,7 +171,7 @@ extension Array.Bounded where Element: ~Copyable {
     }
 }
 
-extension Array.Bounded where Element: Copyable {
+extension Array.Fixed where Element: Copyable {
     /// Accesses the element at the given typed index (copy semantics for Copyable elements).
     ///
     /// - Parameter index: The typed index of the element to access.

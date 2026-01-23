@@ -79,7 +79,7 @@ public enum Array<Element: ~Copyable>: ~Copyable {
     /// When `Element` is `Copyable`, `Bounded` uses copy-on-write semantics:
     /// copies share storage until mutation.
     @safe
-    public struct Bounded {
+    public struct Fixed {
 
         @usableFromInline
         var _storage: Array.Storage
@@ -200,7 +200,7 @@ public enum Array<Element: ~Copyable>: ~Copyable {
 ///
 /// This enables value semantics with copy-on-write optimization:
 /// copies share storage until mutation.
-extension Array.Bounded: Copyable where Element: Copyable {}
+extension Array.Fixed: Copyable where Element: Copyable {}
 
 /// `Array.Unbounded` is `Copyable` when its elements are `Copyable`.
 /// Uses ManagedBuffer storage, so no deinit needed in the struct itself.
@@ -208,7 +208,7 @@ extension Array.Unbounded: Copyable where Element: Copyable {}
 
 // MARK: - Sendable
 
-extension Array.Bounded: @unchecked Sendable where Element: Sendable {}
+extension Array.Fixed: @unchecked Sendable where Element: Sendable {}
 extension Array.Unbounded: @unchecked Sendable where Element: Sendable {}
 extension Array.Static: @unchecked Sendable where Element: Sendable {}
 

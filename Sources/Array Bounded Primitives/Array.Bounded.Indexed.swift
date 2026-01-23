@@ -14,7 +14,7 @@ public import Array_Primitives_Core
 
 // MARK: - Array.Bounded.Indexed
 
-extension Array.Bounded {
+extension Array.Fixed {
     /// A wrapper providing phantom-typed index access to bounded array storage.
     ///
     /// `Indexed<Tag>` wraps an `Array<Element>.Bounded` and provides subscript
@@ -46,13 +46,13 @@ extension Array.Bounded {
     /// `Array.Bounded` is `~Copyable` unconditionally, so `Indexed` is also `~Copyable`.
     public struct Indexed<Tag: ~Copyable>: ~Copyable {
         @usableFromInline
-        var _storage: Array<Element>.Bounded
+        var _storage: Array<Element>.Fixed
 
         /// Creates an indexed wrapper around the given storage.
         ///
         /// - Parameter storage: The bounded array to wrap.
         @inlinable
-        public init(_ storage: consuming Array<Element>.Bounded) {
+        public init(_ storage: consuming Array<Element>.Fixed) {
             self._storage = storage
         }
 
@@ -87,7 +87,7 @@ extension Array.Bounded {
 
 // MARK: - Passthrough Properties
 
-extension Array.Bounded.Indexed {
+extension Array.Fixed.Indexed {
     /// Whether the array is empty.
     @inlinable
     public var isEmpty: Bool { _storage.isEmpty }
@@ -95,4 +95,4 @@ extension Array.Bounded.Indexed {
 
 // MARK: - Sendable
 
-extension Array.Bounded.Indexed: @unchecked Sendable where Element: Sendable, Tag: ~Copyable {}
+extension Array.Fixed.Indexed: @unchecked Sendable where Element: Sendable, Tag: ~Copyable {}

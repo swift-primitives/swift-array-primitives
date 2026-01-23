@@ -34,27 +34,27 @@ extension ArrayBoundedTests.Unit {
 
     @Test("Init establishes count invariant")
     func initEstablishesCountInvariant() throws {
-        let array = try Array<Int>.Bounded(count: 5) { $0 }
+        let array = try Array<Int>.Fixed(count: 5) { $0 }
         #expect(array.count.rawValue == 5)
     }
 
     @Test("Init with zero count creates empty array")
     func initWithZeroCount() throws {
-        let array = try Array<Int>.Bounded(count: 0) { $0 }
+        let array = try Array<Int>.Fixed(count: 0) { $0 }
         #expect(array.count.rawValue == 0)
         #expect(array.isEmpty == true)
     }
 
     @Test("Init with negative count throws")
     func initWithNegativeCountThrows() {
-        #expect(throws: Array<Int>.Bounded.Error.self) {
-            try Array<Int>.Bounded(count: -1) { $0 }
+        #expect(throws: Array<Int>.Fixed.Error.self) {
+            try Array<Int>.Fixed(count: -1) { $0 }
         }
     }
 
     @Test("All indices 0..<count are initialized")
     func allIndicesInitialized() throws {
-        let array = try Array<Int>.Bounded(count: 100) { $0 * 2 }
+        let array = try Array<Int>.Fixed(count: 100) { $0 * 2 }
 
         for i in 0..<100 {
             let idx = try Index<Int>(i)
@@ -66,7 +66,7 @@ extension ArrayBoundedTests.Unit {
 
     @Test("forEach yields exactly count elements")
     func forEachYieldsExactlyCountElements() throws {
-        var array = try Array<Int>.Bounded(count: 10) { $0 }
+        var array = try Array<Int>.Fixed(count: 10) { $0 }
 
         var iteratedCount = 0
         array.forEach { _ in
@@ -78,7 +78,7 @@ extension ArrayBoundedTests.Unit {
 
     @Test("forEach yields elements in order")
     func forEachYieldsElementsInOrder() throws {
-        var array = try Array<Int>.Bounded(count: 5) { $0 * 10 }
+        var array = try Array<Int>.Fixed(count: 5) { $0 * 10 }
 
         var expected = 0
         array.forEach { element in
@@ -90,7 +90,7 @@ extension ArrayBoundedTests.Unit {
 
     @Test("Empty array forEach yields nothing")
     func emptyArrayForEachYieldsNothing() throws {
-        var array = try Array<Int>.Bounded(count: 0) { $0 }
+        var array = try Array<Int>.Fixed(count: 0) { $0 }
 
         var iteratedCount = 0
         array.forEach { _ in
@@ -102,7 +102,7 @@ extension ArrayBoundedTests.Unit {
 
     @Test("forEach matches subscript access")
     func forEachMatchesSubscriptAccess() throws {
-        var array = try Array<Int>.Bounded(count: 20) { $0 * 3 }
+        var array = try Array<Int>.Fixed(count: 20) { $0 * 3 }
 
         // Capture expected values first to avoid exclusivity violation
         var expected: [Int] = []
@@ -118,7 +118,7 @@ extension ArrayBoundedTests.Unit {
 
     @Test("Subscript write preserves other elements")
     func subscriptWritePreservesOtherElements() throws {
-        var array = try Array<Int>.Bounded(count: 5) { $0 }
+        var array = try Array<Int>.Fixed(count: 5) { $0 }
 
         array[try Index<Int>(2)] = 999
 
@@ -131,7 +131,7 @@ extension ArrayBoundedTests.Unit {
 
     @Test("forEach visits all elements in order")
     func forEachVisitsAllElementsInOrder() throws {
-        var array = try Array<Int>.Bounded(count: 5) { $0 }
+        var array = try Array<Int>.Fixed(count: 5) { $0 }
 
         var visited: [Int] = []
         array.forEach { element in
@@ -143,7 +143,7 @@ extension ArrayBoundedTests.Unit {
 
     @Test("forEach visits count elements")
     func forEachVisitsCountElements() throws {
-        var array = try Array<Int>.Bounded(count: 100) { $0 }
+        var array = try Array<Int>.Fixed(count: 100) { $0 }
 
         var visitCount = 0
         array.forEach { _ in
@@ -157,14 +157,14 @@ extension ArrayBoundedTests.Unit {
 
     @Test("Span count matches array count")
     func spanCountMatchesArrayCount() throws {
-        let array = try Array<Int>.Bounded(count: 10) { $0 }
+        let array = try Array<Int>.Fixed(count: 10) { $0 }
 
         #expect(array.span.count == 10)
     }
 
     @Test("Span elements match subscript access")
     func spanElementsMatchSubscriptAccess() throws {
-        let array = try Array<Int>.Bounded(count: 5) { $0 * 7 }
+        let array = try Array<Int>.Fixed(count: 5) { $0 * 7 }
         let span = array.span
 
         for i in 0..<5 {
@@ -179,7 +179,7 @@ extension ArrayBoundedTests.EdgeCase {
 
     @Test("Single element array")
     func singleElementArray() throws {
-        var array = try Array<Int>.Bounded(count: 1) { _ in 42 }
+        var array = try Array<Int>.Fixed(count: 1) { _ in 42 }
 
         #expect(array.count.rawValue == 1)
         #expect(array[try Index<Int>(0)] == 42)
@@ -192,7 +192,7 @@ extension ArrayBoundedTests.EdgeCase {
     @Test("Large array maintains invariants")
     func largeArrayMaintainsInvariants() throws {
         let size = 10_000
-        var array = try Array<Int>.Bounded(count: size) { $0 }
+        var array = try Array<Int>.Fixed(count: size) { $0 }
 
         #expect(array.count.rawValue == size)
 
@@ -209,7 +209,7 @@ extension ArrayBoundedTests.EdgeCase {
 
     @Test("Mutation via subscript reflects in forEach")
     func mutationViaSubscriptReflectsInForEach() throws {
-        var array = try Array<Int>.Bounded(count: 3) { $0 }
+        var array = try Array<Int>.Fixed(count: 3) { $0 }
 
         array[try Index<Int>(1)] = 100
 
@@ -225,7 +225,7 @@ extension ArrayBoundedTests.Integration {
 
     @Test("forEach and withSpan yield same elements")
     func forEachAndWithSpanYieldSameElements() throws {
-        var array = try Array<Int>.Bounded(count: 10) { $0 * 2 }
+        var array = try Array<Int>.Fixed(count: 10) { $0 * 2 }
 
         var forEachElements: [Int] = []
         array.forEach { forEachElements.append($0) }

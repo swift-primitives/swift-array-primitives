@@ -14,7 +14,7 @@ public import Array_Primitives_Core
 
 // MARK: - Array<Bit>.Packed.Bounded
 
-extension Array<Bit>.Packed {
+extension Array<Bit>.Vector {
     /// Fixed-capacity packed bit array.
     ///
     /// `Array<Bit>.Packed.Bounded` stores bits in a fixed-size buffer, throwing on overflow.
@@ -80,7 +80,7 @@ extension Array<Bit>.Packed {
 
 // MARK: - Properties
 
-extension Array<Bit>.Packed.Bounded {
+extension Array<Bit>.Vector.Bounded {
     /// The number of bits in the array.
     @inlinable
     public var count: Int { _count }
@@ -115,7 +115,7 @@ extension Array<Bit>.Packed.Bounded {
 
 // MARK: - Subscript Access
 
-extension Array<Bit>.Packed.Bounded {
+extension Array<Bit>.Vector.Bounded {
     @inlinable
     public subscript(index: Bit.Index) -> Bool {
         get {
@@ -161,7 +161,7 @@ extension Array<Bit>.Packed.Bounded {
 
 // MARK: - Bit Operations
 
-extension Array<Bit>.Packed.Bounded {
+extension Array<Bit>.Vector.Bounded {
     @inlinable
     public mutating func set(_ index: Bit.Index) throws(Error) {
         let i = index.position.rawValue
@@ -224,7 +224,7 @@ extension Array<Bit>.Packed.Bounded {
 
 // MARK: - Append and Remove
 
-extension Array<Bit>.Packed.Bounded {
+extension Array<Bit>.Vector.Bounded {
     /// Appends a boolean value to the array.
     ///
     /// - Parameter value: The value to append.
@@ -286,7 +286,7 @@ extension Array<Bit>.Packed.Bounded {
 
 // MARK: - Additional Properties
 
-extension Array<Bit>.Packed.Bounded {
+extension Array<Bit>.Vector.Bounded {
     @inlinable
     public var first: Bool? {
         guard _count > 0 else { return nil }
@@ -321,7 +321,7 @@ extension Array<Bit>.Packed.Bounded {
 
 // MARK: - Initializers
 
-extension Array<Bit>.Packed.Bounded {
+extension Array<Bit>.Vector.Bounded {
     /// Creates a bounded bit array from a sequence of booleans.
     @inlinable
     public init<S: Swift.Sequence>(capacity: Int, _ elements: S) throws(Error) where S.Element == Bool {
@@ -343,11 +343,11 @@ extension Array<Bit>.Packed.Bounded {
 
 // MARK: - Conversion
 
-extension Array<Bit>.Packed.Bounded {
+extension Array<Bit>.Vector.Bounded {
     /// Converts to a dynamically-sized packed bit array.
     @inlinable
-    public func toPacked() -> Array<Bit>.Packed {
-        var result = Array<Bit>.Packed()
+    public func toPacked() -> Array<Bit>.Vector {
+        var result = Array<Bit>.Vector()
         for i in 0..<_count {
             result.append(self[i])
         }
@@ -355,10 +355,10 @@ extension Array<Bit>.Packed.Bounded {
     }
 }
 
-extension Array<Bit>.Packed {
+extension Array<Bit>.Vector {
     /// Creates a packed bit array from a bounded packed bit array.
     @inlinable
-    public init(_ bounded: Array<Bit>.Packed.Bounded) {
+    public init(_ bounded: Array<Bit>.Vector.Bounded) {
         self.init()
         for i in 0..<bounded._count {
             append(bounded[i])
@@ -368,7 +368,7 @@ extension Array<Bit>.Packed {
 
 // MARK: - Sequence
 
-extension Array<Bit>.Packed.Bounded: Swift.Sequence {
+extension Array<Bit>.Vector.Bounded: Swift.Sequence {
     public struct Iterator: IteratorProtocol, Sendable {
         @usableFromInline let storage: ContiguousArray<UInt>
         @usableFromInline let count: Int
@@ -400,7 +400,7 @@ extension Array<Bit>.Packed.Bounded: Swift.Sequence {
 
 // MARK: - Equatable
 
-extension Array<Bit>.Packed.Bounded: Equatable {
+extension Array<Bit>.Vector.Bounded: Equatable {
     @inlinable
     public static func == (lhs: Self, rhs: Self) -> Bool {
         guard lhs._count == rhs._count else { return false }
@@ -414,7 +414,7 @@ extension Array<Bit>.Packed.Bounded: Equatable {
 
 // MARK: - Hashable
 
-extension Array<Bit>.Packed.Bounded: Hashable {
+extension Array<Bit>.Vector.Bounded: Hashable {
     @inlinable
     public func hash(into hasher: inout Hasher) {
         hasher.combine(_count)
@@ -427,7 +427,7 @@ extension Array<Bit>.Packed.Bounded: Hashable {
 
 // MARK: - CustomStringConvertible
 
-extension Array<Bit>.Packed.Bounded: CustomStringConvertible {
+extension Array<Bit>.Vector.Bounded: CustomStringConvertible {
     public var description: String {
         let bits = prefix(64).map { $0 ? "1" : "0" }.joined()
         let suffix = _count > 64 ? "..." : ""
@@ -437,7 +437,7 @@ extension Array<Bit>.Packed.Bounded: CustomStringConvertible {
 
 // MARK: - Error Typealias
 
-extension Array<Bit>.Packed.Bounded {
+extension Array<Bit>.Vector.Bounded {
     /// Errors that can occur during bounded packed bit array operations.
     public typealias Error = __ArrayBitPackedBoundedError
 }

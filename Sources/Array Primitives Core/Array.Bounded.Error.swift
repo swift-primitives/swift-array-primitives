@@ -5,7 +5,7 @@
 //  Created by Coen ten Thije Boonkkamp on 23/01/2026.
 //
 
-extension Array.Bounded {
+extension Array.Fixed {
     /// Errors that can occur during bounded array operations.
     public enum Error: Swift.Error, Sendable, Equatable {
         /// The requested count is invalid (negative).

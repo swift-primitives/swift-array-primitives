@@ -4,7 +4,7 @@ public import Index_Primitives
 
 // MARK: - Iterator
 
-extension Array.Bounded {
+extension Array.Fixed {
     /// Pointer-based iterator for Array.Bounded.
     ///
     /// Zero-copy iteration using typed `Index<Element>` for position tracking.
@@ -42,17 +42,17 @@ extension Array.Bounded {
     }
 }
 
-extension Array.Bounded.Iterator: @unchecked Sendable where Element: Sendable {}
+extension Array.Fixed.Iterator: @unchecked Sendable where Element: Sendable {}
 
 // MARK: - Sequence.Protocol Conformance
 
-extension Array.Bounded: Sequence.`Protocol` {
+extension Array.Fixed: Sequence.`Protocol` {
     /// Returns a pointer-based iterator over the array elements.
     ///
     /// Zero-copy iteration - no allocation, no element copying.
     /// Uses typed `Index<Element>` for position tracking.
     @inlinable
-    public borrowing func makeIterator() -> Array.Bounded.Iterator {
+    public borrowing func makeIterator() -> Array.Fixed.Iterator {
         unsafe Iterator(base: UnsafePointer(_cachedPtr), count: .init(__unchecked: _count.rawValue))
     }
 }

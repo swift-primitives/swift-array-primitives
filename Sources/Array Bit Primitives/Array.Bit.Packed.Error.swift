@@ -38,7 +38,7 @@ public enum __ArrayBitPackedInlineError: Swift.Error, Sendable, Equatable {
 
 // MARK: - Canonical Error Typealiases
 
-extension Array<Bit>.Packed {
+extension Array<Bit>.Vector {
     /// Errors that can occur during packed bit array operations.
     public typealias Error = __ArrayBitPackedError
 }

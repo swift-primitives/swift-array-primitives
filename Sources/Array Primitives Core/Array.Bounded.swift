@@ -17,7 +17,7 @@ public import Index_Primitives
 
 // MARK: - Initialization (Checked)
 
-extension Array.Bounded {
+extension Array.Fixed {
     /// Creates a fixed array with the specified count, initializing each element.
     ///
     /// - Parameters:
@@ -48,7 +48,7 @@ extension Array.Bounded {
 
 // MARK: - Initialization (Unchecked)
 
-extension Array.Bounded {
+extension Array.Fixed {
     /// Creates a fixed array with the specified count without validation.
     ///
     /// Use this when the count has already been validated by an invariant.
@@ -81,7 +81,7 @@ extension Array.Bounded {
 
 // MARK: - Copy-on-Write (Copyable elements only)
 
-extension Array.Bounded where Element: Copyable {
+extension Array.Fixed where Element: Copyable {
     /// Ensures the storage is uniquely referenced before mutation.
     @usableFromInline
     package mutating func makeUnique() {

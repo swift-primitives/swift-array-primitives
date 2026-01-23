@@ -32,7 +32,7 @@ extension ArrayBitPackedTests.Unit {
 
     @Test("Append and subscript")
     func appendAndSubscript() {
-        var bits = Array<Bit>.Packed()
+        var bits = Array<Bit>.Vector()
 
         bits.append(true)
         bits.append(false)
@@ -46,7 +46,7 @@ extension ArrayBitPackedTests.Unit {
 
     @Test("Subscript set")
     func subscriptSet() {
-        var bits = Array<Bit>.Packed([true, true, true])
+        var bits = Array<Bit>.Vector([true, true, true])
 
         bits[1] = false
 
@@ -57,7 +57,7 @@ extension ArrayBitPackedTests.Unit {
 
     @Test("popLast")
     func popLast() {
-        var bits = Array<Bit>.Packed([true, false, true])
+        var bits = Array<Bit>.Vector([true, false, true])
 
         let last = bits.popLast()
         #expect(last == true)
@@ -77,7 +77,7 @@ extension ArrayBitPackedTests.Unit {
 
     @Test("removeLast")
     func removeLast() {
-        var bits = Array<Bit>.Packed([true, false])
+        var bits = Array<Bit>.Vector([true, false])
 
         bits.removeLast()
         #expect(bits.count == 1)
@@ -86,7 +86,7 @@ extension ArrayBitPackedTests.Unit {
 
     @Test("removeAll")
     func removeAll() {
-        var bits = Array<Bit>.Packed([true, false, true])
+        var bits = Array<Bit>.Vector([true, false, true])
 
         bits.removeAll()
         #expect(bits.isEmpty)
@@ -94,7 +94,7 @@ extension ArrayBitPackedTests.Unit {
 
     @Test("count and isEmpty")
     func countAndIsEmpty() {
-        var bits = Array<Bit>.Packed()
+        var bits = Array<Bit>.Vector()
         #expect(bits.isEmpty)
 
         bits.append(true)
@@ -104,7 +104,7 @@ extension ArrayBitPackedTests.Unit {
 
     @Test("first and last")
     func firstAndLast() {
-        var bits = Array<Bit>.Packed()
+        var bits = Array<Bit>.Vector()
         #expect(bits.first == nil)
         #expect(bits.last == nil)
 
@@ -119,7 +119,7 @@ extension ArrayBitPackedTests.Unit {
 
     @Test("Init from sequence")
     func initFromSequence() {
-        let bits = Array<Bit>.Packed([true, false, true, false])
+        let bits = Array<Bit>.Vector([true, false, true, false])
 
         #expect(bits.count == 4)
         #expect(bits[0] == true)
@@ -130,7 +130,7 @@ extension ArrayBitPackedTests.Unit {
 
     @Test("Init repeating true")
     func initRepeatingTrue() {
-        let bits = Array<Bit>.Packed(repeating: true, count: 5)
+        let bits = Array<Bit>.Vector(repeating: true, count: 5)
 
         #expect(bits.count == 5)
         #expect(bits.allTrue)
@@ -141,7 +141,7 @@ extension ArrayBitPackedTests.Unit {
 
     @Test("Init repeating false")
     func initRepeatingFalse() {
-        let bits = Array<Bit>.Packed(repeating: false, count: 5)
+        let bits = Array<Bit>.Vector(repeating: false, count: 5)
 
         #expect(bits.count == 5)
         #expect(bits.allFalse)
@@ -153,7 +153,7 @@ extension ArrayBitPackedTests.Unit {
     @Test("Conversion from [Bit]")
     func conversionFromUnpacked() {
         let unpacked: [Bit] = [true, false, true, false]
-        let packed = Array<Bit>.Packed(unpacked)
+        let packed = Array<Bit>.Vector(unpacked)
 
         #expect(packed.count == 4)
         #expect(packed[0] == true)
@@ -164,7 +164,7 @@ extension ArrayBitPackedTests.Unit {
 
     @Test("Conversion to [Bit]")
     func conversionToUnpacked() {
-        let packed = Array<Bit>.Packed([true, false, true, false])
+        let packed = Array<Bit>.Vector([true, false, true, false])
         let unpacked = [Bit](packed)
 
         #expect(unpacked.count == 4)
@@ -177,7 +177,7 @@ extension ArrayBitPackedTests.Unit {
     @Test("Roundtrip conversion")
     func roundtripConversion() {
         let original: [Bit] = [true, false, true, true, false, false, true, false]
-        let packed = Array<Bit>.Packed(original)
+        let packed = Array<Bit>.Vector(original)
         let backToUnpacked = [Bit](packed)
 
         #expect(original == backToUnpacked)
@@ -185,7 +185,7 @@ extension ArrayBitPackedTests.Unit {
 
     @Test("toggle")
     func toggle() throws {
-        var bits = Array<Bit>.Packed([true, false, true])
+        var bits = Array<Bit>.Vector([true, false, true])
 
         try bits.toggle(0)
         try bits.toggle(1)
@@ -198,7 +198,7 @@ extension ArrayBitPackedTests.Unit {
 
     @Test("trueCount and falseCount")
     func trueAndFalseCount() {
-        let bits = Array<Bit>.Packed([true, false, true, false, true])
+        let bits = Array<Bit>.Vector([true, false, true, false, true])
 
         #expect(bits.trueCount == 3)
         #expect(bits.falseCount == 2)
@@ -206,9 +206,9 @@ extension ArrayBitPackedTests.Unit {
 
     @Test("allTrue and allFalse")
     func allTrueAndAllFalse() {
-        let allTrue = Array<Bit>.Packed([true, true, true])
-        let allFalse = Array<Bit>.Packed([false, false, false])
-        let mixed = Array<Bit>.Packed([true, false, true])
+        let allTrue = Array<Bit>.Vector([true, true, true])
+        let allFalse = Array<Bit>.Vector([false, false, false])
+        let mixed = Array<Bit>.Vector([true, false, true])
 
         #expect(allTrue.allTrue)
         #expect(!allTrue.allFalse)
@@ -222,7 +222,7 @@ extension ArrayBitPackedTests.Unit {
 
     @Test("Iteration")
     func iteration() {
-        let bits = Array<Bit>.Packed([true, false, true, false])
+        let bits = Array<Bit>.Vector([true, false, true, false])
 
         var values: [Bool] = []
         for bit in bits {
@@ -234,7 +234,7 @@ extension ArrayBitPackedTests.Unit {
 
     @Test("Collection conformance")
     func collectionConformance() {
-        let bits = Array<Bit>.Packed([true, false, true])
+        let bits = Array<Bit>.Vector([true, false, true])
 
         #expect(bits.startIndex == 0)
         #expect(bits.endIndex == 3)
@@ -244,9 +244,9 @@ extension ArrayBitPackedTests.Unit {
 
     @Test("Equality")
     func equality() {
-        let a = Array<Bit>.Packed([true, false, true])
-        let b = Array<Bit>.Packed([true, false, true])
-        let c = Array<Bit>.Packed([true, true, true])
+        let a = Array<Bit>.Vector([true, false, true])
+        let b = Array<Bit>.Vector([true, false, true])
+        let c = Array<Bit>.Vector([true, true, true])
 
         #expect(a == b)
         #expect(a != c)
@@ -254,7 +254,7 @@ extension ArrayBitPackedTests.Unit {
 
     @Test("Description")
     func description() {
-        let bits = Array<Bit>.Packed([true, false, true])
+        let bits = Array<Bit>.Vector([true, false, true])
         let desc = bits.description
         #expect(desc.contains("Array<Bit>.Packed"))
         #expect(desc.contains("101"))
@@ -262,7 +262,7 @@ extension ArrayBitPackedTests.Unit {
 
     @Test("Append Bit type")
     func appendBitType() {
-        var bits = Array<Bit>.Packed()
+        var bits = Array<Bit>.Vector()
         bits.append(Bit.one)
         bits.append(Bit.zero)
         bits.append(Bit.one)
@@ -276,7 +276,7 @@ extension ArrayBitPackedTests.Unit {
     @Test("Init from [Bit] sequence")
     func initFromBitSequence() {
         let bitArray: [Bit] = [.one, .zero, .one, .zero]
-        let packed = Array<Bit>.Packed(bitArray)
+        let packed = Array<Bit>.Vector(bitArray)
 
         #expect(packed.count == 4)
         #expect(packed[0] == true)
@@ -290,21 +290,21 @@ extension ArrayBitPackedTests.EdgeCase {
 
     @Test("Empty arrays equal")
     func emptyArraysEqual() {
-        let a = Array<Bit>.Packed()
-        let b = Array<Bit>.Packed()
+        let a = Array<Bit>.Vector()
+        let b = Array<Bit>.Vector()
         #expect(a == b)
     }
 
     @Test("Different lengths not equal")
     func differentLengthsNotEqual() {
-        let a = Array<Bit>.Packed([true, false])
-        let b = Array<Bit>.Packed([true, false, true])
+        let a = Array<Bit>.Vector([true, false])
+        let b = Array<Bit>.Vector([true, false, true])
         #expect(a != b)
     }
 
     @Test("Word boundary: index 63 and 64")
     func wordBoundary63And64() {
-        var bits = Array<Bit>.Packed(repeating: false, count: 100)
+        var bits = Array<Bit>.Vector(repeating: false, count: 100)
 
         bits[63] = true
         bits[64] = true
@@ -317,7 +317,7 @@ extension ArrayBitPackedTests.EdgeCase {
 
     @Test("Large array")
     func largeArray() {
-        var bits = Array<Bit>.Packed(repeating: false, count: 1000)
+        var bits = Array<Bit>.Vector(repeating: false, count: 1000)
 
         bits[0] = true
         bits[500] = true

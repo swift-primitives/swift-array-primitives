@@ -16,7 +16,7 @@ public import Sequence_Primitives
 
 // MARK: - ForEach Property
 
-extension Array.Bounded where Element: ~Copyable {
+extension Array.Fixed where Element: ~Copyable {
     /// Property view for iteration operations.
     ///
     /// Provides iteration patterns for ALL element types including `~Copyable`:
@@ -53,7 +53,7 @@ extension Array.Bounded where Element: ~Copyable {
 // MARK: - ForEach: Borrowing Operations (~Copyable)
 
 extension Property.View.Typed
-where Tag == Sequence.ForEach, Base == Array<Element>.Bounded, Element: ~Copyable {
+where Tag == Sequence.ForEach, Base == Array<Element>.Fixed, Element: ~Copyable {
     /// Borrowing iteration: `.forEach { }`
     ///
     /// Iterates over all elements without consuming them.

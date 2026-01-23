@@ -48,7 +48,7 @@ extension Array where Element == Bit {
     /// - ``Array/Packed-swift.struct``: Dynamically-growing storage (this type)
     /// - ``Array/Packed-swift.struct/Bounded``: Fixed-capacity, throws on overflow
     /// - ``Array/Packed-swift.struct/Inline``: Zero-allocation inline storage with compile-time capacity
-    public struct Packed: Sendable {
+    public struct Vector: Sendable {
         @usableFromInline
         static var _bitsPerWord: Int { UInt.bitWidth }
 
@@ -65,7 +65,7 @@ extension Array where Element == Bit {
         }
 
         @inlinable
-        public init(count: Int) throws(Array<Bit>.Packed.Error) {
+        public init(count: Int) throws(Array<Bit>.Vector.Error) {
             guard count >= 0 else {
                 throw .invalidCount
             }
@@ -78,7 +78,7 @@ extension Array where Element == Bit {
 
 // MARK: - Properties
 
-extension Array<Bit>.Packed {
+extension Array<Bit>.Vector {
     @inlinable
     public var count: Int { _count }
 
@@ -100,7 +100,7 @@ extension Array<Bit>.Packed {
 
 // MARK: - Subscript Access
 
-extension Array<Bit>.Packed {
+extension Array<Bit>.Vector {
     @inlinable
     public subscript(index: Bit.Index) -> Bool {
         get {
@@ -126,7 +126,7 @@ extension Array<Bit>.Packed {
     }
 
     @inlinable
-    public func get(_ index: Bit.Index) throws(Array<Bit>.Packed.Error) -> Bool {
+    public func get(_ index: Bit.Index) throws(Array<Bit>.Vector.Error) -> Bool {
         let i = index.position.rawValue
         guard i >= 0 && i < _count else {
             throw .bounds(index: i, count: _count)
@@ -140,9 +140,9 @@ extension Array<Bit>.Packed {
 
 // MARK: - Bit Operations
 
-extension Array<Bit>.Packed {
+extension Array<Bit>.Vector {
     @inlinable
-    public mutating func set(_ index: Bit.Index) throws(Array<Bit>.Packed.Error) {
+    public mutating func set(_ index: Bit.Index) throws(Array<Bit>.Vector.Error) {
         let i = index.position.rawValue
         guard i >= 0 && i < _count else {
             throw .bounds(index: i, count: _count)
@@ -154,7 +154,7 @@ extension Array<Bit>.Packed {
     }
 
     @inlinable
-    public mutating func clear(_ index: Bit.Index) throws(Array<Bit>.Packed.Error) {
+    public mutating func clear(_ index: Bit.Index) throws(Array<Bit>.Vector.Error) {
         let i = index.position.rawValue
         guard i >= 0 && i < _count else {
             throw .bounds(index: i, count: _count)
@@ -166,7 +166,7 @@ extension Array<Bit>.Packed {
     }
 
     @inlinable
-    public mutating func toggle(_ index: Bit.Index) throws(Array<Bit>.Packed.Error) {
+    public mutating func toggle(_ index: Bit.Index) throws(Array<Bit>.Vector.Error) {
         let i = index.position.rawValue
         guard i >= 0 && i < _count else {
             throw .bounds(index: i, count: _count)
@@ -200,9 +200,9 @@ extension Array<Bit>.Packed {
 
 // MARK: - Resize
 
-extension Array<Bit>.Packed {
+extension Array<Bit>.Vector {
     @inlinable
-    public mutating func resize(to newCount: Int, fill: Bool = false) throws(Array<Bit>.Packed.Error) {
+    public mutating func resize(to newCount: Int, fill: Bool = false) throws(Array<Bit>.Vector.Error) {
         guard newCount >= 0 else {
             throw .invalidCount
         }
@@ -247,7 +247,7 @@ extension Array<Bit>.Packed {
 
 // MARK: - Iteration
 
-extension Array<Bit>.Packed {
+extension Array<Bit>.Vector {
     @inlinable
     public func forEachSetBit(_ body: (Bit.Index) -> Void) {
         for (wordIndex, var word) in _storage.enumerated() {
@@ -265,7 +265,7 @@ extension Array<Bit>.Packed {
 
 // MARK: - Additional Properties
 
-extension Array<Bit>.Packed {
+extension Array<Bit>.Vector {
     /// Returns the first element, or `nil` if empty.
     @inlinable
     public var first: Bool? {
@@ -308,7 +308,7 @@ extension Array<Bit>.Packed {
 
 // MARK: - Append and Remove
 
-extension Array<Bit>.Packed {
+extension Array<Bit>.Vector {
     /// Appends a boolean value to the array.
     @inlinable
     public mutating func append(_ value: Bool) {
@@ -375,7 +375,7 @@ extension Array<Bit>.Packed {
 
 // MARK: - Initializers
 
-extension Array<Bit>.Packed {
+extension Array<Bit>.Vector {
     /// Creates a packed bit array from a sequence of booleans.
     @inlinable
     public init<S: Swift.Sequence>(_ elements: S) where S.Element == Bool {
@@ -434,12 +434,12 @@ extension Array<Bit>.Packed {
 extension Swift.Array where Element == Bit {
     /// Creates an unpacked `[Bit]` array from a packed bit array.
     @inlinable
-    public init(_ packed: Array_Primitives_Core.Array<Bit>.Packed) {
+    public init(_ packed: Array_Primitives_Core.Array<Bit>.Vector) {
         self.init()
         self.reserveCapacity(packed.count)
         for i in 0..<packed._count {
-            let wordIndex = i / Array_Primitives_Core.Array<Bit>.Packed._bitsPerWord
-            let bitIndex = i % Array_Primitives_Core.Array<Bit>.Packed._bitsPerWord
+            let wordIndex = i / Array_Primitives_Core.Array<Bit>.Vector._bitsPerWord
+            let bitIndex = i % Array_Primitives_Core.Array<Bit>.Vector._bitsPerWord
             let mask: UInt = 1 << bitIndex
             let value = (packed._storage[wordIndex] & mask) != 0
             self.append(Bit(value))
@@ -449,7 +449,7 @@ extension Swift.Array where Element == Bit {
 
 // MARK: - Sequence
 
-extension Array<Bit>.Packed: Swift.Sequence {
+extension Array<Bit>.Vector: Swift.Sequence {
     /// An iterator over the elements of a packed bit array.
     public struct Iterator: IteratorProtocol, Sendable {
         @usableFromInline
@@ -487,7 +487,7 @@ extension Array<Bit>.Packed: Swift.Sequence {
 
 // MARK: - RandomAccessCollection
 
-extension Array<Bit>.Packed: RandomAccessCollection {
+extension Array<Bit>.Vector: RandomAccessCollection {
     public typealias Index = Bit.Index
     public typealias Element = Bool
 
@@ -535,7 +535,7 @@ extension Array<Bit>.Packed: RandomAccessCollection {
 // constrained extensions. The crash occurs during SIL generation for
 // `__derived_struct_equals` with "ambiguous use of operator '=='".
 
-extension Array<Bit>.Packed: Equatable {
+extension Array<Bit>.Vector: Equatable {
     @inlinable
     public static func == (lhs: Self, rhs: Self) -> Bool {
         guard lhs._count == rhs._count else { return false }
@@ -551,7 +551,7 @@ extension Array<Bit>.Packed: Equatable {
 //
 // Manual implementation to work around the same compiler crash.
 
-extension Array<Bit>.Packed: Hashable {
+extension Array<Bit>.Vector: Hashable {
     @inlinable
     public func hash(into hasher: inout Hasher) {
         hasher.combine(_count)
@@ -561,7 +561,7 @@ extension Array<Bit>.Packed: Hashable {
 
 // MARK: - CustomStringConvertible
 
-extension Array<Bit>.Packed: CustomStringConvertible {
+extension Array<Bit>.Vector: CustomStringConvertible {
     public var description: String {
         let bits = prefix(64).map { $0 ? "1" : "0" }.joined()
         let suffix = _count > 64 ? "..." : ""
@@ -571,7 +571,7 @@ extension Array<Bit>.Packed: CustomStringConvertible {
 
 // MARK: - Bit.Order Access
 
-extension Array<Bit>.Packed {
+extension Array<Bit>.Vector {
     /// Accesses the bit at index with specified bit order.
     @inlinable
     public subscript(index: Bit.Index, order: Bit.Order) -> Bool {
@@ -642,16 +642,16 @@ extension Array<Bit>.Packed {
 
 // MARK: - Bit Type Returns
 
-extension Array<Bit>.Packed {
+extension Array<Bit>.Vector {
     /// Returns the bit value at the given index as a `Bit`.
     @inlinable
-    public func bit(at index: Bit.Index) throws(Array<Bit>.Packed.Error) -> Bit {
+    public func bit(at index: Bit.Index) throws(Array<Bit>.Vector.Error) -> Bit {
         Bit(try get(index))
     }
 
     /// Returns the bit value at the given integer index as a `Bit`.
     @inlinable
-    public func bit(at index: Int) throws(Array<Bit>.Packed.Error) -> Bit {
+    public func bit(at index: Int) throws(Array<Bit>.Vector.Error) -> Bit {
         try bit(at: Bit.Index(__unchecked: (), position: index))
     }
 
@@ -664,10 +664,10 @@ extension Array<Bit>.Packed {
 
 // MARK: - Bit.Value Tagged Results
 
-extension Array<Bit>.Packed {
+extension Array<Bit>.Vector {
     /// Toggles the bit at index and returns the new value with its index.
     @inlinable
-    public mutating func toggleReturning(_ index: Bit.Index) throws(Array<Bit>.Packed.Error) -> Bit.Value<Bit.Index> {
+    public mutating func toggleReturning(_ index: Bit.Index) throws(Array<Bit>.Vector.Error) -> Bit.Value<Bit.Index> {
         try toggle(index)
         let newValue = Bit(try get(index))
         return Bit.Value(newValue, index)
@@ -675,7 +675,7 @@ extension Array<Bit>.Packed {
 
     /// Sets the bit at index and returns the previous value with its index.
     @inlinable
-    public mutating func setReturning(_ index: Bit.Index) throws(Array<Bit>.Packed.Error) -> Bit.Value<Bit.Index> {
+    public mutating func setReturning(_ index: Bit.Index) throws(Array<Bit>.Vector.Error) -> Bit.Value<Bit.Index> {
         let previous = Bit(try get(index))
         try set(index)
         return Bit.Value(previous, index)
@@ -683,7 +683,7 @@ extension Array<Bit>.Packed {
 
     /// Clears the bit at index and returns the previous value with its index.
     @inlinable
-    public mutating func clearReturning(_ index: Bit.Index) throws(Array<Bit>.Packed.Error) -> Bit.Value<Bit.Index> {
+    public mutating func clearReturning(_ index: Bit.Index) throws(Array<Bit>.Vector.Error) -> Bit.Value<Bit.Index> {
         let previous = Bit(try get(index))
         try clear(index)
         return Bit.Value(previous, index)

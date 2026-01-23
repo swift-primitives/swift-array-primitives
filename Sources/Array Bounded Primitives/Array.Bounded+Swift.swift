@@ -7,7 +7,7 @@ public import Index_Primitives
 // Requires explicit underestimatedCount to resolve ambiguity with
 // Sequence.Protocol+Swift.Sequence default implementation.
 
-extension Array.Bounded: Swift.Sequence where Element: Copyable {
+extension Array.Fixed: Swift.Sequence where Element: Copyable {
     /// Returns the count as the underestimated count since we know the exact size.
     @inlinable
     public var underestimatedCount: Int { _count.rawValue }
@@ -17,6 +17,6 @@ extension Array.Bounded: Swift.Sequence where Element: Copyable {
 // Bridge to Swift standard library collections for interop with stdlib algorithms.
 // Requirements satisfied by Collection.Protocol conformance above.
 
-extension Array.Bounded: Swift.Collection where Element: Copyable {}
-extension Array.Bounded: Swift.BidirectionalCollection where Element: Copyable {}
-extension Array.Bounded: Swift.RandomAccessCollection where Element: Copyable {}
+extension Array.Fixed: Swift.Collection where Element: Copyable {}
+extension Array.Fixed: Swift.BidirectionalCollection where Element: Copyable {}
+extension Array.Fixed: Swift.RandomAccessCollection where Element: Copyable {}
