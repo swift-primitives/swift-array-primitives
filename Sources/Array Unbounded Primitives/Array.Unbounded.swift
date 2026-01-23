@@ -170,6 +170,33 @@ extension Array.Unbounded where Element: ~Copyable {
     }
 }
 
+// MARK: - Safe Element Access (Copyable elements only)
+
+extension Array.Unbounded where Element: Copyable {
+    /// Returns the element at the typed index, or nil if out of bounds.
+    ///
+    /// - Parameter index: The typed index of the element to access.
+    /// - Returns: The element at the index, or `nil` if out of bounds.
+    @inlinable
+    public func element(at index: Array<Element>.Index) -> Element? {
+        guard index.position.rawValue < count.rawValue else { return nil }
+        return unsafe _cachedPtr[index.position.rawValue]
+    }
+
+    /// Returns element at index offset from given base index.
+    ///
+    /// - Parameters:
+    ///   - base: The starting index.
+    ///   - offset: The signed offset from the base.
+    /// - Returns: The element at the computed position, or `nil` if out of bounds.
+    @inlinable
+    public func element(at base: Array<Element>.Index, offsetBy offset: Array<Element>.Offset) -> Element? {
+        guard let newIndex = base + offset else { return nil }
+        guard newIndex.position.rawValue < count.rawValue else { return nil }
+        return unsafe _cachedPtr[newIndex.position.rawValue]
+    }
+}
+
 // MARK: - Span Access
 
 extension Array.Unbounded where Element: ~Copyable {
