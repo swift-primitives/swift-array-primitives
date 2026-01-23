@@ -53,18 +53,18 @@ extension Array.Small where Element: ~Copyable {
         if let heapStorage = _heapStorage {
             // Heap mode
             let count = heapStorage.header
-            _ensureHeapCapacity(count + 1)
+            heap.ensureCapacity(count + 1)
             _heapStorage!._initializeElement(at: count, to: element)
             _heapStorage!.header = count + 1
             _count = Index_Primitives.Index<Element>.Count(__unchecked: _count.rawValue + 1)
         } else if _count.rawValue < inlineCapacity {
             // Inline mode with room
-            let ptr = unsafe _inlinePointerToElement(at: _count.rawValue)
+            let ptr = unsafe inline.pointer(at: _count.rawValue)
             unsafe ptr.initialize(to: element)
             _count = Index_Primitives.Index<Element>.Count(__unchecked: _count.rawValue + 1)
         } else {
             // Need to spill
-            _spillToHeap(minimumCapacity: _count.rawValue + 1)
+            spill(minimumCapacity: _count.rawValue + 1)
             _heapStorage!._initializeElement(at: _count.rawValue, to: element)
             _heapStorage!.header = _count.rawValue + 1
             _count = Index_Primitives.Index<Element>.Count(__unchecked: _count.rawValue + 1)
@@ -88,7 +88,7 @@ extension Array.Small where Element: ~Copyable {
             // Inline mode
             let newCount = _count.rawValue - 1
             _count = Index_Primitives.Index<Element>.Count(__unchecked: newCount)
-            let ptr = unsafe _inlinePointerToElement(at: newCount)
+            let ptr = unsafe inline.pointer(at: newCount)
             return unsafe ptr.move()
         }
     }
@@ -141,7 +141,7 @@ extension Array.Small where Element: ~Copyable {
                 body(unsafe (elements + index.position.rawValue).pointee)
             }
         } else {
-            return unsafe body(_inlineReadPointerToElement(at: index.position.rawValue).pointee)
+            return unsafe body(inline.read(at: index.position.rawValue).pointee)
         }
     }
 
@@ -310,7 +310,7 @@ extension Array.Small where Element: Copyable {
         if let heapPtr = unsafe _heapPtr {
             return unsafe heapPtr[index.position.rawValue]
         } else {
-            return unsafe _inlineReadPointerToElement(at: index.position.rawValue).pointee
+            return unsafe inline.read(at: index.position.rawValue).pointee
         }
     }
 
@@ -327,7 +327,7 @@ extension Array.Small where Element: Copyable {
         if let heapPtr = unsafe _heapPtr {
             return unsafe heapPtr[newIndex.position.rawValue]
         } else {
-            return unsafe _inlineReadPointerToElement(at: newIndex.position.rawValue).pointee
+            return unsafe inline.read(at: newIndex.position.rawValue).pointee
         }
     }
 }
@@ -346,7 +346,7 @@ extension Array.Small where Element: Copyable {
             if let heapPtr = unsafe _heapPtr {
                 return unsafe heapPtr[index.position.rawValue]
             } else {
-                return unsafe _inlineReadPointerToElement(at: index.position.rawValue).pointee
+                return unsafe inline.read(at: index.position.rawValue).pointee
             }
         }
         set {
@@ -355,7 +355,7 @@ extension Array.Small where Element: Copyable {
                 _ = _heapStorage!._moveElement(at: index.position.rawValue)
                 _heapStorage!._initializeElement(at: index.position.rawValue, to: newValue)
             } else {
-                unsafe _inlinePointerToElement(at: index.position.rawValue).pointee = newValue
+                unsafe inline.pointer(at: index.position.rawValue).pointee = newValue
             }
         }
     }
@@ -373,7 +373,7 @@ extension Array.Small where Element: ~Copyable {
             if let heapPtr = unsafe _heapPtr {
                 yield unsafe heapPtr[index.position.rawValue]
             } else {
-                yield unsafe _inlineReadPointerToElement(at: index.position.rawValue).pointee
+                yield unsafe inline.read(at: index.position.rawValue).pointee
             }
         }
         _modify {
@@ -381,7 +381,7 @@ extension Array.Small where Element: ~Copyable {
             if let heapPtr = unsafe _heapPtr {
                 yield &(unsafe heapPtr[index.position.rawValue])
             } else {
-                yield &(unsafe _inlinePointerToElement(at: index.position.rawValue).pointee)
+                yield &(unsafe inline.pointer(at: index.position.rawValue).pointee)
             }
         }
     }

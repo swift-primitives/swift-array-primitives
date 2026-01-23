@@ -22,6 +22,7 @@ let package = Package(
         .package(path: "../swift-bit-primitives"),
         .package(path: "../swift-index-primitives"),
         .package(path: "../swift-collection-primitives"),
+        .package(path: "../swift-property-primitives"),
     ],
     targets: [
         // Internal: Core types with ~Copyable support (no Sequence/Collection.Protocol conformances)
@@ -32,6 +33,7 @@ let package = Package(
                 .product(name: "Bit Primitives", package: "swift-bit-primitives"),
                 .product(name: "Index Primitives", package: "swift-index-primitives"),
                 .product(name: "Collection Primitives", package: "swift-collection-primitives"),
+                .product(name: "Property Primitives", package: "swift-property-primitives"),
             ]
         ),
         // Per-variant modules: Swift.Sequence/Collection conformances (Element: Copyable)
