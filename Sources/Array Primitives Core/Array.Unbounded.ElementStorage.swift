@@ -5,12 +5,10 @@
 //  Created by Coen ten Thije Boonkkamp on 23/01/2026.
 //
 
-
-
 extension Array.Unbounded.ElementStorage where Element: ~Copyable {
     /// Creates empty storage with the specified minimum capacity.
     @usableFromInline
-    static func create(minimumCapacity: Int) -> Array<Element>.Unbounded<N>.ElementStorage {
+    package static func create(minimumCapacity: Int) -> Array<Element>.Unbounded<N>.ElementStorage {
         let storage = Array<Element>.Unbounded<N>.ElementStorage.create(minimumCapacity: minimumCapacity) { _ in 0 }
         return unsafe unsafeDowncast(storage, to: Array<Element>.Unbounded<N>.ElementStorage.self)
     }
