@@ -106,7 +106,7 @@ extension ArrayUnboundedTests.Unit {
 
     @Test("Empty array forEach yields nothing")
     func emptyArrayForEachYieldsNothing() {
-        let array = Array<Int>.Unbounded<4>()
+        var array = Array<Int>.Unbounded<4>()
 
         var iteratedCount = 0
         array.forEach { _ in iteratedCount += 1 }
@@ -119,11 +119,14 @@ extension ArrayUnboundedTests.Unit {
         var array = Array<Int>.Unbounded<4>()
         for i in 0..<20 { array.append(i * 5) }
 
-        var index = 0
-        array.forEach { element in
-            #expect(element == array[try! Index<Int>(index)])
-            index += 1
-        }
+        // Capture expected values first to avoid exclusivity violation
+        var expected: [Int] = []
+        for i in 0..<20 { expected.append(array[try! Index<Int>(i)]) }
+
+        var actual: [Int] = []
+        array.forEach { actual.append($0) }
+
+        #expect(actual == expected)
     }
 
     // MARK: - Copy-on-Write Invariants
@@ -135,7 +138,7 @@ extension ArrayUnboundedTests.Unit {
         original.append(2)
         original.append(3)
 
-        let copy = original
+        var copy = original
 
         // Both should have same elements
         var originalElements: [Int] = []
@@ -179,7 +182,7 @@ extension ArrayUnboundedTests.Unit {
         original.append(2)
         original.append(3)
 
-        let copy = original
+        var copy = original
 
         // Mutate the original
         original.append(4)

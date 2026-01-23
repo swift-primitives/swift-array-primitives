@@ -149,15 +149,6 @@ extension Array.Bounded where Element: ~Copyable {
         return unsafe body((_cachedPtr + index.position.rawValue).pointee)
     }
 
-    /// Iterates over all elements in the array.
-    ///
-    /// - Parameter body: A closure that receives each borrowed element.
-    @inlinable
-    public func forEach(_ body: (borrowing Element) -> Void) {
-        for i in 0..<_count.rawValue {
-            unsafe body((_cachedPtr + i).pointee)
-        }
-    }
 }
 
 // MARK: - Typed Subscript (Array.Bounded)

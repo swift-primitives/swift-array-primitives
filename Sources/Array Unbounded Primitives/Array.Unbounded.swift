@@ -140,34 +140,6 @@ extension Array.Unbounded where Element: ~Copyable {
         }
     }
 
-    /// Iterates over all elements in the array.
-    ///
-    /// - Parameter body: A closure that receives each borrowed element.
-    @inlinable
-    public func forEach<E: Swift.Error>(_ body: (borrowing Element) throws(E) -> Void) throws(E) {
-        let count = _storage.header
-        guard count > 0 else { return }
-        _ = try unsafe _storage.withUnsafeMutablePointerToElements { (elements) throws(E) in
-            for i in 0..<count {
-                try unsafe body((elements + i).pointee)
-            }
-        }
-    }
-
-    /// Removes and consumes all elements.
-    ///
-    /// - Parameter body: A closure that receives each consumed element.
-    @inlinable
-    public mutating func drain(_ body: (consuming Element) -> Void) {
-        let count = _storage.header
-        guard count > 0 else { return }
-        _ = unsafe _storage.withUnsafeMutablePointerToElements { elements in
-            for i in 0..<count {
-                unsafe body((elements + i).move())
-            }
-        }
-        _storage.header = 0
-    }
 }
 
 // MARK: - Safe Element Access (Copyable elements only)
