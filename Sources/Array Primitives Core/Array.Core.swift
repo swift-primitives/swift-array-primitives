@@ -9,16 +9,14 @@
 //
 // ===----------------------------------------------------------------------===//
 
-// Note: Array.Unbounded is declared INSIDE the Array enum body (in Array.swift)
-// due to Swift's ~Copyable constraint propagation rules. This file contains
-// only the minimal extensions required for the workaround. Public API is in
-// the Array Unbounded Primitives module.
+// Core extensions for the base Array type.
+// These provide internal helpers required for the Array struct.
 
 import Index_Primitives
 
 // MARK: - Count (package access for Core - subscripts use this)
 
-extension Array.Unbounded where Element: ~Copyable {
+extension Array where Element: ~Copyable {
     /// The number of elements in the array (package access for Core subscripts).
     @usableFromInline
     package var _rawCount: Int { _storage.header }
@@ -26,14 +24,14 @@ extension Array.Unbounded where Element: ~Copyable {
 
 // MARK: - Capacity Management (package access for cross-module use)
 
-extension Array.Unbounded where Element: ~Copyable {
+extension Array where Element: ~Copyable {
     /// Ensures the array has capacity for at least the specified number of elements.
     @usableFromInline
     package mutating func _ensureCapacity(_ minimumCapacity: Int) {
         guard _storage.capacity < minimumCapacity else { return }
 
-        // Growth factor 2.0, minimum capacity from hint or 4
-        let newCapacity = Swift.max(minimumCapacity, _storage.capacity * 2, N, 4)
+        // Growth factor 2.0, minimum capacity 4
+        let newCapacity = Swift.max(minimumCapacity, _storage.capacity * 2, 4)
         let newStorage = Array.Storage.create(minimumCapacity: newCapacity)
         let currentCount = _storage.header
 
@@ -46,7 +44,7 @@ extension Array.Unbounded where Element: ~Copyable {
 
 // MARK: - Copy-on-Write (package access for cross-module use)
 
-extension Array.Unbounded where Element: Copyable {
+extension Array where Element: Copyable {
     /// Ensures the storage is uniquely referenced before mutation.
     @usableFromInline
     package mutating func makeUnique() {
@@ -56,5 +54,3 @@ extension Array.Unbounded where Element: Copyable {
         }
     }
 }
-
-// MARK: - Typed Subscript

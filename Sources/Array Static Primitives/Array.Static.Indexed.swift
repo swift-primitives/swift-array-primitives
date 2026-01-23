@@ -12,10 +12,10 @@
 import Index_Primitives
 public import Array_Primitives_Core
 
-// MARK: - Array.Inline.Indexed
+// MARK: - Array.Static.Indexed
 
 extension Array.Static where Element: Copyable {
-    /// A wrapper providing phantom-typed index access to inline array storage.
+    /// A wrapper providing phantom-typed index access to static array storage.
     ///
     /// `Indexed<Tag>` wraps an `Array<Element>.Inline<capacity>` and provides subscript
     /// access via `Index<Tag>` instead of raw `Int`, enabling type-safe indexing
@@ -42,14 +42,14 @@ extension Array.Static where Element: Copyable {
     ///
     /// ## Note
     ///
-    /// `Array.Inline` is `~Copyable` unconditionally, so `Indexed` is also `~Copyable`.
+    /// `Array.Static` is `~Copyable` unconditionally, so `Indexed` is also `~Copyable`.
     public struct Indexed<Tag: ~Copyable>: ~Copyable {
         @usableFromInline
         var _storage: Array<Element>.Static<capacity>
 
         /// Creates an indexed wrapper around the given storage.
         ///
-        /// - Parameter storage: The inline array to wrap.
+        /// - Parameter storage: The static array to wrap.
         @inlinable
         public init(_ storage: consuming Array<Element>.Static<capacity>) {
             self._storage = storage
@@ -131,7 +131,7 @@ extension Array.Static.Indexed where Element: Copyable {
     /// Appends an element to the array.
     ///
     /// - Parameter element: The element to append.
-    /// - Throws: `Array.Inline.Error.overflow` if the array is full.
+    /// - Throws: `Array.Static.Error.overflow` if the array is full.
     @inlinable
     public mutating func append(_ element: Element) throws(Array.Static.Error) {
         try _storage.append(element)

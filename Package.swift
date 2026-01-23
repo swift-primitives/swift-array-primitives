@@ -47,21 +47,21 @@ let package = Package(
         // Per-variant modules: Swift.Sequence/Collection conformances (Element: Copyable)
         // Separate modules to avoid constraint poisoning on Core types
         .target(
-            name: "Array Bounded Primitives",
+            name: "Array Fixed Primitives",  // Fixed-count heap array (was Bounded)
             dependencies: [
                 "Array Primitives Core",
                 .product(name: "Collection Primitives", package: "swift-collection-primitives"),
             ]
         ),
         .target(
-            name: "Array Unbounded Primitives",
+            name: "Array Unbounded Primitives",  // Base Array extensions (growable)
             dependencies: [
                 "Array Primitives Core",
                 .product(name: "Collection Primitives", package: "swift-collection-primitives"),
             ]
         ),
         .target(
-            name: "Array Inline Primitives",
+            name: "Array Static Primitives",  // Fixed-capacity inline (was Inline)
             dependencies: [
                 "Array Primitives Core",
                 .product(name: "Collection Primitives", package: "swift-collection-primitives"),
@@ -86,9 +86,9 @@ let package = Package(
             name: "Array Primitives",
             dependencies: [
                 "Array Primitives Core",
-                "Array Bounded Primitives",
+                "Array Fixed Primitives",
                 "Array Unbounded Primitives",
-                "Array Inline Primitives",
+                "Array Static Primitives",
                 "Array Small Primitives",
                 "Array Bit Primitives",
             ]

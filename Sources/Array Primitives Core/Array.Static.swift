@@ -9,7 +9,7 @@
 //
 // ===----------------------------------------------------------------------===//
 
-// Note: Array.Inline is declared INSIDE the Array enum body (in Array.swift)
+// Note: Array.Static is declared INSIDE the Array struct body (in Array.swift)
 // due to a Swift compiler bug where nested types with value generic parameters
 // declared in extensions do not properly inherit ~Copyable constraints from
 // the outer type. This file contains only extensions that require direct
@@ -63,7 +63,7 @@ extension Array.Static where Element: ~Copyable {
     ///
     /// Inline storage requires closure-based access because the storage address
     /// is not stable (it moves with the struct). Use `span` property on heap-backed
-    /// variants (Bounded, Unbounded) for direct access.
+    /// variants (Fixed, Array) for direct access.
     @inlinable
     public func withSpan<R, E: Swift.Error>(
         _ body: (Span<Element>) throws(E) -> R
@@ -89,7 +89,7 @@ extension Array.Static where Element: ~Copyable {
     ///
     /// Inline storage requires closure-based access because the storage address
     /// is not stable (it moves with the struct). Use `mutableSpan` property on
-    /// heap-backed variants (Bounded, Unbounded) for direct access.
+    /// heap-backed variants (Fixed, Array) for direct access.
     @inlinable
     public mutating func withMutableSpan<R, E: Swift.Error>(
         _ body: (borrowing MutableSpan<Element>) throws(E) -> R

@@ -5,7 +5,7 @@ public import Index_Primitives
 // MARK: - Iterator
 
 extension Array.Static {
-    /// Pointer-based iterator for Array.Inline.
+    /// Pointer-based iterator for Array.Static.
     ///
     /// Zero-copy iteration using typed `Index<Element>` for position tracking.
     /// The iterator holds a pointer to the inline storage.
@@ -13,7 +13,7 @@ extension Array.Static {
     /// ## Safety
     ///
     /// The iterator is only valid while the source array exists and is not mutated.
-    /// Since Array.Inline uses inline storage that moves with the struct, the
+    /// Since Array.Static uses inline storage that moves with the struct, the
     /// iterator must be used within the same scope where it was created.
     @safe
     public struct Iterator: IteratorProtocol {
@@ -55,7 +55,7 @@ extension Array.Static: Sequence.`Protocol` {
     ///
     /// ## Note
     ///
-    /// Array.Inline uses inline storage. The iterator captures a pointer to
+    /// Array.Static uses inline storage. The iterator captures a pointer to
     /// element 0, which is valid for the duration of this borrow.
     @inlinable
     public borrowing func makeIterator() -> Iterator {

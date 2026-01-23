@@ -7,11 +7,11 @@
 
 // MARK: - Error Types (Hoisted to Module Level)
 
-/// Hoisted implementation of ``Array/Inline/Error``.
+/// Hoisted implementation of ``Array/Static/Error``.
 ///
 /// Swift does not allow nested types inside generic types to be easily accessed.
 /// This error type is hoisted to module level and exposed via typealias.
-public enum __ArrayInlineError: Swift.Error, Sendable, Equatable {
+public enum __ArrayStaticError: Swift.Error, Sendable, Equatable {
     /// The array is full and cannot accept more elements.
     case overflow
 
@@ -20,6 +20,6 @@ public enum __ArrayInlineError: Swift.Error, Sendable, Equatable {
 }
 
 extension Array.Static {
-    /// Errors that can occur during inline array operations.
-    public typealias Error = __ArrayInlineError
+    /// Errors that can occur during static array operations.
+    public typealias Error = __ArrayStaticError
 }

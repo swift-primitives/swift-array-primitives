@@ -9,12 +9,12 @@ public import Collection_Primitives
 public import Array_Primitives_Core
 public import Index_Primitives
 
-extension Array.Unbounded: Collection.`Protocol` where Element: Copyable {}
+extension Array: Collection.`Protocol` where Element: Copyable {}
 
 // MARK: - Iterator
 
-extension Array.Unbounded where Element: Copyable {
-    /// Pointer-based iterator for Array.Unbounded.
+extension Array where Element: Copyable {
+    /// Pointer-based iterator for Array.
     ///
     /// Zero-copy iteration using typed `Index<Element>` for position tracking.
     /// The iterator holds a pointer to the storage, not a copy of the elements.
@@ -51,7 +51,7 @@ extension Array.Unbounded where Element: Copyable {
     }
 }
 
-extension Array.Unbounded.Iterator: @unchecked Sendable where Element: Sendable {}
+extension Array.Iterator: @unchecked Sendable where Element: Sendable {}
 
 // MARK: - Sequence.Protocol Conformance
 
@@ -66,9 +66,9 @@ extension Array.Unbounded.Iterator: @unchecked Sendable where Element: Sendable 
 // Note: Collection.Bidirectional conformance is provided in +Collection.Indexed.swift
 // for ALL element types (including ~Copyable) via `where Element: ~Copyable`.
 
-extension Array.Unbounded: Collection.Access.Random where Element: Copyable {}
+extension Array: Collection.Access.Random where Element: Copyable {}
 
-extension Array.Unbounded: Collection.Indexed where Element: ~Copyable {
+extension Array: Collection.Indexed where Element: ~Copyable {
     public typealias Index = Array<Element>.Index
 
     @inlinable
@@ -83,7 +83,7 @@ extension Array.Unbounded: Collection.Indexed where Element: ~Copyable {
 
 // MARK: - Collection.Bidirectional Conformance
 
-extension Array.Unbounded: Collection.Bidirectional where Element: ~Copyable {
+extension Array: Collection.Bidirectional where Element: ~Copyable {
     @inlinable
     public func index(before i: Index) -> Index { (i - 1)! }
 }

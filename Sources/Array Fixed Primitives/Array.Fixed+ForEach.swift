@@ -25,8 +25,8 @@ extension Array.Fixed where Element: ~Copyable {
     ///
     /// ## Note
     ///
-    /// `Array.Bounded` has a fixed count (immutable), so `.forEach.consuming { }` and
-    /// `.drain { }` are not available. Use `Array.Unbounded` or `Array.Small` for
+    /// `Array.Fixed` has a fixed count (immutable), so `.forEach.consuming { }` and
+    /// `.drain { }` are not available. Use `Array` or `Array.Small` for
     /// mutable-count arrays.
     ///
     /// ## Example
@@ -80,5 +80,5 @@ where Tag == Sequence.ForEach, Base == Array<Element>.Fixed, Element: ~Copyable 
     }
 }
 
-// Note: Array.Bounded has immutable count (_count is `let`), so consuming/drain
-// operations are not supported. Use Array.Unbounded or Array.Small instead.
+// Note: Array.Fixed has immutable count (_count is `let`), so consuming/drain
+// operations are not supported. Use Array or Array.Small instead.

@@ -9,16 +9,15 @@
 //
 // ===----------------------------------------------------------------------===//
 
-// Note: Array.Unbounded is declared INSIDE the Array enum body (in Array.swift)
-// due to Swift's ~Copyable constraint propagation rules. This file contains
-// the public API extensions to Array.Unbounded.
+// Public API extensions for the base Array type (growable, heap-allocated).
+// Note: Array struct is declared in Array.swift to enable conditional Copyable.
 
 public import Index_Primitives
 public import Array_Primitives_Core
 
 // MARK: - Properties
 
-extension Array.Unbounded where Element: ~Copyable {
+extension Array where Element: ~Copyable {
     /// The number of elements in the array.
     @inlinable
     public var count: Index_Primitives.Index<Element>.Count {
@@ -32,15 +31,11 @@ extension Array.Unbounded where Element: ~Copyable {
     /// The current capacity of the array.
     @inlinable
     public var capacity: Int { _storage.capacity }
-
-    /// The initial capacity hint from the generic parameter.
-    @inlinable
-    public var initialCapacityHint: Int { N }
 }
 
 // MARK: - Core Operations (Base - for ~Copyable elements)
 
-extension Array.Unbounded where Element: ~Copyable {
+extension Array where Element: ~Copyable {
     /// Appends an element to the array.
     ///
     /// - Parameter element: The element to append (consumed).
@@ -80,7 +75,7 @@ extension Array.Unbounded where Element: ~Copyable {
 
 // MARK: - Copy-on-Write (Copyable elements only)
 
-extension Array.Unbounded where Element: Copyable {
+extension Array where Element: Copyable {
     /// Appends an element to the array (CoW-aware).
     ///
     /// This method shadows the base `append(_:)` when `Element: Copyable`,
@@ -124,7 +119,7 @@ extension Array.Unbounded where Element: Copyable {
 
 // MARK: - Borrowed Element Access (for ~Copyable elements)
 
-extension Array.Unbounded where Element: ~Copyable {
+extension Array where Element: ~Copyable {
     /// Accesses the element at the given index via closure (for ~Copyable elements).
     ///
     /// - Parameters:
@@ -144,7 +139,7 @@ extension Array.Unbounded where Element: ~Copyable {
 
 // MARK: - Safe Element Access (Copyable elements only)
 
-extension Array.Unbounded where Element: Copyable {
+extension Array where Element: Copyable {
     /// Returns the element at the typed index, or nil if out of bounds.
     ///
     /// - Parameter index: The typed index of the element to access.
@@ -174,7 +169,7 @@ extension Array.Unbounded where Element: Copyable {
 
 // MARK: - Span Access
 
-extension Array.Unbounded where Element: ~Copyable {
+extension Array where Element: ~Copyable {
     /// Read-only span of the array elements.
     ///
     /// ## Lifetime Contract
@@ -217,7 +212,7 @@ extension Array.Unbounded where Element: ~Copyable {
 // MARK: - Buffer Access (Escape Hatch for C Interop)
 
 @_spi(Unsafe)
-extension Array.Unbounded where Element: ~Copyable {
+extension Array where Element: ~Copyable {
     /// Provides read-only access to the underlying contiguous storage.
     ///
     /// - Warning: This is an escape hatch for C interop. Prefer `span` for safe access.
@@ -255,7 +250,7 @@ extension Array.Unbounded where Element: ~Copyable {
 
 
 
-extension Array.Unbounded where Element: ~Copyable {
+extension Array where Element: ~Copyable {
     /// Accesses the element at the given typed index.
     ///
     /// - Parameter index: The typed index of the element to access.
@@ -273,7 +268,7 @@ extension Array.Unbounded where Element: ~Copyable {
     }
 }
 
-extension Array.Unbounded where Element: Copyable {
+extension Array where Element: Copyable {
     /// Accesses the element at the given typed index with copy-on-write semantics.
     ///
     /// - Parameter index: The typed index of the element to access.

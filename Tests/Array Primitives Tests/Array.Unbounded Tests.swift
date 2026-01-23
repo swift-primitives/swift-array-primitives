@@ -15,9 +15,9 @@ import Index_Primitives
 
 // MARK: - Test Suite Structure
 
-/// Test namespace for Array.Unbounded
+/// Test namespace for Array
 ///
-/// Note: Array.Unbounded is ~Copyable, so it doesn't conform to Sequence.
+/// Note: Array is ~Copyable, so it doesn't conform to Sequence.
 /// Use forEach for iteration instead of for-in loops.
 enum ArrayUnboundedTests {
     @Suite struct Unit {}

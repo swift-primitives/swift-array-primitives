@@ -12,7 +12,7 @@
 import Index_Primitives
 public import Array_Primitives_Core
 
-// MARK: - Array.Bounded.Indexed
+// MARK: - Array.Fixed.Indexed
 
 extension Array.Fixed {
     /// A wrapper providing phantom-typed index access to bounded array storage.
@@ -43,7 +43,7 @@ extension Array.Fixed {
     ///
     /// ## Note
     ///
-    /// `Array.Bounded` is `~Copyable` unconditionally, so `Indexed` is also `~Copyable`.
+    /// `Array.Fixed` is `~Copyable` unconditionally, so `Indexed` is also `~Copyable`.
     public struct Indexed<Tag: ~Copyable>: ~Copyable {
         @usableFromInline
         var _storage: Array<Element>.Fixed

@@ -16,7 +16,7 @@ public import Sequence_Primitives
 
 // MARK: - Drain Property
 
-extension Array.Unbounded where Element: ~Copyable {
+extension Array where Element: ~Copyable {
     /// Property view for draining operations.
     ///
     /// Provides `.drain { }` via `callAsFunction`, which removes all elements
@@ -41,12 +41,12 @@ extension Array.Unbounded where Element: ~Copyable {
     /// array.append(4)
     /// ```
     @inlinable
-    public var drain: Property<Sequence.Drain, Self>.View.Typed<Element>.Valued<N> {
+    public var drain: Property<Sequence.Drain, Self>.View.Typed<Element> {
         mutating _read {
-            yield unsafe Property<Sequence.Drain, Self>.View.Typed<Element>.Valued<N>(&self)
+            yield unsafe Property<Sequence.Drain, Self>.View.Typed<Element>(&self)
         }
         mutating _modify {
-            var view = unsafe Property<Sequence.Drain, Self>.View.Typed<Element>.Valued<N>(&self)
+            var view = unsafe Property<Sequence.Drain, Self>.View.Typed<Element>(&self)
             yield &view
         }
     }
@@ -55,7 +55,7 @@ extension Array.Unbounded where Element: ~Copyable {
 // MARK: - Drain: Operations (~Copyable)
 
 extension Property.View.Typed.Valued
-where Tag == Sequence.Drain, Base == Array<Element>.Unbounded<n>, Element: ~Copyable {
+where Tag == Sequence.Drain, Base == Array<Element>, Element: ~Copyable {
     /// Drain iteration: `.drain { }`
     ///
     /// Removes all elements from the array, passing each to the closure

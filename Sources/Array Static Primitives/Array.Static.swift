@@ -138,7 +138,7 @@ extension Array.Static where Element: ~Copyable {
     }
 }
 
-// MARK: - Typed Subscript (Array.Inline)
+// MARK: - Typed Subscript (Array.Static)
 
 extension Array.Static where Element: ~Copyable {
     /// Accesses the element at the given typed index (borrowing access for ~Copyable elements).
@@ -182,7 +182,7 @@ extension Array.Static.Error: CustomStringConvertible {
     public var description: String {
         switch self {
         case .overflow:
-            return "inline array is full"
+            return "static array is full"
         case .indexOutOfBounds(let index, let count):
             return "index \(index) out of bounds for count \(count)"
         }

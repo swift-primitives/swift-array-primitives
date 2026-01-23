@@ -16,7 +16,7 @@ public import Sequence_Primitives
 
 // MARK: - ForEach Property
 
-extension Array.Unbounded where Element: ~Copyable {
+extension Array where Element: ~Copyable {
     /// Property view for iteration operations.
     ///
     /// Provides iteration patterns for ALL element types including `~Copyable`:
@@ -29,7 +29,7 @@ extension Array.Unbounded where Element: ~Copyable {
     /// ## Example
     ///
     /// ```swift
-    /// var array = Array<Int>.Unbounded()
+    /// var array = Array<Int>()
     /// array.append(1)
     /// array.append(2)
     /// array.append(3)
@@ -42,12 +42,12 @@ extension Array.Unbounded where Element: ~Copyable {
     /// // array is now empty
     /// ```
     @inlinable
-    public var forEach: Property<Sequence.ForEach, Self>.View.Typed<Element>.Valued<N> {
+    public var forEach: Property<Sequence.ForEach, Self>.View.Typed<Element> {
         mutating _read {
-            yield unsafe Property<Sequence.ForEach, Self>.View.Typed<Element>.Valued<N>(&self)
+            yield unsafe Property<Sequence.ForEach, Self>.View.Typed<Element>(&self)
         }
         mutating _modify {
-            var view = unsafe Property<Sequence.ForEach, Self>.View.Typed<Element>.Valued<N>(&self)
+            var view = unsafe Property<Sequence.ForEach, Self>.View.Typed<Element>(&self)
             yield &view
         }
     }
@@ -55,8 +55,8 @@ extension Array.Unbounded where Element: ~Copyable {
 
 // MARK: - ForEach: Borrowing Operations (~Copyable)
 
-extension Property.View.Typed.Valued
-where Tag == Sequence.ForEach, Base == Array<Element>.Unbounded<n>, Element: ~Copyable {
+extension Property.View.Typed
+where Tag == Sequence.ForEach, Base == Array<Element>, Element: ~Copyable {
     /// Borrowing iteration: `.forEach { }`
     ///
     /// Iterates over all elements without consuming them.
@@ -89,7 +89,7 @@ where Tag == Sequence.ForEach, Base == Array<Element>.Unbounded<n>, Element: ~Co
 // MARK: - ForEach: Consuming Operations (Copyable only)
 
 extension Property.View.Typed.Valued
-where Tag == Sequence.ForEach, Base == Array<Element>.Unbounded<n>, Element: Copyable {
+where Tag == Sequence.ForEach, Base == Array<Element>, Element: Copyable {
     /// Consuming iteration: `.forEach.consuming { }`
     ///
     /// Iterates over all elements and then clears the array.

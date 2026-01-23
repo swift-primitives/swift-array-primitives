@@ -35,5 +35,5 @@ extension Array.Static: Collection.Bidirectional where Element: ~Copyable {
     public func index(before i: Index) -> Index { (i - 1)! }
 }
 
-// Note: Array.Inline cannot conform to Swift.Collection because it is unconditionally
+// Note: Array.Static cannot conform to Swift.Collection because it is unconditionally
 // ~Copyable (has deinit for inline storage cleanup). Swift.Collection requires Self: Copyable.

@@ -9,7 +9,7 @@ public import Array_Primitives_Core
 public import Sequence_Primitives
 public import Index_Primitives
 
-extension Array.Unbounded: Sequence.`Protocol` where Element: Copyable {
+extension Array: Sequence.`Protocol` where Element: Copyable {
     /// Returns a pointer-based iterator over the array elements.
     ///
     /// Zero-copy iteration - no allocation, no element copying.

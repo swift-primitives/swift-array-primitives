@@ -5,7 +5,7 @@ public import Index_Primitives
 // MARK: - Iterator
 
 extension Array.Fixed {
-    /// Pointer-based iterator for Array.Bounded.
+    /// Pointer-based iterator for Array.Fixed.
     ///
     /// Zero-copy iteration using typed `Index<Element>` for position tracking.
     /// The iterator holds a pointer to the storage, not a copy of the elements.

@@ -30,7 +30,7 @@ This document captures insights that emerged during development of swift-array-p
 
 **Date**: 2026-01-22
 
-**Context**: The array types (`Array.Bounded`, `Array.Unbounded`, `Array.Inline`, `Array.Small`) needed to support both `~Copyable` elements AND provide `Sequence.Protocol`/`Collection.Protocol` conformances for `Copyable` elements. Initial attempts resulted in "constraint poisoning"—the compiler propagated `Copyable` requirements from conditional conformances back to stored property declarations.
+**Context**: The array types (`Array.Bounded`, `Array`, `Array.Inline`, `Array.Small`) needed to support both `~Copyable` elements AND provide `Sequence.Protocol`/`Collection.Protocol` conformances for `Copyable` elements. Initial attempts resulted in "constraint poisoning"—the compiler propagated `Copyable` requirements from conditional conformances back to stored property declarations.
 
 ### The Problem
 

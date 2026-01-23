@@ -9,7 +9,7 @@
 //
 // ===----------------------------------------------------------------------===//
 
-// Note: Array.Bounded is declared INSIDE the Array enum body (in Array.swift)
+// Note: Array.Fixed is declared INSIDE the Array struct body (in Array.swift)
 // due to Swift's ~Copyable constraint propagation rules. This file contains
 // only extensions that require internal access to _storage.
 

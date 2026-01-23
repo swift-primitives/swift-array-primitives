@@ -12,12 +12,12 @@
 import Index_Primitives
 public import Array_Primitives_Core
 
-// MARK: - Array.Unbounded.Indexed
+// MARK: - Array.Indexed
 
-extension Array.Unbounded where Element: Copyable {
+extension Array where Element: Copyable {
     /// A wrapper providing phantom-typed index access to unbounded array storage.
     ///
-    /// `Indexed<Tag>` wraps an `Array<Element>.Unbounded<N>` and provides subscript
+    /// `Indexed<Tag>` wraps an `Array<Element>` and provides subscript
     /// access via `Index<Tag>` instead of raw `Int`, enabling type-safe indexing
     /// where the phantom type differs from the element type.
     ///
@@ -54,13 +54,13 @@ extension Array.Unbounded where Element: Copyable {
     /// requiring protocols (which can't have `~Copyable` associated types).
     public struct Indexed<Tag: Copyable>: Copyable, @unchecked Sendable {
         @usableFromInline
-        var _storage: Array<Element>.Unbounded<N>
+        var _storage: Array<Element>
 
         /// Creates an indexed wrapper around the given storage.
         ///
         /// - Parameter storage: The unbounded array to wrap.
         @inlinable
-        public init(_ storage: consuming Array<Element>.Unbounded<N>) {
+        public init(_ storage: consuming Array<Element>) {
             self._storage = storage
         }
 
@@ -97,7 +97,7 @@ extension Array.Unbounded where Element: Copyable {
 
 // MARK: - Passthrough Properties
 
-extension Array.Unbounded.Indexed where Element: Copyable {
+extension Array.Indexed where Element: Copyable {
     /// Whether the array is empty.
     @inlinable
     public var isEmpty: Bool { _storage.isEmpty }
@@ -109,7 +109,7 @@ extension Array.Unbounded.Indexed where Element: Copyable {
 
 // MARK: - Mutating Operations
 
-extension Array.Unbounded.Indexed where Element: Copyable {
+extension Array.Indexed where Element: Copyable {
     /// Appends an element to the array.
     ///
     /// - Parameter element: The element to append.

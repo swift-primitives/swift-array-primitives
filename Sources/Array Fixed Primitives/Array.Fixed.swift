@@ -151,7 +151,7 @@ extension Array.Fixed where Element: ~Copyable {
 
 }
 
-// MARK: - Typed Subscript (Array.Bounded)
+// MARK: - Typed Subscript (Array.Fixed)
 
 extension Array.Fixed where Element: ~Copyable {
     /// Accesses the element at the given typed index (borrowing access for ~Copyable elements).
