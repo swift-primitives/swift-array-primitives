@@ -32,7 +32,7 @@ extension Array where Element: ~Copyable {
     public struct Small<let inlineCapacity: Int>: ~Copyable {
         /// Maximum element stride supported by inline storage (64 bytes per slot).
         @usableFromInline
-        package static var _maxElementStride: Int { 64 }
+        package static var maxElementStride: Int { 64 }
 
         /// Raw byte storage for inline elements.
         @usableFromInline
@@ -54,8 +54,8 @@ extension Array where Element: ~Copyable {
         @inlinable
         public init() {
             precondition(
-                MemoryLayout<Element>.stride <= Self._maxElementStride,
-                "Element stride (\(MemoryLayout<Element>.stride)) exceeds inline storage slot size (\(Self._maxElementStride) bytes). Use Array.Unbounded instead."
+                MemoryLayout<Element>.stride <= Array.Inline<inlineCapacity>.maxElementStride,
+                "Element stride (\(MemoryLayout<Element>.stride)) exceeds inline storage slot size (\(Self.maxElementStride) bytes). Use Array.Unbounded instead."
             )
             precondition(
                 MemoryLayout<Element>.alignment <= MemoryLayout<Int>.alignment,

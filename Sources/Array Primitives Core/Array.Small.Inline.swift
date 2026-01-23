@@ -24,7 +24,7 @@ extension Array.Small where Element: ~Copyable {
         @usableFromInline
         @_lifetime(borrow base)
         init(_ base: UnsafeMutablePointer<Array<Element>.Small<inlineCapacity>>) {
-            self._base = base
+            unsafe self._base = unsafe base
         }
 
         /// Returns a mutable pointer to the inline element at the given index.

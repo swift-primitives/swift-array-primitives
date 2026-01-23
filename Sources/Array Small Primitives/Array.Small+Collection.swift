@@ -27,7 +27,7 @@ extension Array.Small: Collection.Indexed where Element: ~Copyable {
     public var startIndex: Index { .zero }
 
     @inlinable
-    public var endIndex: Index { Index(_count) }
+    public var endIndex: Index { Index(count) }
 
     @inlinable
     public func index(after i: Index) -> Index { (i + 1)! }

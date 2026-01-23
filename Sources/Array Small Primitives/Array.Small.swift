@@ -141,7 +141,14 @@ extension Array.Small where Element: ~Copyable {
                 body(unsafe (elements + index.position.rawValue).pointee)
             }
         } else {
-            return unsafe body(inline.read(at: index.position.rawValue).pointee)
+            // Use withUnsafePointer directly - inline accessor requires mutating context
+            let stride = MemoryLayout<Element>.stride
+            return unsafe withUnsafePointer(to: _inlineElements) { storagePtr in
+                let basePtr = unsafe UnsafeRawPointer(storagePtr)
+                let elementPtr = unsafe (basePtr + index.position.rawValue * stride)
+                    .assumingMemoryBound(to: Element.self)
+                return unsafe body(elementPtr.pointee)
+            }
         }
     }
 
@@ -310,7 +317,14 @@ extension Array.Small where Element: Copyable {
         if let heapPtr = unsafe _heapPtr {
             return unsafe heapPtr[index.position.rawValue]
         } else {
-            return unsafe inline.read(at: index.position.rawValue).pointee
+            // Use withUnsafePointer directly - inline accessor requires mutating context
+            let stride = MemoryLayout<Element>.stride
+            return unsafe withUnsafePointer(to: _inlineElements) { storagePtr in
+                let basePtr = unsafe UnsafeRawPointer(storagePtr)
+                let elementPtr = unsafe (basePtr + index.position.rawValue * stride)
+                    .assumingMemoryBound(to: Element.self)
+                return unsafe elementPtr.pointee
+            }
         }
     }
 
@@ -327,7 +341,14 @@ extension Array.Small where Element: Copyable {
         if let heapPtr = unsafe _heapPtr {
             return unsafe heapPtr[newIndex.position.rawValue]
         } else {
-            return unsafe inline.read(at: newIndex.position.rawValue).pointee
+            // Use withUnsafePointer directly - inline accessor requires mutating context
+            let stride = MemoryLayout<Element>.stride
+            return unsafe withUnsafePointer(to: _inlineElements) { storagePtr in
+                let basePtr = unsafe UnsafeRawPointer(storagePtr)
+                let elementPtr = unsafe (basePtr + newIndex.position.rawValue * stride)
+                    .assumingMemoryBound(to: Element.self)
+                return unsafe elementPtr.pointee
+            }
         }
     }
 }
@@ -346,7 +367,14 @@ extension Array.Small where Element: Copyable {
             if let heapPtr = unsafe _heapPtr {
                 return unsafe heapPtr[index.position.rawValue]
             } else {
-                return unsafe inline.read(at: index.position.rawValue).pointee
+                // Use withUnsafePointer directly - inline accessor requires mutating context
+                let stride = MemoryLayout<Element>.stride
+                return unsafe withUnsafePointer(to: _inlineElements) { storagePtr in
+                    let basePtr = unsafe UnsafeRawPointer(storagePtr)
+                    let elementPtr = unsafe (basePtr + index.position.rawValue * stride)
+                        .assumingMemoryBound(to: Element.self)
+                    return unsafe elementPtr.pointee
+                }
             }
         }
         set {
@@ -368,7 +396,9 @@ extension Array.Small where Element: ~Copyable {
     /// - Precondition: `index` must be in bounds.
     @inlinable
     public subscript(index: Array<Element>.Index) -> Element {
-        _read {
+        // Note: _read must be mutating because inline storage access requires &self
+        // to obtain a pointer. This is a fundamental limitation - see Non-Mutating-Accessor-Problem.md
+        mutating _read {
             precondition(index < _count, "Index out of bounds")
             if let heapPtr = unsafe _heapPtr {
                 yield unsafe heapPtr[index.position.rawValue]

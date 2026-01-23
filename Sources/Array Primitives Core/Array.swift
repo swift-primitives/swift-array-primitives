@@ -10,7 +10,7 @@
 // ===----------------------------------------------------------------------===//
 
 public import Index_Primitives
-public import Standard_Library_Extensions
+import Standard_Library_Extensions
 
 // MARK: - Array Namespace
 
@@ -160,7 +160,7 @@ public enum Array<Element: ~Copyable>: ~Copyable {
     public struct Inline<let capacity: Int>: ~Copyable {
         /// Maximum element stride supported by inline storage (64 bytes per slot).
         @usableFromInline
-        static var _maxElementStride: Int { 64 }
+        package static var maxElementStride: Int { 64 }
 
         /// Raw byte storage for elements. Each slot is 64 bytes (8 Ints on 64-bit).
         @usableFromInline
@@ -181,8 +181,8 @@ public enum Array<Element: ~Copyable>: ~Copyable {
         @inlinable
         public init() {
             precondition(
-                MemoryLayout<Element>.stride <= Self._maxElementStride,
-                "Element stride (\(MemoryLayout<Element>.stride)) exceeds inline storage slot size (\(Self._maxElementStride) bytes). Use Array.Bounded instead."
+                MemoryLayout<Element>.stride <= Self.maxElementStride,
+                "Element stride (\(MemoryLayout<Element>.stride)) exceeds inline storage slot size (\(Self.maxElementStride) bytes). Use Array.Bounded instead."
             )
             precondition(
                 MemoryLayout<Element>.alignment <= MemoryLayout<Int>.alignment,
@@ -198,7 +198,7 @@ public enum Array<Element: ~Copyable>: ~Copyable {
 
             let stride = MemoryLayout<Element>.stride
             unsafe Swift.withUnsafePointer(to: _elements) { storagePtr in
-                let basePtr = UnsafeMutableRawPointer(mutating: UnsafeRawPointer(storagePtr))
+                let basePtr = unsafe UnsafeMutableRawPointer(mutating: UnsafeRawPointer(storagePtr))
                 for i in 0..<count {
                     let elementPtr = unsafe (basePtr + i * stride)
                         .assumingMemoryBound(to: Element.self)

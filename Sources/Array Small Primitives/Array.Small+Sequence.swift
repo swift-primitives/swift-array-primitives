@@ -1,9 +1,13 @@
+// ===----------------------------------------------------------------------===//
 //
-//  File.swift
-//  swift-array-primitives
+// This source file is part of the swift-primitives open source project
 //
-//  Created by Coen ten Thije Boonkkamp on 23/01/2026.
+// Copyright (c) 2024-2026 Coen ten Thije Boonkkamp and the swift-primitives project authors
+// Licensed under Apache License v2.0
 //
+// See LICENSE for license information
+//
+// ===----------------------------------------------------------------------===//
 
 public import Collection_Primitives
 public import Array_Primitives_Core
@@ -60,24 +64,36 @@ extension Array.Small: Sequence.`Protocol` where Element: Copyable {
     /// Zero-copy iteration - no allocation, no element copying.
     /// Uses typed `Index<Element>` for position tracking.
     ///
-    /// ## Note
+    /// ## Implementation Note
     ///
-    /// Array.Small can use either inline or heap storage. The iterator captures
-    /// a pointer to the appropriate storage location.
+    /// This function must be `borrowing` (non-mutating) per Sequence protocol.
+    /// For heap storage, we use the cached `_heapPtr` pointer directly.
+    /// For inline storage, we use `withUnsafePointer(to:)` on the stored property
+    /// to obtain a pointer without requiring `&self`.
+    ///
+    /// The `inline` accessor cannot be used here because it requires `mutating`
+    /// context (needs `&self` to construct the accessor struct). See:
+    /// `/Users/coen/Developer/swift-institute/Research/Non-Mutating-Accessor-Problem.md`
     @inlinable
     public borrowing func makeIterator() -> Iterator {
-        guard _count.rawValue > 0 else {
+        guard count.rawValue > 0 else {
             // Empty array - pointer is irrelevant, count is zero
             return unsafe Iterator(base: UnsafePointer<Element>(bitPattern: 1)!, count: .zero)
         }
 
         if let heapPtr = unsafe _heapPtr {
             // Heap storage - use cached pointer
-            return unsafe Iterator(base: UnsafePointer(heapPtr), count: .init(__unchecked: _count.rawValue))
+            return unsafe Iterator(base: UnsafePointer(heapPtr), count: .init(__unchecked: count.rawValue))
         } else {
-            // Inline storage - get pointer to first element
-            let basePtr = unsafe self.inline.read(at: 0)
-            return unsafe Iterator(base: basePtr, count: .init(__unchecked: _count.rawValue))
+            // Inline storage - get pointer to first element via withUnsafePointer
+            // Note: We use withUnsafePointer directly on the stored property because
+            // the `inline` accessor requires mutating context (needs &self).
+            _ = MemoryLayout<Element>.stride
+            return unsafe withUnsafePointer(to: _inlineElements) { storagePtr in
+                let basePtr = unsafe UnsafeRawPointer(storagePtr)
+                let elementPtr = unsafe basePtr.assumingMemoryBound(to: Element.self)
+                return unsafe Iterator(base: elementPtr, count: .init(__unchecked: count.rawValue))
+            }
         }
     }
 }

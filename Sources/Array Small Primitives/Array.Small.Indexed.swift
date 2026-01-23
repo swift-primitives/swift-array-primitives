@@ -70,6 +70,12 @@ extension Array.Small where Element: Copyable {
         ///
         /// - Parameter index: The typed index of the element to access.
         /// - Precondition: `index` must be within bounds.
+        ///
+        /// ## Implementation Note
+        ///
+        /// The getter uses `withUnsafePointer` directly on the stored property
+        /// instead of the `inline` accessor because subscript getters are non-mutating,
+        /// but the `inline` accessor requires `&self` (mutating context).
         @inlinable
         public subscript(index: Index_Primitives.Index<Tag>) -> Element {
             get {
@@ -77,7 +83,15 @@ extension Array.Small where Element: Copyable {
                 if let heapStorage = _storage._heapStorage {
                     return heapStorage._readElement(at: index.position.rawValue)
                 } else {
-                    return unsafe _storage.inline.read(at: index.position.rawValue).pointee
+                    // Direct access to inline storage - cannot use `inline` accessor
+                    // because it requires mutating context (needs &self for pointer)
+                    let idx = index.position.rawValue
+                    let stride = MemoryLayout<Element>.stride
+                    return unsafe withUnsafePointer(to: _storage._inlineElements) { storagePtr in
+                        let basePtr = unsafe UnsafeRawPointer(storagePtr)
+                        let elementPtr = unsafe (basePtr + idx * stride).assumingMemoryBound(to: Element.self)
+                        return unsafe elementPtr.pointee
+                    }
                 }
             }
             set {
