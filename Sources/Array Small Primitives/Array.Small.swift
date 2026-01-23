@@ -165,53 +165,6 @@ extension Array.Small where Element: ~Copyable {
         }
     }
 
-    /// Iterates over all elements in the array.
-    ///
-    /// - Parameter body: A closure that receives each borrowed element.
-    @inlinable
-    public func forEach<E: Swift.Error>(_ body: (borrowing Element) throws(E) -> Void) throws(E) {
-        guard count.rawValue > 0 else { return }
-
-        if let heapState = heap {
-            _ = try unsafe heapState.storage.withUnsafeMutablePointerToElements { (elements) throws(E) in
-                for i in 0..<count.rawValue {
-                    try unsafe body((elements + i).pointee)
-                }
-            }
-        } else {
-            let stride = MemoryLayout<Element>.stride
-            try unsafe withUnsafePointer(to: inline) { storagePtr throws(E) in
-                let basePtr = unsafe UnsafeRawPointer(storagePtr)
-                for i in 0..<count.rawValue {
-                    let elementPtr = unsafe (basePtr + i * stride)
-                        .assumingMemoryBound(to: Element.self)
-                    try unsafe body(elementPtr.pointee)
-                }
-            }
-        }
-    }
-
-    /// Removes and consumes all elements.
-    ///
-    /// - Parameter body: A closure that receives each consumed element.
-    @inlinable
-    public mutating func drain(_ body: (consuming Element) -> Void) {
-        guard count.rawValue > 0 else { return }
-
-        if let heapState = heap {
-            _ = unsafe heapState.storage.withUnsafeMutablePointerToElements { elements in
-                for i in 0..<count.rawValue {
-                    unsafe body((elements + i).move())
-                }
-            }
-            heap!.storage.header = 0
-        } else {
-            for i in 0..<count.rawValue {
-                body(inline.move(at: i))
-            }
-        }
-        elementCount = .zero
-    }
 }
 
 // MARK: - Span Access

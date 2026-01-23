@@ -191,7 +191,7 @@ extension ArraySmallTests.Unit {
 
     @Test("Empty array forEach yields nothing")
     func emptyArrayForEachYieldsNothing() {
-        let array = try! Array<Int>.Small<4>()
+        var array = try! Array<Int>.Small<4>()
 
         var iteratedCount = 0
         array.forEach { _ in iteratedCount += 1 }
@@ -204,10 +204,13 @@ extension ArraySmallTests.Unit {
         var array = try! Array<Int>.Small<10>()
         for i in 0..<5 { array.append(i * 7) }
 
-        var index = 0
-        array.forEach { element in
-            #expect(element == array[try! Index<Int>(index)])
-            index += 1
+        // Collect elements via forEach
+        var forEachElements: [Int] = []
+        array.forEach { forEachElements.append($0) }
+
+        // Compare with subscript access
+        for i in 0..<5 {
+            #expect(forEachElements[i] == array[try Index<Int>(i)])
         }
     }
 
@@ -216,10 +219,13 @@ extension ArraySmallTests.Unit {
         var array = try! Array<Int>.Small<2>()
         for i in 0..<10 { array.append(i * 7) }
 
-        var index = 0
-        array.forEach { element in
-            #expect(element == array[try! Index<Int>(index)])
-            index += 1
+        // Collect elements via forEach
+        var forEachElements: [Int] = []
+        array.forEach { forEachElements.append($0) }
+
+        // Compare with subscript access
+        for i in 0..<10 {
+            #expect(forEachElements[i] == array[try Index<Int>(i)])
         }
     }
 
