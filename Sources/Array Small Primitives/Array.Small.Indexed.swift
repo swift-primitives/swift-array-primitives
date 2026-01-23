@@ -80,14 +80,14 @@ extension Array.Small where Element: Copyable {
         public subscript(index: Index_Primitives.Index<Tag>) -> Element {
             get {
                 precondition(index.position.rawValue < _storage.count.rawValue, "Index out of bounds")
-                if let heapStorage = _storage._heapStorage {
+                if let heapStorage = _storage._heap {
                     return heapStorage._readElement(at: index.position.rawValue)
                 } else {
                     // Direct access to inline storage - cannot use `inline` accessor
                     // because it requires mutating context (needs &self for pointer)
                     let idx = index.position.rawValue
                     let stride = MemoryLayout<Element>.stride
-                    return unsafe withUnsafePointer(to: _storage._inlineElements) { storagePtr in
+                    return unsafe withUnsafePointer(to: _storage._inline) { storagePtr in
                         let basePtr = unsafe UnsafeRawPointer(storagePtr)
                         let elementPtr = unsafe (basePtr + idx * stride).assumingMemoryBound(to: Element.self)
                         return unsafe elementPtr.pointee
@@ -96,9 +96,9 @@ extension Array.Small where Element: Copyable {
             }
             set {
                 precondition(index.position.rawValue < _storage.count.rawValue, "Index out of bounds")
-                if _storage._heapStorage != nil {
-                    _ = _storage._heapStorage!._moveElement(at: index.position.rawValue)
-                    _storage._heapStorage!._initializeElement(at: index.position.rawValue, to: newValue)
+                if _storage._heap != nil {
+                    _ = _storage._heap!._moveElement(at: index.position.rawValue)
+                    _storage._heap!._initializeElement(at: index.position.rawValue, to: newValue)
                 } else {
                     unsafe _storage.inline.pointer(at: index.position.rawValue).pointee = newValue
                 }

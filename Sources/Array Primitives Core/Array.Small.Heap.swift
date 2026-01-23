@@ -38,7 +38,7 @@ extension Array.Small where Element: ~Copyable {
         @usableFromInline
         @_lifetime(&self)
         package mutating func adopt(_ newStorage: Array<Element>.Storage) {
-            unsafe _base.pointee._heapStorage = newStorage
+            unsafe _base.pointee._heap = newStorage
             unsafe (_base.pointee._heapPtr = newStorage._elementsPointer)
         }
 
@@ -46,7 +46,7 @@ extension Array.Small where Element: ~Copyable {
         @usableFromInline
         @_lifetime(&self)
         package mutating func ensureCapacity(_ minimumCapacity: Int) {
-            guard let heapStorage = unsafe _base.pointee._heapStorage else {
+            guard let heapStorage = unsafe _base.pointee._heap else {
                 preconditionFailure("Not in heap mode")
             }
             guard heapStorage.capacity < minimumCapacity else { return }
@@ -57,7 +57,7 @@ extension Array.Small where Element: ~Copyable {
 
             heapStorage._moveAllElements(to: newStorage)
             newStorage.header = currentCount
-            unsafe _base.pointee._heapStorage = newStorage
+            unsafe _base.pointee._heap = newStorage
             unsafe (_base.pointee._heapPtr = newStorage._elementsPointer)
         }
     }

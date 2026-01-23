@@ -29,7 +29,7 @@ extension Array.Small where Element: ~Copyable {
     /// The current capacity of the array.
     @inlinable
     public var capacity: Int {
-        if let heapStorage = _heapStorage {
+        if let heapStorage = _heap {
             return heapStorage.capacity
         }
         return inlineCapacity
@@ -37,7 +37,7 @@ extension Array.Small where Element: ~Copyable {
 
     /// Whether the array is currently using heap storage.
     @inlinable
-    public var isSpilled: Bool { _heapStorage != nil }
+    public var isSpilled: Bool { _heap != nil }
 }
 
 // MARK: - Core Operations (Base - for ~Copyable elements)
@@ -50,12 +50,12 @@ extension Array.Small where Element: ~Copyable {
     /// - Parameter element: The element to append (consumed).
     @inlinable
     public mutating func append(_ element: consuming Element) {
-        if let heapStorage = _heapStorage {
+        if let heapStorage = _heap {
             // Heap mode
             let count = heapStorage.header
             heap.ensureCapacity(count + 1)
-            _heapStorage!._initializeElement(at: count, to: element)
-            _heapStorage!.header = count + 1
+            _heap!._initializeElement(at: count, to: element)
+            _heap!.header = count + 1
             _count = Index_Primitives.Index<Element>.Count(__unchecked: _count.rawValue + 1)
         } else if _count.rawValue < inlineCapacity {
             // Inline mode with room
@@ -65,8 +65,8 @@ extension Array.Small where Element: ~Copyable {
         } else {
             // Need to spill
             spill(minimumCapacity: _count.rawValue + 1)
-            _heapStorage!._initializeElement(at: _count.rawValue, to: element)
-            _heapStorage!.header = _count.rawValue + 1
+            _heap!._initializeElement(at: _count.rawValue, to: element)
+            _heap!.header = _count.rawValue + 1
             _count = Index_Primitives.Index<Element>.Count(__unchecked: _count.rawValue + 1)
         }
     }
@@ -78,11 +78,11 @@ extension Array.Small where Element: ~Copyable {
     public mutating func removeLast() -> Element? {
         guard _count.rawValue > 0 else { return nil }
 
-        if let heapStorage = _heapStorage {
+        if let heapStorage = _heap {
             // Heap mode
             let newCount = _count.rawValue - 1
             _count = Index_Primitives.Index<Element>.Count(__unchecked: newCount)
-            _heapStorage!.header = newCount
+            _heap!.header = newCount
             return heapStorage._moveElement(at: newCount)
         } else {
             // Inline mode
@@ -100,17 +100,17 @@ extension Array.Small where Element: ~Copyable {
     public mutating func removeAll(keepingCapacity: Bool = false) {
         guard _count.rawValue > 0 else { return }
 
-        if let heapStorage = _heapStorage {
+        if let heapStorage = _heap {
             // Heap mode - deinitialize via storage
             heapStorage._deinitializeAllElements()
             if !keepingCapacity {
-                _heapStorage = nil
+                _heap = nil
                 unsafe (_heapPtr = nil)
             }
         } else {
             // Inline mode - deinitialize manually
             let stride = MemoryLayout<Element>.stride
-            unsafe Swift.withUnsafeMutablePointer(to: &_inlineElements) { storagePtr in
+            unsafe Swift.withUnsafeMutablePointer(to: &_inline) { storagePtr in
                 let basePtr = UnsafeMutableRawPointer(storagePtr)
                 for i in 0..<_count.rawValue {
                     let elementPtr = unsafe (basePtr + i * stride)
@@ -136,14 +136,14 @@ extension Array.Small where Element: ~Copyable {
     @inlinable
     public func withElement<R>(at index: Index_Primitives.Index<Element>, _ body: (borrowing Element) -> R) -> R {
         precondition(index < _count, "Index out of bounds")
-        if let heapStorage = _heapStorage {
+        if let heapStorage = _heap {
             return unsafe heapStorage.withUnsafeMutablePointerToElements { elements in
                 body(unsafe (elements + index.position.rawValue).pointee)
             }
         } else {
             // Use withUnsafePointer directly - inline accessor requires mutating context
             let stride = MemoryLayout<Element>.stride
-            return unsafe withUnsafePointer(to: _inlineElements) { storagePtr in
+            return unsafe withUnsafePointer(to: _inline) { storagePtr in
                 let basePtr = unsafe UnsafeRawPointer(storagePtr)
                 let elementPtr = unsafe (basePtr + index.position.rawValue * stride)
                     .assumingMemoryBound(to: Element.self)
@@ -159,7 +159,7 @@ extension Array.Small where Element: ~Copyable {
     public func forEach<E: Swift.Error>(_ body: (borrowing Element) throws(E) -> Void) throws(E) {
         guard _count.rawValue > 0 else { return }
 
-        if let heapStorage = _heapStorage {
+        if let heapStorage = _heap {
             _ = try unsafe heapStorage.withUnsafeMutablePointerToElements { (elements) throws(E) in
                 for i in 0..<_count.rawValue {
                     try unsafe body((elements + i).pointee)
@@ -167,7 +167,7 @@ extension Array.Small where Element: ~Copyable {
             }
         } else {
             let stride = MemoryLayout<Element>.stride
-            try unsafe withUnsafePointer(to: _inlineElements) { storagePtr throws(E) in
+            try unsafe withUnsafePointer(to: _inline) { storagePtr throws(E) in
                 let basePtr = unsafe UnsafeRawPointer(storagePtr)
                 for i in 0..<_count.rawValue {
                     let elementPtr = unsafe (basePtr + i * stride)
@@ -185,16 +185,16 @@ extension Array.Small where Element: ~Copyable {
     public mutating func drain(_ body: (consuming Element) -> Void) {
         guard _count.rawValue > 0 else { return }
 
-        if let heapStorage = _heapStorage {
+        if let heapStorage = _heap {
             _ = unsafe heapStorage.withUnsafeMutablePointerToElements { elements in
                 for i in 0..<_count.rawValue {
                     unsafe body((elements + i).move())
                 }
             }
-            _heapStorage!.header = 0
+            _heap!.header = 0
         } else {
             let stride = MemoryLayout<Element>.stride
-            unsafe Swift.withUnsafeMutablePointer(to: &_inlineElements) { storagePtr in
+            unsafe Swift.withUnsafeMutablePointer(to: &_inline) { storagePtr in
                 let basePtr = UnsafeMutableRawPointer(storagePtr)
                 for i in 0..<_count.rawValue {
                     let elementPtr = unsafe (basePtr + i * stride)
@@ -220,7 +220,7 @@ extension Array.Small where Element: ~Copyable {
                 let span = unsafe Span(_unsafeStart: heapPtr, count: _count.rawValue)
                 return try body(span)
             } else {
-                return try unsafe withUnsafePointer(to: _inlineElements) { storagePtr throws(E) -> R in
+                return try unsafe withUnsafePointer(to: _inline) { storagePtr throws(E) -> R in
                     let basePtr = unsafe UnsafeRawPointer(storagePtr)
                     let elementPtr = unsafe basePtr.assumingMemoryBound(to: Element.self)
                     let span = unsafe Span(_unsafeStart: elementPtr, count: _count.rawValue)
@@ -243,7 +243,7 @@ extension Array.Small where Element: ~Copyable {
                 let span = unsafe MutableSpan(_unsafeStart: heapPtr, count: _count.rawValue)
                 return try body(span)
             } else {
-                return try unsafe withUnsafeMutablePointer(to: &_inlineElements) { storagePtr throws(E) -> R in
+                return try unsafe withUnsafeMutablePointer(to: &_inline) { storagePtr throws(E) -> R in
                     let basePtr = UnsafeMutableRawPointer(storagePtr)
                     let elementPtr = unsafe basePtr.assumingMemoryBound(to: Element.self)
                     let span = unsafe MutableSpan(_unsafeStart: elementPtr, count: _count.rawValue)
@@ -271,7 +271,7 @@ extension Array.Small where Element: ~Copyable {
             if let heapPtr = unsafe _heapPtr {
                 return try unsafe body(UnsafeBufferPointer(start: heapPtr, count: _count.rawValue))
             } else {
-                return try unsafe withUnsafePointer(to: _inlineElements) { (storagePtr) throws(E) -> R in
+                return try unsafe withUnsafePointer(to: _inline) { (storagePtr) throws(E) -> R in
                     let basePtr = unsafe UnsafeRawPointer(storagePtr)
                     let elementPtr = unsafe basePtr.assumingMemoryBound(to: Element.self)
                     return try unsafe body(UnsafeBufferPointer(start: elementPtr, count: _count.rawValue))
@@ -292,7 +292,7 @@ extension Array.Small where Element: ~Copyable {
             if let heapPtr = unsafe _heapPtr {
                 return try unsafe body(UnsafeMutableBufferPointer(start: heapPtr, count: _count.rawValue))
             } else {
-                return try unsafe withUnsafeMutablePointer(to: &_inlineElements) { (storagePtr) throws(E) -> R in
+                return try unsafe withUnsafeMutablePointer(to: &_inline) { (storagePtr) throws(E) -> R in
                     let basePtr = UnsafeMutableRawPointer(storagePtr)
                     let elementPtr = unsafe basePtr.assumingMemoryBound(to: Element.self)
                     return try unsafe body(UnsafeMutableBufferPointer(start: elementPtr, count: _count.rawValue))
@@ -319,7 +319,7 @@ extension Array.Small where Element: Copyable {
         } else {
             // Use withUnsafePointer directly - inline accessor requires mutating context
             let stride = MemoryLayout<Element>.stride
-            return unsafe withUnsafePointer(to: _inlineElements) { storagePtr in
+            return unsafe withUnsafePointer(to: _inline) { storagePtr in
                 let basePtr = unsafe UnsafeRawPointer(storagePtr)
                 let elementPtr = unsafe (basePtr + index.position.rawValue * stride)
                     .assumingMemoryBound(to: Element.self)
@@ -343,7 +343,7 @@ extension Array.Small where Element: Copyable {
         } else {
             // Use withUnsafePointer directly - inline accessor requires mutating context
             let stride = MemoryLayout<Element>.stride
-            return unsafe withUnsafePointer(to: _inlineElements) { storagePtr in
+            return unsafe withUnsafePointer(to: _inline) { storagePtr in
                 let basePtr = unsafe UnsafeRawPointer(storagePtr)
                 let elementPtr = unsafe (basePtr + newIndex.position.rawValue * stride)
                     .assumingMemoryBound(to: Element.self)
@@ -369,7 +369,7 @@ extension Array.Small where Element: Copyable {
             } else {
                 // Use withUnsafePointer directly - inline accessor requires mutating context
                 let stride = MemoryLayout<Element>.stride
-                return unsafe withUnsafePointer(to: _inlineElements) { storagePtr in
+                return unsafe withUnsafePointer(to: _inline) { storagePtr in
                     let basePtr = unsafe UnsafeRawPointer(storagePtr)
                     let elementPtr = unsafe (basePtr + index.position.rawValue * stride)
                         .assumingMemoryBound(to: Element.self)
@@ -379,9 +379,9 @@ extension Array.Small where Element: Copyable {
         }
         set {
             precondition(index < _count, "Index out of bounds")
-            if _heapStorage != nil {
-                _ = _heapStorage!._moveElement(at: index.position.rawValue)
-                _heapStorage!._initializeElement(at: index.position.rawValue, to: newValue)
+            if _heap != nil {
+                _ = _heap!._moveElement(at: index.position.rawValue)
+                _heap!._initializeElement(at: index.position.rawValue, to: newValue)
             } else {
                 unsafe inline.pointer(at: index.position.rawValue).pointee = newValue
             }

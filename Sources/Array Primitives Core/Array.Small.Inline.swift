@@ -32,7 +32,7 @@ extension Array.Small where Element: ~Copyable {
         @unsafe
         package func pointer(at index: Int) -> UnsafeMutablePointer<Element> {
             let stride = MemoryLayout<Element>.stride
-            return unsafe Swift.withUnsafeMutablePointer(to: &_base.pointee._inlineElements) { storagePtr in
+            return unsafe Swift.withUnsafeMutablePointer(to: &_base.pointee._inline) { storagePtr in
                 let basePtr = UnsafeMutableRawPointer(storagePtr)
                 let elementPtr = unsafe (basePtr + index * stride)
                     .assumingMemoryBound(to: Element.self)
@@ -45,7 +45,7 @@ extension Array.Small where Element: ~Copyable {
         @unsafe
         package func read(at index: Int) -> UnsafePointer<Element> {
             let stride = MemoryLayout<Element>.stride
-            return unsafe Swift.withUnsafePointer(to: _base.pointee._inlineElements) { storagePtr in
+            return unsafe Swift.withUnsafePointer(to: _base.pointee._inline) { storagePtr in
                 let basePtr = unsafe UnsafeRawPointer(storagePtr)
                 let elementPtr = unsafe (basePtr + index * stride)
                     .assumingMemoryBound(to: Element.self)
@@ -60,7 +60,7 @@ extension Array.Small where Element: ~Copyable {
         package mutating func moveAll(to target: Array<Element>.Storage) {
             let stride = MemoryLayout<Element>.stride
             let count = unsafe _base.pointee._count.rawValue
-            _ = unsafe Swift.withUnsafeBytes(of: _base.pointee._inlineElements) { bytes in
+            _ = unsafe Swift.withUnsafeBytes(of: _base.pointee._inline) { bytes in
                 unsafe target.withUnsafeMutablePointerToElements { heapPtr in
                     let inlineBase = unsafe UnsafeMutableRawPointer(mutating: bytes.baseAddress!)
                     for i in 0..<count {
@@ -79,7 +79,7 @@ extension Array.Small where Element: ~Copyable {
         package mutating func deinitializeAll() {
             let stride = MemoryLayout<Element>.stride
             let count = unsafe _base.pointee._count.rawValue
-            unsafe Swift.withUnsafeBytes(of: _base.pointee._inlineElements) { bytes in
+            unsafe Swift.withUnsafeBytes(of: _base.pointee._inline) { bytes in
                 let basePtr = unsafe UnsafeMutableRawPointer(mutating: bytes.baseAddress!)
                 for i in 0..<count {
                     let elementPtr = unsafe (basePtr + i * stride)

@@ -36,7 +36,7 @@ extension Array where Element: ~Copyable {
 
         /// Raw byte storage for inline elements.
         @usableFromInline
-        package var _inlineElements: InlineArray<inlineCapacity, (Int, Int, Int, Int, Int, Int, Int, Int)>
+        package var _inline: InlineArray<inlineCapacity, (Int, Int, Int, Int, Int, Int, Int, Int)>
 
         /// Current element count (valid in both inline and heap modes).
         @usableFromInline
@@ -44,7 +44,7 @@ extension Array where Element: ~Copyable {
 
         /// Heap storage for elements when spilled. Nil when using inline storage.
         @usableFromInline
-        package var _heapStorage: Array.Storage?
+        package var _heap: Array.Storage?
 
         /// Cached pointer to heap elements. Only valid when _heapStorage is non-nil.
         @usableFromInline
@@ -61,9 +61,9 @@ extension Array where Element: ~Copyable {
                 MemoryLayout<Element>.alignment <= MemoryLayout<Int>.alignment,
                 "Element alignment (\(MemoryLayout<Element>.alignment)) exceeds inline storage alignment (\(MemoryLayout<Int>.alignment)). Use Array.Unbounded instead."
             )
-            self._inlineElements = InlineArray(repeating: (0, 0, 0, 0, 0, 0, 0, 0))
+            self._inline = InlineArray(repeating: (0, 0, 0, 0, 0, 0, 0, 0))
             self._count = .zero
-            self._heapStorage = nil
+            self._heap = nil
             unsafe (self._heapPtr = nil)
         }
 
@@ -71,13 +71,13 @@ extension Array where Element: ~Copyable {
             let count = _count.rawValue
             guard count > 0 else { return }
 
-            if let heap = _heapStorage {
+            if let heap = _heap {
                 // Elements are on heap - ElementStorage handles cleanup via its deinit
                 heap.header = count
             } else {
                 // Elements are inline - clean up manually
                 let stride = MemoryLayout<Element>.stride
-                unsafe Swift.withUnsafeBytes(of: _inlineElements) { bytes in
+                unsafe Swift.withUnsafeBytes(of: _inline) { bytes in
                     let basePtr = unsafe UnsafeMutableRawPointer(mutating: bytes.baseAddress!)
                     for i in 0..<count {
                         let elementPtr = unsafe (basePtr + i * stride)
@@ -91,18 +91,3 @@ extension Array where Element: ~Copyable {
 }
 
 extension Array.Small: @unchecked Sendable where Element: Sendable {}
-
-// MARK: - Composed Operations
-
-extension Array.Small where Element: ~Copyable {
-    /// Spills inline storage to heap.
-    @usableFromInline
-    package mutating func spill(minimumCapacity: Int) {
-        precondition(_heapStorage == nil, "Already spilled")
-
-        let newStorage = heap.create(minimumCapacity: minimumCapacity)
-        unsafe inline.moveAll(to: newStorage)
-        newStorage.header = _count.rawValue
-        heap.adopt(newStorage)
-    }
-}
