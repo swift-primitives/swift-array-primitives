@@ -57,6 +57,18 @@ extension Array.Unbounded: Sequence.`Protocol` where Element: Copyable {
     }
 }
 
+// MARK: - Swift.Sequence Conformance
+//
+// Bridge to Swift.Sequence for `for-in` loops and stdlib algorithms.
+// Requires explicit underestimatedCount to resolve ambiguity with
+// Sequence.Protocol+Swift.Sequence default implementation.
+
+extension Array.Unbounded: Swift.Sequence where Element: Copyable {
+    /// Returns the count as the underestimated count since we know the exact size.
+    @inlinable
+    public var underestimatedCount: Int { count.rawValue }
+}
+
 // MARK: - Collection.Protocol Conformance
 // Note: Index, startIndex, endIndex, index(after:) defined in Collection.Indexed conformance
 
@@ -67,3 +79,11 @@ extension Array.Unbounded: Collection.`Protocol` where Element: Copyable {}
 // for ALL element types (including ~Copyable) via `where Element: ~Copyable`.
 
 extension Array.Unbounded: Collection.Access.Random where Element: Copyable {}
+
+// MARK: - Swift.Collection Conformance
+// Bridge to Swift standard library collections for interop with stdlib algorithms.
+// Requirements satisfied by Collection.Protocol conformance above.
+
+extension Array.Unbounded: Swift.Collection where Element: Copyable {}
+extension Array.Unbounded: Swift.BidirectionalCollection where Element: Copyable {}
+extension Array.Unbounded: Swift.RandomAccessCollection where Element: Copyable {}

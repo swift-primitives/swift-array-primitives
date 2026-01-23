@@ -85,3 +85,6 @@ extension Array.Small: Collection.`Protocol` where Element: Copyable {}
 // for ALL element types (including ~Copyable) via `where Element: ~Copyable`.
 
 extension Array.Small: Collection.Access.Random where Element: Copyable {}
+
+// Note: Array.Small cannot conform to Swift.Collection because it is unconditionally
+// ~Copyable (has deinit for inline storage cleanup). Swift.Collection requires Self: Copyable.

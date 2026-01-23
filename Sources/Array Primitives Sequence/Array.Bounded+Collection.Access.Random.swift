@@ -79,3 +79,11 @@ extension Array.Bounded: Collection.`Protocol` where Element: Copyable {}
 // for ALL element types (including ~Copyable) via `where Element: ~Copyable`.
 
 extension Array.Bounded: Collection.Access.Random where Element: Copyable {}
+
+// MARK: - Swift.Collection Conformance
+// Bridge to Swift standard library collections for interop with stdlib algorithms.
+// Requirements satisfied by Collection.Protocol conformance above.
+
+extension Array.Bounded: Swift.Collection where Element: Copyable {}
+extension Array.Bounded: Swift.BidirectionalCollection where Element: Copyable {}
+extension Array.Bounded: Swift.RandomAccessCollection where Element: Copyable {}
