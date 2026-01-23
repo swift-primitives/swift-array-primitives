@@ -34,53 +34,13 @@ extension Array.Unbounded where Element: ~Copyable {
 
         // Growth factor 2.0, minimum capacity from hint or 4
         let newCapacity = Swift.max(minimumCapacity, _storage.capacity * 2, N, 4)
-        let newStorage = ElementStorage.create(minimumCapacity: newCapacity)
+        let newStorage = Array.Storage.create(minimumCapacity: newCapacity)
         let currentCount = _storage.header
 
         _storage._moveAllElements(to: newStorage)
         newStorage.header = currentCount
         _storage = newStorage
         unsafe (_cachedPtr = _storage._elementsPointer)  // CRITICAL: Update cached pointer
-    }
-}
-
-// MARK: - Copy-on-Write Helpers (Copyable elements only)
-
-extension Array.Unbounded.ElementStorage where Element: Copyable {
-    /// Creates a copy of this storage.
-    @usableFromInline
-    package func copy() -> Array<Element>.Unbounded<N>.ElementStorage {
-        let count = header
-        guard count > 0 else {
-            return Array<Element>.Unbounded<N>.ElementStorage.create(minimumCapacity: 0)
-        }
-
-        let new = Array<Element>.Unbounded<N>.ElementStorage.create(minimumCapacity: capacity)
-        new.header = count
-
-        _ = unsafe withUnsafeMutablePointerToElements { src in
-            unsafe new.withUnsafeMutablePointerToElements { dst in
-                for i in 0..<count {
-                    unsafe (dst + i).initialize(to: src[i])
-                }
-            }
-        }
-
-        return new
-    }
-
-    /// Copies all elements to new storage.
-    @usableFromInline
-    package func _copyAllElements(to newStorage: Array<Element>.Unbounded<N>.ElementStorage) {
-        let count = header
-        guard count > 0 else { return }
-        _ = unsafe withUnsafeMutablePointerToElements { src in
-            unsafe newStorage.withUnsafeMutablePointerToElements { dst in
-                for i in 0..<count {
-                    unsafe (dst + i).initialize(to: src[i])
-                }
-            }
-        }
     }
 }
 
@@ -97,6 +57,8 @@ extension Array.Unbounded where Element: Copyable {
     }
 }
 
+// MARK: - Safe Element Access
+
 extension Array.Unbounded where Element: Copyable {
     /// Returns the element at the typed index, or nil if out of bounds.
     ///
@@ -107,10 +69,7 @@ extension Array.Unbounded where Element: Copyable {
         guard index.position.rawValue < _rawCount else { return nil }
         return unsafe _cachedPtr[index.position.rawValue]
     }
-}
 
-
-extension Array.Unbounded where Element: Copyable {
     /// Returns element at index offset from given base index.
     ///
     /// - Parameters:
@@ -125,7 +84,7 @@ extension Array.Unbounded where Element: Copyable {
     }
 }
 
-// MARK: - Typed Subscript (Array.Unbounded)
+// MARK: - Typed Subscript
 
 extension Array.Unbounded where Element: ~Copyable {
     /// Accesses the element at the given typed index.
@@ -145,8 +104,6 @@ extension Array.Unbounded where Element: ~Copyable {
     }
 }
 
-
-
 extension Array.Unbounded where Element: Copyable {
     /// Accesses the element at the given typed index with copy-on-write semantics.
     ///
@@ -165,4 +122,3 @@ extension Array.Unbounded where Element: Copyable {
         }
     }
 }
-

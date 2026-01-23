@@ -44,7 +44,7 @@ extension Array where Element: ~Copyable {
 
         /// Heap storage for elements when spilled. Nil when using inline storage.
         @usableFromInline
-        package var _heapStorage: Unbounded<inlineCapacity>.ElementStorage?
+        package var _heapStorage: Array.Storage?
 
         /// Cached pointer to heap elements. Only valid when _heapStorage is non-nil.
         @usableFromInline
@@ -128,7 +128,7 @@ extension Array.Small where Element: ~Copyable {
 
         // Create heap storage with growth factor
         let newCapacity = Swift.max(minimumCapacity, inlineCapacity * 2, 8)
-        let newStorage = Array<Element>.Unbounded<inlineCapacity>.ElementStorage.create(minimumCapacity: newCapacity)
+        let newStorage = Array<Element>.Storage.create(minimumCapacity: newCapacity)
 
         // Move elements from inline to heap
         let stride = MemoryLayout<Element>.stride
@@ -157,7 +157,7 @@ extension Array.Small where Element: ~Copyable {
         guard heapStorage.capacity < minimumCapacity else { return }
 
         let newCapacity = Swift.max(minimumCapacity, heapStorage.capacity * 2, 8)
-        let newStorage = Array<Element>.Unbounded<inlineCapacity>.ElementStorage.create(minimumCapacity: newCapacity)
+        let newStorage = Array<Element>.Storage.create(minimumCapacity: newCapacity)
         let currentCount = heapStorage.header
 
         heapStorage._moveAllElements(to: newStorage)

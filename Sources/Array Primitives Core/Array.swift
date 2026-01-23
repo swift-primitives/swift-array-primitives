@@ -29,16 +29,15 @@ public enum Array<Element: ~Copyable>: ~Copyable {
 
     // MARK: - Unified Storage (nested to inherit Element's ~Copyable context)
 
-    /// Internal storage class for bounded arrays using ManagedBuffer.
+    /// Unified storage class for array variants using ManagedBuffer.
     ///
     /// Declared as a nested class inside `Array` so that the `Element` generic
     /// inherits the `~Copyable` suppression from the outer type. This enables
-    /// `Array.Bounded` to be conditionally Copyable.
+    /// conditional Copyable conformance for `Bounded` and `Unbounded`.
     ///
-    /// - Note: This must be nested directly in `Array`, not in `Array.Bounded`,
-    ///   due to Swift's generic constraint propagation limitations with `~Copyable`.
+    /// Used by: `Array.Bounded`, `Array.Unbounded`, `Array.Small` (heap mode).
     @usableFromInline
-    final class Storage: ManagedBuffer<Int, Element> {
+    package final class Storage: ManagedBuffer<Int, Element> {
         deinit {
             let count = header
             guard count > 0 else { return }
@@ -120,27 +119,8 @@ public enum Array<Element: ~Copyable>: ~Copyable {
     @safe
     public struct Unbounded<let N: Int> {
 
-        // MARK: - ElementStorage (nested to inherit Element's ~Copyable context)
-
-        /// Internal storage class for elements using ManagedBuffer.
-        ///
-        /// Declared as a nested class inside `Unbounded` so that the `Element` generic
-        /// inherits the `~Copyable` suppression from the outer type.
         @usableFromInline
-        package final class ElementStorage: ManagedBuffer<Int, Element> {
-            deinit {
-                let count = header
-                guard count > 0 else { return }
-                _ = unsafe withUnsafeMutablePointerToElements { elements in
-                    for i in 0..<count {
-                        unsafe (elements + i).deinitialize(count: 1)
-                    }
-                }
-            }
-        }
-
-        @usableFromInline
-        package var _storage: ElementStorage
+        package var _storage: Array.Storage
 
         /// Cached pointer to element storage. Stored in struct to enable property-based access.
         /// CRITICAL: Must be updated whenever _storage is replaced (reallocation, CoW copy).
@@ -150,7 +130,7 @@ public enum Array<Element: ~Copyable>: ~Copyable {
         /// Creates an empty growable array.
         @inlinable
         public init() {
-            self._storage = ElementStorage.create(minimumCapacity: 0)
+            self._storage = Array.Storage.create(minimumCapacity: 0)
             unsafe (self._cachedPtr = _storage._elementsPointer)
         }
     }

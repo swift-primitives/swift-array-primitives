@@ -72,7 +72,7 @@ extension Array.Unbounded where Element: ~Copyable {
     public mutating func removeAll(keepingCapacity: Bool = false) {
         _storage._deinitializeAllElements()
         if !keepingCapacity {
-            _storage = ElementStorage.create(minimumCapacity: 0)
+            _storage = Array.Storage.create(minimumCapacity: 0)
             unsafe (_cachedPtr = _storage._elementsPointer)
         }
     }
@@ -116,7 +116,7 @@ extension Array.Unbounded where Element: Copyable {
         makeUnique()
         _storage._deinitializeAllElements()
         if !keepingCapacity {
-            _storage = ElementStorage.create(minimumCapacity: 0)
+            _storage = Array.Storage.create(minimumCapacity: 0)
             unsafe (_cachedPtr = _storage._elementsPointer)
         }
     }
