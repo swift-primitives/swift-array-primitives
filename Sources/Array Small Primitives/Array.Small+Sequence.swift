@@ -81,7 +81,7 @@ extension Array.Small: Sequence.`Protocol` where Element: Copyable {
             return unsafe Iterator(base: UnsafePointer<Element>(bitPattern: 1)!, count: .zero)
         }
 
-        if let heapState = _heap {
+        if let heapState = heap {
             // Heap storage - use cached pointer
             return unsafe Iterator(base: UnsafePointer(heapState.pointer), count: .init(__unchecked: count.rawValue))
         } else {
@@ -89,7 +89,7 @@ extension Array.Small: Sequence.`Protocol` where Element: Copyable {
             // Note: We use withUnsafePointer directly on the stored property because
             // the `inline` accessor requires mutating context (needs &self).
             _ = MemoryLayout<Element>.stride
-            return unsafe withUnsafePointer(to: _inline) { storagePtr in
+            return unsafe withUnsafePointer(to: inline) { storagePtr in
                 let basePtr = unsafe UnsafeRawPointer(storagePtr)
                 let elementPtr = unsafe basePtr.assumingMemoryBound(to: Element.self)
                 return unsafe Iterator(base: elementPtr, count: .init(__unchecked: count.rawValue))

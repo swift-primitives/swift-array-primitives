@@ -33,18 +33,18 @@ extension Array where Element: ~Copyable {
 
         /// Inline storage for elements.
         @usableFromInline
-        package var _inline: Storage.Inline<inlineCapacity>
+        package var inline: Array<Element>.Storage.Inline<inlineCapacity>
 
         /// Current element count (valid in both inline and heap modes).
         @usableFromInline
-        package var _count: Index_Primitives.Index<Element>.Count
+        package var elementCount: Index_Primitives.Index<Element>.Count
 
         /// Heap storage state when spilled. Nil when using inline storage.
         ///
         /// Contains both the storage reference and cached element pointer,
         /// ensuring they are always consistent by construction.
         @usableFromInline
-        package var _heap: Heap?
+        package var heap: Heap?
 
         /// Creates an empty small array.
         ///
@@ -68,21 +68,21 @@ extension Array where Element: ~Copyable {
                 )
             }
 
-            self._inline = Storage.Inline<inlineCapacity>()
-            self._count = .zero
-            self._heap = nil
+            self.inline = Storage.Inline<inlineCapacity>()
+            self.elementCount = .zero
+            self.heap = nil
         }
 
         deinit {
-            let count = _count.rawValue
+            let count = elementCount.rawValue
             guard count > 0 else { return }
 
-            if let heap = _heap {
+            if let heapState = heap {
                 // Elements are on heap - ElementStorage handles cleanup via its deinit
-                heap.storage.header = count
+                heapState.storage.header = count
             } else {
                 // Elements are inline - clean up via Storage.Inline
-                _inline.deinitialize(count: count)
+                inline.deinitialize(count: count)
             }
         }
     }
