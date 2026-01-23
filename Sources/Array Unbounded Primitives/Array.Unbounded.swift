@@ -20,8 +20,8 @@ public import Array_Primitives_Core
 extension Array where Element: ~Copyable {
     /// The number of elements in the array.
     @inlinable
-    public var count: Index_Primitives.Index<Element>.Count {
-        Index_Primitives.Index<Element>.Count(__unchecked: _storage.header)
+    public var count: Index.Count {
+        Index.Count(__unchecked: _storage.header)
     }
 
     /// Whether the array is empty.
@@ -128,7 +128,7 @@ extension Array where Element: ~Copyable {
     /// - Returns: The result of the closure.
     /// - Precondition: The index must be in bounds.
     @inlinable
-    public func withElement<R>(at index: Index_Primitives.Index<Element>, _ body: (borrowing Element) -> R) -> R {
+    public func withElement<R>(at index: Index, _ body: (borrowing Element) -> R) -> R {
         precondition(index < count, "Index out of bounds")
         return unsafe _storage.withUnsafeMutablePointerToElements { elements in
             body(unsafe (elements + index.position.rawValue).pointee)

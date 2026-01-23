@@ -7,7 +7,7 @@ public import Index_Primitives
 extension Array.Fixed {
     /// The number of elements in the array.
     @inlinable
-    public var count: Index_Primitives.Index<Element>.Count { _count }
+    public var count: Index.Count { _count }
 
     /// Whether the array is empty.
     @inlinable
@@ -144,7 +144,7 @@ extension Array.Fixed where Element: ~Copyable {
     /// - Returns: The result of the closure.
     /// - Precondition: The index must be in bounds.
     @inlinable
-    public func withElement<R>(at index: Index_Primitives.Index<Element>, _ body: (borrowing Element) -> R) -> R {
+    public func withElement<R>(at index: Index, _ body: (borrowing Element) -> R) -> R {
         precondition(index < _count, "Index out of bounds")
         return unsafe body((_cachedPtr + index.position.rawValue).pointee)
     }

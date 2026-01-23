@@ -134,6 +134,6 @@ where Tag == Sequence.ForEach, Base == Array<Element>.Small<n>, Element: Copyabl
             }
             unsafe base.pointee.inline.deinitialize(count: count)
         }
-        unsafe base.pointee.elementCount = .zero
+        unsafe base.pointee.count = .zero
     }
 }

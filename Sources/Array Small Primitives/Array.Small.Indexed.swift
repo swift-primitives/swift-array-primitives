@@ -62,8 +62,8 @@ extension Array.Small where Element: Copyable {
         /// guard node < indexed.count else { return }
         /// ```
         @inlinable
-        public var count: Index_Primitives.Index<Tag>.Count {
-            Index_Primitives.Index<Tag>.Count(__unchecked: _storage.count.rawValue)
+        public var count: Index.Count {
+            Index.Count(__unchecked: _storage.count.rawValue)
         }
 
         /// Accesses the element at the given phantom-typed index.
@@ -77,7 +77,7 @@ extension Array.Small where Element: Copyable {
         /// instead of the `inline` accessor because subscript getters are non-mutating,
         /// but the `inline` accessor requires `&self` (mutating context).
         @inlinable
-        public subscript(index: Index_Primitives.Index<Tag>) -> Element {
+        public subscript(index: Index) -> Element {
             get {
                 precondition(index.position.rawValue < _storage.count.rawValue, "Index out of bounds")
                 if let heapState = _storage.heap {

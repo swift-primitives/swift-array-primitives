@@ -42,7 +42,7 @@ extension Array.Fixed {
 
         self._storage = Array.Storage.create(capacity: count, initializingWith: initializer)
         unsafe self._cachedPtr = _storage.pointer(at: 0)
-        self._count = Index_Primitives.Index<Element>.Count(__unchecked: count)
+        self._count = Index.Count(__unchecked: count)
     }
 }
 
@@ -75,7 +75,7 @@ extension Array.Fixed {
 
         self._storage = Array.Storage.create(capacity: count, initializingWith: initializer)
         unsafe self._cachedPtr = _storage.pointer(at: 0)
-        self._count = Index_Primitives.Index<Element>.Count(__unchecked: count)
+        self._count = Index.Count(__unchecked: count)
     }
 }
 

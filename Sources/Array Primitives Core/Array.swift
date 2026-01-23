@@ -139,7 +139,7 @@ public struct Array<Element: ~Copyable>: ~Copyable {
         package var _cachedPtr: UnsafeMutablePointer<Element>
 
         /// The number of elements in the array.
-        public let _count: Index_Primitives.Index<Element>.Count
+        public let _count: Index.Count
 
         // Note: No deinit needed - Storage handles cleanup
     }
@@ -177,7 +177,7 @@ public struct Array<Element: ~Copyable>: ~Copyable {
 
         /// Current element count.
         @usableFromInline
-        package var _count: Index_Primitives.Index<Element>.Count
+        package var _count: Index.Count
 
         /// Workaround for Swift compiler bug where deinit element cleanup
         /// fails for ~Copyable structs that contain only value-type properties.

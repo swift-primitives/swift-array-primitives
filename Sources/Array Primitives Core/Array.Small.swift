@@ -32,8 +32,7 @@ extension Array where Element: ~Copyable {
     public struct Small<let inlineCapacity: Int>: ~Copyable {
 
         /// Current element count (valid in both inline and heap modes).
-        @usableFromInline
-        package var elementCount: Index_Primitives.Index<Element>.Count
+        public var count: Index.Count
         
         /// Inline storage for elements.
         @usableFromInline
@@ -69,20 +68,20 @@ extension Array where Element: ~Copyable {
             }
 
             self.inline = Storage.Inline<inlineCapacity>()
-            self.elementCount = .zero
+            self.count = .zero
             self.heap = nil
         }
 
         deinit {
-            let count = elementCount.rawValue
-            guard count > 0 else { return }
+            let elementCount = count.rawValue
+            guard elementCount > 0 else { return }
 
             if let heapState = heap {
                 // Elements are on heap - ElementStorage handles cleanup via its deinit
-                heapState.storage.header = count
+                heapState.storage.header = elementCount
             } else {
                 // Elements are inline - clean up via Storage.Inline
-                inline.deinitialize(count: count)
+                inline.deinitialize(count: elementCount)
             }
         }
     }

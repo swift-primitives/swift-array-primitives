@@ -81,6 +81,6 @@ where Tag == Sequence.Drain, Base == Array<Element>.Small<n>, Element: ~Copyable
                 body(unsafe base.pointee.inline.move(at: i))
             }
         }
-        unsafe base.pointee.elementCount = .zero
+        unsafe base.pointee.count = .zero
     }
 }

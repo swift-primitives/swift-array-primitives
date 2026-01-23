@@ -6,7 +6,7 @@ public import Index_Primitives
 extension Array.Static where Element: ~Copyable {
     /// The number of elements in the array.
     @inlinable
-    public var count: Index_Primitives.Index<Element>.Count { _count }
+    public var count: Index.Count { _count }
 
     /// Whether the array is empty.
     @inlinable
@@ -30,7 +30,7 @@ extension Array.Static where Element: ~Copyable {
             throw .overflow
         }
         _storage.initialize(to: element, at: _count.rawValue)
-        _count = Index_Primitives.Index<Element>.Count(__unchecked: _count.rawValue + 1)
+        _count = Index.Count(__unchecked: _count.rawValue + 1)
     }
 
     /// Removes and returns the last element.
@@ -40,7 +40,7 @@ extension Array.Static where Element: ~Copyable {
     public mutating func removeLast() -> Element? {
         guard _count.rawValue > 0 else { return nil }
         let newCount = _count.rawValue - 1
-        _count = Index_Primitives.Index<Element>.Count(__unchecked: newCount)
+        _count = Index.Count(__unchecked: newCount)
         return _storage.move(at: newCount)
     }
 }
@@ -56,7 +56,7 @@ extension Array.Static where Element: ~Copyable {
     /// - Returns: The result of the closure.
     /// - Precondition: The index must be in bounds.
     @inlinable
-    public func withElement<R>(at index: Index_Primitives.Index<Element>, _ body: (borrowing Element) -> R) -> R {
+    public func withElement<R>(at index: Index, _ body: (borrowing Element) -> R) -> R {
         precondition(index < _count, "Index out of bounds")
         return unsafe body(_storage.read(at: index.position.rawValue).pointee)
     }
@@ -126,7 +126,7 @@ extension Array.Static where Element: ~Copyable {
     ///
     /// - Parameter index: A bounded index where the type proves `0 <= index < capacity`.
     @inlinable
-    public subscript(_ index: Index_Primitives.Index<Element>.Bounded<capacity>) -> Element {
+    public subscript(_ index: Index.Bounded<capacity>) -> Element {
         _read {
             // Type proves: 0 <= index < capacity
             // For full arrays: count == capacity, so 0 <= index < count ✓

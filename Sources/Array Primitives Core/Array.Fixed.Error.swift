@@ -12,6 +12,6 @@ extension Array.Fixed {
         case invalidCount(Int)
 
         /// The index is out of bounds.
-        case indexOutOfBounds(index: Index_Primitives.Index<Element>, count: Index_Primitives.Index<Element>.Count)
+        case indexOutOfBounds(index: Array.Index, count: Array.Index.Count)
     }
 }

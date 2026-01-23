@@ -18,13 +18,9 @@ public import Array_Primitives_Core
 // MARK: - Properties
 
 extension Array.Small where Element: ~Copyable {
-    /// The number of elements in the array.
-    @inlinable
-    public var count: Index_Primitives.Index<Element>.Count { elementCount }
-
     /// Whether the array is empty.
     @inlinable
-    public var isEmpty: Bool { elementCount == .zero }
+    public var isEmpty: Bool { count == .zero }
 
     /// The current capacity of the array.
     @inlinable
@@ -78,18 +74,18 @@ extension Array.Small where Element: ~Copyable {
             heap = heapState  // Write back mutation
             heap!.storage.initialize(to: element, at: currentCount)
             heap!.storage.header = currentCount + 1
-            elementCount = Index_Primitives.Index<Element>.Count(__unchecked: count.rawValue + 1)
+            count = Index.Count(__unchecked: count.rawValue + 1)
         } else if count.rawValue < inlineCapacity {
             // Inline mode with room
             let ptr = unsafe inline.pointer(at: count.rawValue)
             unsafe ptr.initialize(to: element)
-            elementCount = Index_Primitives.Index<Element>.Count(__unchecked: count.rawValue + 1)
+            count = Index.Count(__unchecked: count.rawValue + 1)
         } else {
             // Need to spill
             spill(minimumCapacity: count.rawValue + 1)
             heap!.storage.initialize(to: element, at: count.rawValue)
             heap!.storage.header = count.rawValue + 1
-            elementCount = Index_Primitives.Index<Element>.Count(__unchecked: count.rawValue + 1)
+            count = Index.Count(__unchecked: count.rawValue + 1)
         }
     }
 
@@ -103,13 +99,13 @@ extension Array.Small where Element: ~Copyable {
         if let heapState = heap {
             // Heap mode
             let newCount = count.rawValue - 1
-            elementCount = Index_Primitives.Index<Element>.Count(__unchecked: newCount)
+            count = Index.Count(__unchecked: newCount)
             heap!.storage.header = newCount
             return heapState.storage.move(at: newCount)
         } else {
             // Inline mode
             let newCount = count.rawValue - 1
-            elementCount = Index_Primitives.Index<Element>.Count(__unchecked: newCount)
+            count = Index.Count(__unchecked: newCount)
             let ptr = unsafe inline.pointer(at: newCount)
             return unsafe ptr.move()
         }
@@ -132,7 +128,7 @@ extension Array.Small where Element: ~Copyable {
             // Inline mode - deinitialize via Storage.Inline
             inline.deinitialize(count: count.rawValue)
         }
-        elementCount = .zero
+        count = .zero
     }
 }
 
@@ -147,7 +143,7 @@ extension Array.Small where Element: ~Copyable {
     /// - Returns: The result of the closure.
     /// - Precondition: The index must be in bounds.
     @inlinable
-    public func withElement<R>(at index: Index_Primitives.Index<Element>, _ body: (borrowing Element) -> R) -> R {
+    public func withElement<R>(at index: Index, _ body: (borrowing Element) -> R) -> R {
         precondition(index < count, "Index out of bounds")
         if let heapState = heap {
             return unsafe heapState.storage.withUnsafeMutablePointerToElements { elements in
@@ -203,11 +199,11 @@ extension Array.Small where Element: ~Copyable {
                 let span = unsafe MutableSpan(_unsafeStart: heapState.pointer, count: count.rawValue)
                 return try body(span)
             } else {
-                let elementCount = count.rawValue
+                let count = count.rawValue
                 return try unsafe withUnsafeMutablePointer(to: &inline) { storagePtr throws(E) -> R in
                     let basePtr = UnsafeMutableRawPointer(storagePtr)
                     let elementPtr = unsafe basePtr.assumingMemoryBound(to: Element.self)
-                    let span = unsafe MutableSpan(_unsafeStart: elementPtr, count: elementCount)
+                    let span = unsafe MutableSpan(_unsafeStart: elementPtr, count: count)
                     return try body(span)
                 }
             }
@@ -253,11 +249,11 @@ extension Array.Small where Element: ~Copyable {
             if let heapState = heap {
                 return try unsafe body(UnsafeMutableBufferPointer(start: heapState.pointer, count: count.rawValue))
             } else {
-                let elementCount = count.rawValue
+                let count = count.rawValue
                 return try unsafe withUnsafeMutablePointer(to: &inline) { (storagePtr) throws(E) -> R in
                     let basePtr = UnsafeMutableRawPointer(storagePtr)
                     let elementPtr = unsafe basePtr.assumingMemoryBound(to: Element.self)
-                    return try unsafe body(UnsafeMutableBufferPointer(start: elementPtr, count: elementCount))
+                    return try unsafe body(UnsafeMutableBufferPointer(start: elementPtr, count: count))
                 }
             }
         } else {

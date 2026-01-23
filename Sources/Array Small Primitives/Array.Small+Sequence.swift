@@ -32,13 +32,13 @@ extension Array.Small where Element: Copyable {
         let base: UnsafePointer<Element>
 
         @usableFromInline
-        let end: Index_Primitives.Index<Element>.Count
+        let end: Index.Count
 
         @usableFromInline
-        var position: Index_Primitives.Index<Element>
+        var position: Index
 
         @usableFromInline @unsafe
-        init(base: UnsafePointer<Element>, count: Index_Primitives.Index<Element>.Count) {
+        init(base: UnsafePointer<Element>, count: Index.Count) {
             unsafe self.base = base
             self.end = count
             self.position = .zero

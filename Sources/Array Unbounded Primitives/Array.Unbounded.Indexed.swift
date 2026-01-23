@@ -71,8 +71,8 @@ extension Array where Element: Copyable {
         /// guard node < indexed.count else { return }
         /// ```
         @inlinable
-        public var count: Index_Primitives.Index<Tag>.Count {
-            Index_Primitives.Index<Tag>.Count(__unchecked: _storage.count.rawValue)
+        public var count: Index.Count {
+            Index.Count(__unchecked: _storage.count.rawValue)
         }
 
         /// Accesses the element at the given phantom-typed index.
@@ -80,7 +80,7 @@ extension Array where Element: Copyable {
         /// - Parameter index: The typed index of the element to access.
         /// - Precondition: `index` must be within bounds.
         @inlinable
-        public subscript(index: Index_Primitives.Index<Tag>) -> Element {
+        public subscript(index: Index) -> Element {
             get {
                 precondition(index.position.rawValue < _storage.count.rawValue, "Index out of bounds")
                 return unsafe _storage._storage.read(at: index.position.rawValue).pointee

@@ -62,8 +62,8 @@ extension Array.Static where Element: Copyable {
         /// guard node < indexed.count else { return }
         /// ```
         @inlinable
-        public var count: Index_Primitives.Index<Tag>.Count {
-            Index_Primitives.Index<Tag>.Count(__unchecked: _storage.count.rawValue)
+        public var count: Index.Count {
+            Index.Count(__unchecked: _storage.count.rawValue)
         }
 
         /// Accesses the element at the given phantom-typed index.
@@ -71,7 +71,7 @@ extension Array.Static where Element: Copyable {
         /// - Parameter index: The typed index of the element to access.
         /// - Precondition: `index` must be within bounds.
         @inlinable
-        public subscript(index: Index_Primitives.Index<Tag>) -> Element {
+        public subscript(index: Index) -> Element {
             get {
                 precondition(index.position.rawValue < _storage.count.rawValue, "Index out of bounds")
                 return unsafe _storage._readPointerToElement(at: index.position.rawValue).pointee
@@ -100,7 +100,7 @@ extension Array.Static where Element: Copyable {
         ///
         /// - Parameter index: A bounded index where the type proves `0 <= index < capacity`.
         @inlinable
-        public subscript(_ index: Index_Primitives.Index<Tag>.Bounded<capacity>) -> Element {
+        public subscript(_ index: Index.Bounded<capacity>) -> Element {
             get {
                 // Type proves: 0 <= index < capacity
                 // For full arrays: count == capacity, so 0 <= index < count ✓
