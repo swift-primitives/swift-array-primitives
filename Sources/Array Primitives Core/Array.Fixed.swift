@@ -26,7 +26,7 @@ extension Array.Fixed {
     /// - Throws: `Error.invalidCount` if count is negative.
     @inlinable
     public init(
-        count: Int,
+        count: Array.Index.Count,
         initializingWith initializer: (Int) -> Element
     ) throws(Error) {
         guard count >= 0 else {
@@ -42,7 +42,7 @@ extension Array.Fixed {
 
         self._storage = Array.Storage.create(capacity: count, initializingWith: initializer)
         unsafe self._cachedPtr = _storage.pointer(at: 0)
-        self._count = Index.Count(__unchecked: count)
+        self._count = count
     }
 }
 
@@ -61,7 +61,7 @@ extension Array.Fixed {
     @inlinable
     public init(
         __unchecked: Void,
-        count: Int,
+        count: Array.Index.Count,
         initializingWith initializer: (Int) -> Element
     ) {
         precondition(count >= 0, "Count must be non-negative")
@@ -75,7 +75,7 @@ extension Array.Fixed {
 
         self._storage = Array.Storage.create(capacity: count, initializingWith: initializer)
         unsafe self._cachedPtr = _storage.pointer(at: 0)
-        self._count = Index.Count(__unchecked: count)
+        self._count = count
     }
 }
 

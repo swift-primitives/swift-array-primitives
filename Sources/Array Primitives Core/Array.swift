@@ -70,7 +70,7 @@ public struct Array<Element: ~Copyable>: ~Copyable {
     ///
     /// - Parameter initialCapacity: The initial capacity to allocate.
     @inlinable
-    public init(initialCapacity: Int) {
+    public init(initialCapacity: Array.Index.Count) {
         precondition(initialCapacity >= 0, "Initial capacity must be non-negative")
         self._storage = Array.Storage.create(minimumCapacity: initialCapacity)
         unsafe (self._cachedPtr = _storage.pointer(at: 0))

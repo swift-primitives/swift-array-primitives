@@ -47,7 +47,7 @@ extension Array.Small where Element: ~Copyable {
     /// - Parameter minimumCapacity: The minimum capacity for heap storage.
     /// - Precondition: Must not already be in heap mode.
     @usableFromInline
-    package mutating func spill(minimumCapacity: Int) {
+    package mutating func spill(minimumCapacity: Array.Index.Count) {
         precondition(heap == nil, "Already spilled")
 
         let newStorage = Heap.create(minimumCapacity: minimumCapacity)
@@ -82,7 +82,7 @@ extension Array.Small where Element: ~Copyable {
             count = Index.Count(__unchecked: count.rawValue + 1)
         } else {
             // Need to spill
-            spill(minimumCapacity: count.rawValue + 1)
+            spill(minimumCapacity: count + 1)
             heap!.storage.initialize(to: element, at: count.rawValue)
             heap!.storage.header = count.rawValue + 1
             count = Index.Count(__unchecked: count.rawValue + 1)

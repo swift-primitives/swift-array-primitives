@@ -38,9 +38,9 @@ extension Array.Small where Element: ~Copyable {
 
         /// Creates new heap storage with specified capacity.
         @usableFromInline
-        package static func create(minimumCapacity: Int) -> Array<Element>.Storage {
-            let newCapacity = Swift.max(minimumCapacity, inlineCapacity * 2, 8)
-            return Array<Element>.Storage.create(minimumCapacity: newCapacity)
+        package static func create(minimumCapacity: Array.Index.Count) -> Array<Element>.Storage {
+            let newCapacity = Swift.max(minimumCapacity.rawValue, inlineCapacity * 2, 8)
+            return Array<Element>.Storage.create(minimumCapacity: .init(__unchecked: newCapacity))
         }
 
         /// Ensures capacity, reallocating if needed.
@@ -49,7 +49,7 @@ extension Array.Small where Element: ~Copyable {
             guard storage.capacity < minimumCapacity else { return }
 
             let newCapacity = Swift.max(minimumCapacity, storage.capacity * 2, 8)
-            let newStorage = Array<Element>.Storage.create(minimumCapacity: newCapacity)
+            let newStorage = Array<Element>.Storage.create(minimumCapacity: .init(__unchecked: newCapacity))
             let currentCount = storage.header
 
             storage.move(to: newStorage)

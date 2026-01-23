@@ -32,7 +32,7 @@ extension Array where Element: ~Copyable {
 
         // Growth factor 2.0, minimum capacity 4
         let newCapacity = Swift.max(minimumCapacity, _storage.capacity * 2, 4)
-        let newStorage = Array.Storage.create(minimumCapacity: newCapacity)
+        let newStorage = Array.Storage.create(minimumCapacity: .init(__unchecked: newCapacity))
         let currentCount = _storage.header
 
         _storage.move(to: newStorage)

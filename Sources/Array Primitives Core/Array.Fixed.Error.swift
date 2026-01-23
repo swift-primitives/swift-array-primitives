@@ -8,8 +8,7 @@
 extension Array.Fixed {
     /// Errors that can occur during fixed array operations.
     public enum Error: Swift.Error, Sendable, Equatable {
-        /// The requested count is invalid (negative).
-        case invalidCount(Int)
+        case invalidCount(Array.Index.Count)
 
         /// The index is out of bounds.
         case indexOutOfBounds(index: Array.Index, count: Array.Index.Count)

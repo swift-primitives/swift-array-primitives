@@ -16,8 +16,8 @@ extension Array.Storage where Element: ~Copyable {
     ///
     /// Used by growable arrays (Unbounded, Small heap mode).
     @usableFromInline
-    package static func create(minimumCapacity: Int) -> Array<Element>.Storage {
-        let storage = Array<Element>.Storage.create(minimumCapacity: minimumCapacity) { _ in 0 }
+    package static func create(minimumCapacity: Array.Index.Count) -> Array<Element>.Storage {
+        let storage = Array<Element>.Storage.create(minimumCapacity: minimumCapacity.rawValue) { _ in 0 }
         return unsafe unsafeDowncast(storage, to: Array<Element>.Storage.self)
     }
 
@@ -26,9 +26,10 @@ extension Array.Storage where Element: ~Copyable {
     /// Used by fixed-size arrays (Bounded).
     @usableFromInline
     static func create(
-        capacity: Int,
+        capacity: Array.Index.Count,
         initializingWith initializer: (Int) -> Element
     ) -> Array.Storage {
+        let capacity = capacity.rawValue
         let storage = Array.Storage.create(minimumCapacity: capacity) { _ in 0 }
         let typed = unsafe unsafeDowncast(storage, to: Array.Storage.self)
 
@@ -169,7 +170,7 @@ extension Array.Storage where Element: Copyable {
             return Array<Element>.Storage.create(minimumCapacity: 0)
         }
 
-        let new = Array<Element>.Storage.create(minimumCapacity: capacity)
+        let new = Array<Element>.Storage.create(minimumCapacity: Array.Index.Count(__unchecked: count))
         new.header = count
 
         _ = unsafe withUnsafeMutablePointerToElements { src in
