@@ -42,29 +42,38 @@ extension Array where Element: ~Copyable {
         @usableFromInline
         package var _count: Index_Primitives.Index<Element>.Count
 
-        /// Heap storage for elements when spilled. Nil when using inline storage.
+        /// Heap storage state when spilled. Nil when using inline storage.
+        ///
+        /// Contains both the storage reference and cached element pointer,
+        /// ensuring they are always consistent by construction.
         @usableFromInline
-        package var _heap: Array.Storage?
-
-        /// Cached pointer to heap elements. Only valid when _heapStorage is non-nil.
-        @usableFromInline
-        package var _heapPtr: UnsafeMutablePointer<Element>?
+        package var _heap: Heap.State?
 
         /// Creates an empty small array.
+        ///
+        /// - Throws: `Error.strideExceedsSlotSize` if element stride exceeds inline storage slot size (64 bytes).
+        /// - Throws: `Error.alignmentExceedsStorageAlignment` if element alignment exceeds inline storage alignment.
         @inlinable
-        public init() {
-            precondition(
-                MemoryLayout<Element>.stride <= Array.Inline<inlineCapacity>.maxElementStride,
-                "Element stride (\(MemoryLayout<Element>.stride)) exceeds inline storage slot size (\(Self.maxElementStride) bytes). Use Array.Unbounded instead."
-            )
-            precondition(
-                MemoryLayout<Element>.alignment <= MemoryLayout<Int>.alignment,
-                "Element alignment (\(MemoryLayout<Element>.alignment)) exceeds inline storage alignment (\(MemoryLayout<Int>.alignment)). Use Array.Unbounded instead."
-            )
+        public init() throws(Error) {
+            let stride = MemoryLayout<Element>.stride
+            let alignment = MemoryLayout<Element>.alignment
+
+            guard stride <= Self.maxElementStride else {
+                throw .strideExceedsSlotSize(
+                    elementStride: stride,
+                    maxSlotSize: Self.maxElementStride
+                )
+            }
+            guard alignment <= MemoryLayout<Int>.alignment else {
+                throw .alignmentExceedsStorageAlignment(
+                    elementAlignment: alignment,
+                    maxAlignment: MemoryLayout<Int>.alignment
+                )
+            }
+
             self._inline = InlineArray(repeating: (0, 0, 0, 0, 0, 0, 0, 0))
             self._count = .zero
             self._heap = nil
-            unsafe (self._heapPtr = nil)
         }
 
         deinit {
@@ -73,7 +82,7 @@ extension Array where Element: ~Copyable {
 
             if let heap = _heap {
                 // Elements are on heap - ElementStorage handles cleanup via its deinit
-                heap.header = count
+                heap.storage.header = count
             } else {
                 // Elements are inline - clean up manually
                 let stride = MemoryLayout<Element>.stride

@@ -80,8 +80,8 @@ extension Array.Small where Element: Copyable {
         public subscript(index: Index_Primitives.Index<Tag>) -> Element {
             get {
                 precondition(index.position.rawValue < _storage.count.rawValue, "Index out of bounds")
-                if let heapStorage = _storage._heap {
-                    return heapStorage._readElement(at: index.position.rawValue)
+                if let heapState = _storage._heap {
+                    return heapState.storage._readElement(at: index.position.rawValue)
                 } else {
                     // Direct access to inline storage - cannot use `inline` accessor
                     // because it requires mutating context (needs &self for pointer)
@@ -97,8 +97,8 @@ extension Array.Small where Element: Copyable {
             set {
                 precondition(index.position.rawValue < _storage.count.rawValue, "Index out of bounds")
                 if _storage._heap != nil {
-                    _ = _storage._heap!._moveElement(at: index.position.rawValue)
-                    _storage._heap!._initializeElement(at: index.position.rawValue, to: newValue)
+                    _ = _storage._heap!.storage._moveElement(at: index.position.rawValue)
+                    _storage._heap!.storage._initializeElement(at: index.position.rawValue, to: newValue)
                 } else {
                     unsafe _storage.inline.pointer(at: index.position.rawValue).pointee = newValue
                 }
