@@ -29,8 +29,8 @@ extension Array.Small where Element: ~Copyable {
     /// The current capacity of the array.
     @inlinable
     public var capacity: Int {
-        if let heap = _heap {
-            return heap.storage.capacity
+        if let heapState = _heap {
+            return heapState.storage.capacity
         }
         return inlineCapacity
     }
@@ -409,7 +409,7 @@ extension Array.Small where Element: ~Copyable {
             if let heapState = _heap {
                 yield unsafe heapState.pointer[index.position.rawValue]
             } else {
-                yield unsafe inline.read(at: index.position.rawValue).pointee
+                yield unsafe _inline.read(at: index.position.rawValue).pointee
             }
         }
         _modify {
@@ -417,7 +417,7 @@ extension Array.Small where Element: ~Copyable {
             if let heapState = _heap {
                 yield &(unsafe heapState.pointer[index.position.rawValue])
             } else {
-                yield &(unsafe inline.pointer(at: index.position.rawValue).pointee)
+                yield &(unsafe _inline.pointer(at: index.position.rawValue).pointee)
             }
         }
     }
