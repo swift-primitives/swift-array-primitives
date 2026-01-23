@@ -1,9 +1,10 @@
 public import Collection_Primitives
 public import Index_Primitives
+public import Array_Primitives_Core
 
 // MARK: - Collection.Indexed Conformance
 
-extension Array.Inline: Collection.Indexed where Element: ~Copyable {
+extension Array.Bounded: Collection.Indexed where Element: ~Copyable {
     public typealias Index = Array<Element>.Index
 
     @inlinable
@@ -18,7 +19,7 @@ extension Array.Inline: Collection.Indexed where Element: ~Copyable {
 
 // MARK: - Collection.Bidirectional Conformance
 
-extension Array.Inline: Collection.Bidirectional where Element: ~Copyable {
+extension Array.Bounded: Collection.Bidirectional where Element: ~Copyable {
     @inlinable
     public func index(before i: Index) -> Index { (i - 1)! }
 }

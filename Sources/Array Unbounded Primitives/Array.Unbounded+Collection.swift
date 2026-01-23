@@ -1,6 +1,15 @@
+//
+//  File.swift
+//  swift-array-primitives
+//
+//  Created by Coen ten Thije Boonkkamp on 23/01/2026.
+//
+
 public import Collection_Primitives
 public import Array_Primitives_Core
 public import Index_Primitives
+
+extension Array.Unbounded: Collection.`Protocol` where Element: Copyable {}
 
 // MARK: - Iterator
 
@@ -46,33 +55,12 @@ extension Array.Unbounded.Iterator: @unchecked Sendable where Element: Sendable 
 
 // MARK: - Sequence.Protocol Conformance
 
-extension Array.Unbounded: Sequence.`Protocol` where Element: Copyable {
-    /// Returns a pointer-based iterator over the array elements.
-    ///
-    /// Zero-copy iteration - no allocation, no element copying.
-    /// Uses typed `Index<Element>` for position tracking.
-    @inlinable
-    public borrowing func makeIterator() -> Iterator {
-        unsafe Iterator(base: UnsafePointer(_cachedPtr), count: .init(__unchecked: count.rawValue))
-    }
-}
 
-// MARK: - Swift.Sequence Conformance
-//
-// Bridge to Swift.Sequence for `for-in` loops and stdlib algorithms.
-// Requires explicit underestimatedCount to resolve ambiguity with
-// Sequence.Protocol+Swift.Sequence default implementation.
-
-extension Array.Unbounded: Swift.Sequence where Element: Copyable {
-    /// Returns the count as the underestimated count since we know the exact size.
-    @inlinable
-    public var underestimatedCount: Int { count.rawValue }
-}
 
 // MARK: - Collection.Protocol Conformance
 // Note: Index, startIndex, endIndex, index(after:) defined in Collection.Indexed conformance
 
-extension Array.Unbounded: Collection.`Protocol` where Element: Copyable {}
+
 
 // MARK: - Collection.Access.Random Conformance
 // Note: Collection.Bidirectional conformance is provided in +Collection.Indexed.swift
@@ -80,10 +68,22 @@ extension Array.Unbounded: Collection.`Protocol` where Element: Copyable {}
 
 extension Array.Unbounded: Collection.Access.Random where Element: Copyable {}
 
-// MARK: - Swift.Collection Conformance
-// Bridge to Swift standard library collections for interop with stdlib algorithms.
-// Requirements satisfied by Collection.Protocol conformance above.
+extension Array.Unbounded: Collection.Indexed where Element: ~Copyable {
+    public typealias Index = Array<Element>.Index
 
-extension Array.Unbounded: Swift.Collection where Element: Copyable {}
-extension Array.Unbounded: Swift.BidirectionalCollection where Element: Copyable {}
-extension Array.Unbounded: Swift.RandomAccessCollection where Element: Copyable {}
+    @inlinable
+    public var startIndex: Index { .zero }
+
+    @inlinable
+    public var endIndex: Index { Index(count) }
+
+    @inlinable
+    public func index(after i: Index) -> Index { (i + 1)! }
+}
+
+// MARK: - Collection.Bidirectional Conformance
+
+extension Array.Unbounded: Collection.Bidirectional where Element: ~Copyable {
+    @inlinable
+    public func index(before i: Index) -> Index { (i - 1)! }
+}

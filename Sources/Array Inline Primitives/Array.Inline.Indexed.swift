@@ -10,6 +10,7 @@
 // ===----------------------------------------------------------------------===//
 
 import Index_Primitives
+public import Array_Primitives_Core
 
 // MARK: - Array.Inline.Indexed
 

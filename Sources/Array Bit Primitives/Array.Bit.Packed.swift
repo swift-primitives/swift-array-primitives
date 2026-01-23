@@ -10,6 +10,7 @@
 // ===----------------------------------------------------------------------===//
 
 public import Bit_Primitives
+public import Array_Primitives_Core
 
 // MARK: - Array<Bit>.Packed
 

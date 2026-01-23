@@ -4,7 +4,7 @@ public import Index_Primitives
 
 // MARK: - Iterator
 
-extension Array.Bounded where Element: Copyable {
+extension Array.Bounded {
     /// Pointer-based iterator for Array.Bounded.
     ///
     /// Zero-copy iteration using typed `Index<Element>` for position tracking.
@@ -46,7 +46,7 @@ extension Array.Bounded.Iterator: @unchecked Sendable where Element: Sendable {}
 
 // MARK: - Sequence.Protocol Conformance
 
-extension Array.Bounded: Sequence.`Protocol` where Element: Copyable {
+extension Array.Bounded: Sequence.`Protocol` {
     /// Returns a pointer-based iterator over the array elements.
     ///
     /// Zero-copy iteration - no allocation, no element copying.
@@ -72,13 +72,13 @@ extension Array.Bounded: Swift.Sequence where Element: Copyable {
 // MARK: - Collection.Protocol Conformance
 // Note: Index, startIndex, endIndex, index(after:) defined in Collection.Indexed conformance
 
-extension Array.Bounded: Collection.`Protocol` where Element: Copyable {}
+extension Array.Bounded: Collection.`Protocol` {}
 
 // MARK: - Collection.Access.Random Conformance
 // Note: Collection.Bidirectional conformance is provided in +Collection.Indexed.swift
 // for ALL element types (including ~Copyable) via `where Element: ~Copyable`.
 
-extension Array.Bounded: Collection.Access.Random where Element: Copyable {}
+extension Array.Bounded: Collection.Access.Random {}
 
 // MARK: - Swift.Collection Conformance
 // Bridge to Swift standard library collections for interop with stdlib algorithms.

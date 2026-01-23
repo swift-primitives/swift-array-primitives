@@ -10,64 +10,69 @@
 // ===----------------------------------------------------------------------===//
 
 public import Bit_Primitives
+public import Array_Primitives_Core
 
-// MARK: - Array<Bit>.Packed.Inline
+// MARK: - Array<Bit>.Packed.Bounded
 
 extension Array<Bit>.Packed {
-    /// Zero-allocation packed bit array with compile-time capacity.
+    /// Fixed-capacity packed bit array.
     ///
-    /// `Array<Bit>.Packed.Inline` stores bits in inline storage using `InlineArray`,
-    /// avoiding heap allocation entirely. The capacity is specified as a compile-time
-    /// constant representing the number of `UInt` words.
+    /// `Array<Bit>.Packed.Bounded` stores bits in a fixed-size buffer, throwing on overflow.
+    /// Use when the maximum size is known and overflow should be an error.
     ///
     /// ## Example
     ///
     /// ```swift
-    /// // 2 words = 128 bits on 64-bit systems
-    /// var bits = Array<Bit>.Packed.Inline<2>()
+    /// var bits = try Array<Bit>.Packed.Bounded(capacity: 100)
     /// try bits.append(true)
-    /// try bits.append(false)
-    /// bits[0]  // true
+    /// try bits.set(50)
+    /// bits[50]  // true
     /// ```
-    ///
-    /// ## Capacity
-    ///
-    /// The capacity is `wordCount * UInt.bitWidth`:
-    /// - `Inline<1>`: 64 bits
-    /// - `Inline<2>`: 128 bits
-    /// - `Inline<4>`: 256 bits
-    /// - `Inline<8>`: 512 bits
-    public struct Inline<let wordCount: Int>: Sendable {
+    public struct Bounded: Sendable {
         @usableFromInline
         static var _bitsPerWord: Int { UInt.bitWidth }
 
-        /// The maximum number of bits that can be stored.
-        @inlinable
-        public static var capacity: Int { wordCount * _bitsPerWord }
+        @usableFromInline
+        let _capacity: Int
 
         @usableFromInline
-        var _storage: InlineArray<wordCount, UInt>
+        var _storage: ContiguousArray<UInt>
 
         @usableFromInline
         var _count: Int
 
-        /// Creates an empty inline packed bit array.
+        /// Creates an empty bounded bit array with the specified capacity.
+        ///
+        /// - Parameter capacity: The maximum number of bits.
+        /// - Throws: `Error.invalidCount` if capacity is negative.
         @inlinable
-        public init() {
-            self._storage = InlineArray(repeating: 0)
+        public init(capacity: Int) throws(Error) {
+            guard capacity >= 0 else {
+                throw .invalidCount
+            }
+            let wordCount = (capacity + Self._bitsPerWord - 1) / Self._bitsPerWord
+            self._capacity = capacity
+            self._storage = ContiguousArray(repeating: 0, count: wordCount)
             self._count = 0
         }
 
-        /// Creates an inline packed bit array with an initial count.
+        /// Creates a bounded bit array with an initial count.
         ///
-        /// - Parameter count: The initial number of bits (all set to false).
-        /// - Throws: `Error.overflow` if count exceeds capacity.
+        /// - Parameters:
+        ///   - capacity: The maximum number of bits.
+        ///   - count: The initial number of bits (all set to false).
+        /// - Throws: `Error.invalidCount` if capacity is negative, `Error.overflow` if count exceeds capacity.
         @inlinable
-        public init(count: Int) throws(Error) {
-            guard count >= 0 && count <= Self.capacity else {
+        public init(capacity: Int, count: Int) throws(Error) {
+            guard capacity >= 0 else {
+                throw .invalidCount
+            }
+            guard count >= 0 && count <= capacity else {
                 throw .overflow
             }
-            self._storage = InlineArray(repeating: 0)
+            let wordCount = (capacity + Self._bitsPerWord - 1) / Self._bitsPerWord
+            self._capacity = capacity
+            self._storage = ContiguousArray(repeating: 0, count: wordCount)
             self._count = count
         }
     }
@@ -75,14 +80,14 @@ extension Array<Bit>.Packed {
 
 // MARK: - Properties
 
-extension Array<Bit>.Packed.Inline {
+extension Array<Bit>.Packed.Bounded {
     /// The number of bits in the array.
     @inlinable
     public var count: Int { _count }
 
     /// The maximum number of bits the array can hold.
     @inlinable
-    public var capacity: Int { Self.capacity }
+    public var capacity: Int { _capacity }
 
     /// Whether the array is empty.
     @inlinable
@@ -90,11 +95,11 @@ extension Array<Bit>.Packed.Inline {
 
     /// Whether the array is at full capacity.
     @inlinable
-    public var isFull: Bool { _count >= Self.capacity }
+    public var isFull: Bool { _count >= _capacity }
 
     /// The number of remaining slots.
     @inlinable
-    public var remainingCapacity: Int { Self.capacity - _count }
+    public var remainingCapacity: Int { _capacity - _count }
 
     /// Population count (number of set bits).
     @inlinable
@@ -110,7 +115,7 @@ extension Array<Bit>.Packed.Inline {
 
 // MARK: - Subscript Access
 
-extension Array<Bit>.Packed.Inline {
+extension Array<Bit>.Packed.Bounded {
     @inlinable
     public subscript(index: Bit.Index) -> Bool {
         get {
@@ -156,7 +161,7 @@ extension Array<Bit>.Packed.Inline {
 
 // MARK: - Bit Operations
 
-extension Array<Bit>.Packed.Inline {
+extension Array<Bit>.Packed.Bounded {
     @inlinable
     public mutating func set(_ index: Bit.Index) throws(Error) {
         let i = index.position.rawValue
@@ -195,7 +200,8 @@ extension Array<Bit>.Packed.Inline {
 
     @inlinable
     public mutating func clearAll() {
-        for i in 0..<wordCount {
+        let usedWords = (_count + Self._bitsPerWord - 1) / Self._bitsPerWord
+        for i in 0..<usedWords {
             _storage[i] = 0
         }
     }
@@ -218,14 +224,14 @@ extension Array<Bit>.Packed.Inline {
 
 // MARK: - Append and Remove
 
-extension Array<Bit>.Packed.Inline {
+extension Array<Bit>.Packed.Bounded {
     /// Appends a boolean value to the array.
     ///
     /// - Parameter value: The value to append.
     /// - Throws: `Error.overflow` if the array is at capacity.
     @inlinable
     public mutating func append(_ value: Bool) throws(Error) {
-        guard _count < Self.capacity else {
+        guard _count < _capacity else {
             throw .overflow
         }
         let newIndex = _count
@@ -280,7 +286,7 @@ extension Array<Bit>.Packed.Inline {
 
 // MARK: - Additional Properties
 
-extension Array<Bit>.Packed.Inline {
+extension Array<Bit>.Packed.Bounded {
     @inlinable
     public var first: Bool? {
         guard _count > 0 else { return nil }
@@ -315,11 +321,20 @@ extension Array<Bit>.Packed.Inline {
 
 // MARK: - Initializers
 
-extension Array<Bit>.Packed.Inline {
-    /// Creates an inline packed bit array with a repeated value.
+extension Array<Bit>.Packed.Bounded {
+    /// Creates a bounded bit array from a sequence of booleans.
     @inlinable
-    public init(repeating value: Bool, count: Int) throws(Error) {
-        try self.init(count: count)
+    public init<S: Swift.Sequence>(capacity: Int, _ elements: S) throws(Error) where S.Element == Bool {
+        try self.init(capacity: capacity)
+        for element in elements {
+            try append(element)
+        }
+    }
+
+    /// Creates a bounded bit array with a repeated value.
+    @inlinable
+    public init(capacity: Int, repeating value: Bool, count: Int) throws(Error) {
+        try self.init(capacity: capacity, count: count)
         if value {
             setAll()
         }
@@ -328,7 +343,7 @@ extension Array<Bit>.Packed.Inline {
 
 // MARK: - Conversion
 
-extension Array<Bit>.Packed.Inline {
+extension Array<Bit>.Packed.Bounded {
     /// Converts to a dynamically-sized packed bit array.
     @inlinable
     public func toPacked() -> Array<Bit>.Packed {
@@ -340,16 +355,27 @@ extension Array<Bit>.Packed.Inline {
     }
 }
 
+extension Array<Bit>.Packed {
+    /// Creates a packed bit array from a bounded packed bit array.
+    @inlinable
+    public init(_ bounded: Array<Bit>.Packed.Bounded) {
+        self.init()
+        for i in 0..<bounded._count {
+            append(bounded[i])
+        }
+    }
+}
+
 // MARK: - Sequence
 
-extension Array<Bit>.Packed.Inline: Swift.Sequence {
+extension Array<Bit>.Packed.Bounded: Swift.Sequence {
     public struct Iterator: IteratorProtocol, Sendable {
-        @usableFromInline let storage: InlineArray<wordCount, UInt>
+        @usableFromInline let storage: ContiguousArray<UInt>
         @usableFromInline let count: Int
         @usableFromInline var index: Int
 
         @usableFromInline
-        init(storage: InlineArray<wordCount, UInt>, count: Int) {
+        init(storage: ContiguousArray<UInt>, count: Int) {
             self.storage = storage
             self.count = count
             self.index = 0
@@ -374,12 +400,12 @@ extension Array<Bit>.Packed.Inline: Swift.Sequence {
 
 // MARK: - Equatable
 
-extension Array<Bit>.Packed.Inline: Equatable {
+extension Array<Bit>.Packed.Bounded: Equatable {
     @inlinable
     public static func == (lhs: Self, rhs: Self) -> Bool {
         guard lhs._count == rhs._count else { return false }
-        let usedWords = (lhs._count + _bitsPerWord - 1) / _bitsPerWord
-        for i in 0..<usedWords {
+        let wordCount = (lhs._count + _bitsPerWord - 1) / _bitsPerWord
+        for i in 0..<wordCount {
             if lhs._storage[i] != rhs._storage[i] { return false }
         }
         return true
@@ -388,12 +414,12 @@ extension Array<Bit>.Packed.Inline: Equatable {
 
 // MARK: - Hashable
 
-extension Array<Bit>.Packed.Inline: Hashable {
+extension Array<Bit>.Packed.Bounded: Hashable {
     @inlinable
     public func hash(into hasher: inout Hasher) {
         hasher.combine(_count)
-        let usedWords = (_count + Self._bitsPerWord - 1) / Self._bitsPerWord
-        for i in 0..<usedWords {
+        let wordCount = (_count + Self._bitsPerWord - 1) / Self._bitsPerWord
+        for i in 0..<wordCount {
             hasher.combine(_storage[i])
         }
     }
@@ -401,17 +427,17 @@ extension Array<Bit>.Packed.Inline: Hashable {
 
 // MARK: - CustomStringConvertible
 
-extension Array<Bit>.Packed.Inline: CustomStringConvertible {
+extension Array<Bit>.Packed.Bounded: CustomStringConvertible {
     public var description: String {
         let bits = prefix(64).map { $0 ? "1" : "0" }.joined()
         let suffix = _count > 64 ? "..." : ""
-        return "Array<Bit>.Packed.Inline<\(wordCount)>(\(bits)\(suffix))"
+        return "Array<Bit>.Packed.Bounded(\(bits)\(suffix), capacity: \(_capacity))"
     }
 }
 
 // MARK: - Error Typealias
 
-extension Array<Bit>.Packed.Inline {
-    /// Errors that can occur during inline packed bit array operations.
-    public typealias Error = __ArrayBitPackedInlineError
+extension Array<Bit>.Packed.Bounded {
+    /// Errors that can occur during bounded packed bit array operations.
+    public typealias Error = __ArrayBitPackedBoundedError
 }

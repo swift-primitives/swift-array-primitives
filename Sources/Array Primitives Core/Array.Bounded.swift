@@ -14,6 +14,7 @@
 // only extensions to Array.Bounded.
 
 public import Index_Primitives
+public import Array_Primitives_Core
 
 // MARK: - Properties
 
@@ -151,13 +152,15 @@ extension Array.Bounded where Element: Copyable {
 extension Array.Bounded where Element: Copyable {
     /// Ensures the storage is uniquely referenced before mutation.
     @usableFromInline
-    mutating func makeUnique() {
+    package mutating func makeUnique() {
         if !isKnownUniquelyReferenced(&_storage) {
             _storage = _storage.copy()
             unsafe _cachedPtr = _storage._elementsPointer
         }
     }
 }
+
+//extension Array.Bounded: Swift.Collection where Element: Copyable {}
 
 // MARK: - Pointer Access (Escape Hatch for C Interop)
 

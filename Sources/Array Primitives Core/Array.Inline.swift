@@ -19,6 +19,35 @@ public import Index_Primitives
 // MARK: - Properties
 
 extension Array.Inline where Element: ~Copyable {
+    
+    /// Returns a mutable pointer to the element at the given index.
+    @usableFromInline
+    @unsafe
+    package mutating func _pointerToElement(at index: Int) -> UnsafeMutablePointer<Element> {
+        let stride = MemoryLayout<Element>.stride
+        return unsafe Swift.withUnsafeMutablePointer(to: &_elements) { storagePtr in
+            let basePtr = UnsafeMutableRawPointer(storagePtr)
+            let elementPtr = unsafe (basePtr + index * stride)
+                .assumingMemoryBound(to: Element.self)
+            return unsafe elementPtr
+        }
+    }
+
+    /// Returns a read-only pointer to the element at the given index.
+    @usableFromInline
+    @unsafe
+    package func _readPointerToElement(at index: Int) -> UnsafePointer<Element> {
+        let stride = MemoryLayout<Element>.stride
+        return unsafe Swift.withUnsafePointer(to: _elements) { storagePtr in
+            let basePtr = unsafe UnsafeRawPointer(storagePtr)
+            let elementPtr = unsafe (basePtr + index * stride)
+                .assumingMemoryBound(to: Element.self)
+            return unsafe elementPtr
+        }
+    }
+}
+
+extension Array.Inline where Element: ~Copyable {
     /// The number of elements in the array.
     @inlinable
     public var count: Index_Primitives.Index<Element>.Count { _count }

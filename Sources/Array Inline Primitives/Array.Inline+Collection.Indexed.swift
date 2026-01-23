@@ -1,16 +1,17 @@
 public import Collection_Primitives
 public import Index_Primitives
+public import Array_Primitives_Core
 
 // MARK: - Collection.Indexed Conformance
 
-extension Array.Unbounded: Collection.Indexed where Element: ~Copyable {
+extension Array.Inline: Collection.Indexed where Element: ~Copyable {
     public typealias Index = Array<Element>.Index
 
     @inlinable
     public var startIndex: Index { .zero }
 
     @inlinable
-    public var endIndex: Index { Index(count) }
+    public var endIndex: Index { Index(_count) }
 
     @inlinable
     public func index(after i: Index) -> Index { (i + 1)! }
@@ -18,7 +19,7 @@ extension Array.Unbounded: Collection.Indexed where Element: ~Copyable {
 
 // MARK: - Collection.Bidirectional Conformance
 
-extension Array.Unbounded: Collection.Bidirectional where Element: ~Copyable {
+extension Array.Inline: Collection.Bidirectional where Element: ~Copyable {
     @inlinable
     public func index(before i: Index) -> Index { (i - 1)! }
 }

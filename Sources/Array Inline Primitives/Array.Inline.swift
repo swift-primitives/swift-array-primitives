@@ -4,17 +4,17 @@ public import Index_Primitives
 
 // MARK: - Iterator
 
-extension Array.Small where Element: Copyable {
-    /// Pointer-based iterator for Array.Small.
+extension Array.Inline {
+    /// Pointer-based iterator for Array.Inline.
     ///
     /// Zero-copy iteration using typed `Index<Element>` for position tracking.
-    /// The iterator holds a pointer to either inline or heap storage.
+    /// The iterator holds a pointer to the inline storage.
     ///
     /// ## Safety
     ///
     /// The iterator is only valid while the source array exists and is not mutated.
-    /// For inline storage, the iterator must be used within the same scope where
-    /// it was created (inline storage moves with the struct).
+    /// Since Array.Inline uses inline storage that moves with the struct, the
+    /// iterator must be used within the same scope where it was created.
     @safe
     public struct Iterator: IteratorProtocol {
         @usableFromInline
@@ -43,11 +43,11 @@ extension Array.Small where Element: Copyable {
     }
 }
 
-extension Array.Small.Iterator: @unchecked Sendable where Element: Sendable {}
+extension Array.Inline.Iterator: @unchecked Sendable where Element: Sendable {}
 
 // MARK: - Sequence.Protocol Conformance
 
-extension Array.Small: Sequence.`Protocol` where Element: Copyable {
+extension Array.Inline: Sequence.`Protocol` {
     /// Returns a pointer-based iterator over the array elements.
     ///
     /// Zero-copy iteration - no allocation, no element copying.
@@ -55,22 +55,17 @@ extension Array.Small: Sequence.`Protocol` where Element: Copyable {
     ///
     /// ## Note
     ///
-    /// Array.Small can use either inline or heap storage. The iterator captures
-    /// a pointer to the appropriate storage location.
+    /// Array.Inline uses inline storage. The iterator captures a pointer to
+    /// element 0, which is valid for the duration of this borrow.
     @inlinable
     public borrowing func makeIterator() -> Iterator {
-        guard _count.rawValue > 0 else {
+        // Get pointer to first element (or a valid pointer if empty)
+        if _count.rawValue > 0 {
+            let basePtr = unsafe _readPointerToElement(at: 0)
+            return unsafe Iterator(base: basePtr, count: .init(__unchecked: _count.rawValue))
+        } else {
             // Empty array - pointer is irrelevant, count is zero
             return unsafe Iterator(base: UnsafePointer<Element>(bitPattern: 1)!, count: .zero)
-        }
-
-        if let heapPtr = unsafe _heapPtr {
-            // Heap storage - use cached pointer
-            return unsafe Iterator(base: UnsafePointer(heapPtr), count: .init(__unchecked: _count.rawValue))
-        } else {
-            // Inline storage - get pointer to first element
-            let basePtr = unsafe _inlineReadPointerToElement(at: 0)
-            return unsafe Iterator(base: basePtr, count: .init(__unchecked: _count.rawValue))
         }
     }
 }
@@ -78,13 +73,13 @@ extension Array.Small: Sequence.`Protocol` where Element: Copyable {
 // MARK: - Collection.Protocol Conformance
 // Note: Index, startIndex, endIndex, index(after:) defined in Collection.Indexed conformance
 
-extension Array.Small: Collection.`Protocol` where Element: Copyable {}
+extension Array.Inline: Collection.`Protocol` {}
 
 // MARK: - Collection.Access.Random Conformance
 // Note: Collection.Bidirectional conformance is provided in +Collection.Indexed.swift
 // for ALL element types (including ~Copyable) via `where Element: ~Copyable`.
 
-extension Array.Small: Collection.Access.Random where Element: Copyable {}
+extension Array.Inline: Collection.Access.Random {}
 
-// Note: Array.Small cannot conform to Swift.Collection because it is unconditionally
+// Note: Array.Inline cannot conform to Swift.Collection because it is unconditionally
 // ~Copyable (has deinit for inline storage cleanup). Swift.Collection requires Self: Copyable.

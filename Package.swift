@@ -34,21 +34,53 @@ let package = Package(
                 .product(name: "Collection Primitives", package: "swift-collection-primitives"),
             ]
         ),
-        // Internal: Sequence/Collection.Protocol conformances (Element: Copyable)
-        // Separate module to avoid constraint poisoning on Core types
+        // Per-variant modules: Swift.Sequence/Collection conformances (Element: Copyable)
+        // Separate modules to avoid constraint poisoning on Core types
         .target(
-            name: "Array Primitives Sequence",
+            name: "Array Bounded Primitives",
             dependencies: [
                 "Array Primitives Core",
                 .product(name: "Collection Primitives", package: "swift-collection-primitives"),
             ]
         ),
-        // Public: Re-exports Core and Sequence for users
+        .target(
+            name: "Array Unbounded Primitives",
+            dependencies: [
+                "Array Primitives Core",
+                .product(name: "Collection Primitives", package: "swift-collection-primitives"),
+            ]
+        ),
+        .target(
+            name: "Array Inline Primitives",
+            dependencies: [
+                "Array Primitives Core",
+                .product(name: "Collection Primitives", package: "swift-collection-primitives"),
+            ]
+        ),
+        .target(
+            name: "Array Small Primitives",
+            dependencies: [
+                "Array Primitives Core",
+                .product(name: "Collection Primitives", package: "swift-collection-primitives"),
+            ]
+        ),
+        .target(
+            name: "Array Bit Primitives",
+            dependencies: [
+                "Array Primitives Core",
+                .product(name: "Collection Primitives", package: "swift-collection-primitives"),
+            ]
+        ),
+        // Public: Re-exports Core and all variant modules
         .target(
             name: "Array Primitives",
             dependencies: [
                 "Array Primitives Core",
-                "Array Primitives Sequence",
+                "Array Bounded Primitives",
+                "Array Unbounded Primitives",
+                "Array Inline Primitives",
+                "Array Small Primitives",
+                "Array Bit Primitives",
             ]
         ),
         .testTarget(
