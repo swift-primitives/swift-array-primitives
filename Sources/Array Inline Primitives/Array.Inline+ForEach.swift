@@ -11,29 +11,8 @@
 
 public import Array_Primitives_Core
 public import Index_Primitives
-
-// MARK: - ForEach View Type
-
-extension Array.Inline where Element: ~Copyable {
-    /// View type for forEach iteration operations.
-    ///
-    /// Provides iteration patterns for ALL element types including `~Copyable`:
-    /// - `.forEach { }` — Borrowing iteration via `callAsFunction`
-    /// - `.forEach.borrowing { }` — Explicit borrowing iteration
-    ///
-    /// For `Copyable` elements only:
-    /// - `.forEach.consuming { }` — Consuming iteration (clears array)
-    @safe
-    public struct ForEachView: ~Copyable {
-        @usableFromInline
-        let _base: UnsafeMutablePointer<Array<Element>.Inline<capacity>>
-
-        @usableFromInline
-        init(_ base: UnsafeMutablePointer<Array<Element>.Inline<capacity>>) {
-            unsafe _base = base
-        }
-    }
-}
+public import Property_Primitives
+public import Sequence_Primitives
 
 // MARK: - ForEach Property
 
@@ -78,20 +57,21 @@ extension Array.Inline where Element: ~Copyable {
     /// // handles still contains both handles
     /// ```
     @inlinable
-    public var forEach: ForEachView {
+    public var forEach: Property<Sequence.ForEach, Self>.View.Typed<Element>.Valued<capacity> {
         mutating _read {
-            yield unsafe ForEachView(&self)
+            yield unsafe Property<Sequence.ForEach, Self>.View.Typed<Element>.Valued<capacity>(&self)
         }
         mutating _modify {
-            var view = unsafe ForEachView(&self)
+            var view = unsafe Property<Sequence.ForEach, Self>.View.Typed<Element>.Valued<capacity>(&self)
             yield &view
         }
     }
 }
 
-// MARK: - ForEachView: Borrowing Operations (~Copyable)
+// MARK: - ForEach: Borrowing Operations (~Copyable)
 
-extension Array.Inline.ForEachView where Element: ~Copyable {
+extension Property.View.Typed.Valued
+where Tag == Sequence.ForEach, Base == Array<Element>.Inline<n>, Element: ~Copyable {
     /// Borrowing iteration: `.forEach { }`
     ///
     /// Iterates over all elements without consuming them.
@@ -100,9 +80,9 @@ extension Array.Inline.ForEachView where Element: ~Copyable {
     /// - Parameter body: A closure called with each borrowed element.
     @inlinable
     public func callAsFunction(_ body: (borrowing Element) -> Void) {
-        let count = unsafe _base.pointee._count.rawValue
+        let count = unsafe base.pointee._count.rawValue
         for i in 0..<count {
-            unsafe body(_base.pointee._storage.read(at: i).pointee)
+            unsafe body(base.pointee._storage.read(at: i).pointee)
         }
     }
 
@@ -114,29 +94,31 @@ extension Array.Inline.ForEachView where Element: ~Copyable {
     /// - Parameter body: A closure called with each borrowed element.
     @inlinable
     public func borrowing(_ body: (borrowing Element) -> Void) {
-        let count = unsafe _base.pointee._count.rawValue
+        let count = unsafe base.pointee._count.rawValue
         for i in 0..<count {
-            unsafe body(_base.pointee._storage.read(at: i).pointee)
+            unsafe body(base.pointee._storage.read(at: i).pointee)
         }
     }
 }
 
-// MARK: - ForEachView: Consuming Operations (Copyable only)
+// MARK: - ForEach: Consuming Operations (Copyable only)
 
-extension Array.Inline.ForEachView where Element: Copyable {
+extension Property.View.Typed.Valued
+where Tag == Sequence.ForEach, Base == Array<Element>.Inline<n>, Element: Copyable {
     /// Consuming iteration: `.forEach.consuming { }`
     ///
     /// Iterates over all elements and then clears the array.
     /// Only available for `Copyable` elements.
     ///
     /// - Parameter body: A closure called with each element.
+    @_lifetime(&self)
     @inlinable
     public mutating func consuming(_ body: (Element) -> Void) {
-        let count = unsafe _base.pointee._count.rawValue
+        let count = unsafe base.pointee._count.rawValue
         for i in 0..<count {
-            unsafe body(_base.pointee._storage.read(at: i).pointee)
+            unsafe body(base.pointee._storage.read(at: i).pointee)
         }
-        unsafe _base.pointee._storage.deinitialize(count: count)
-        unsafe _base.pointee._count = Index<Element>.Count(__unchecked: 0)
+        unsafe base.pointee._storage.deinitialize(count: count)
+        unsafe base.pointee._count = Index<Element>.Count(__unchecked: 0)
     }
 }
