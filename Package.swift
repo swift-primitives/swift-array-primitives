@@ -15,7 +15,15 @@ let package = Package(
         .library(
             name: "Array Primitives",
             targets: ["Array Primitives"]
-        )
+        ),
+        .library(
+            name: "Array Primitives Core",
+            targets: ["Array Primitives Core"]
+        ),
+        .library(
+            name: "Array Small Primitives",
+            targets: ["Array Small Primitives"]
+        ),
     ],
     dependencies: [
         .package(path: "../swift-standard-library-extensions"),

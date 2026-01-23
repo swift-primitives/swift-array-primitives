@@ -77,7 +77,7 @@ extension Array.Small where Element: Copyable {
                 if let heapStorage = _storage._heapStorage {
                     return heapStorage._readElement(at: index.position.rawValue)
                 } else {
-                    return unsafe _storage._inlineReadPointerToElement(at: index.position.rawValue).pointee
+                    return unsafe _storage.inline.read(at: index.position.rawValue).pointee
                 }
             }
             set {
@@ -86,7 +86,7 @@ extension Array.Small where Element: Copyable {
                     _ = _storage._heapStorage!._moveElement(at: index.position.rawValue)
                     _storage._heapStorage!._initializeElement(at: index.position.rawValue, to: newValue)
                 } else {
-                    unsafe _storage._inlinePointerToElement(at: index.position.rawValue).pointee = newValue
+                    unsafe _storage.inline.pointer(at: index.position.rawValue).pointee = newValue
                 }
             }
         }

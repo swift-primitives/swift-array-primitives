@@ -76,7 +76,7 @@ extension Array.Small: Sequence.`Protocol` where Element: Copyable {
             return unsafe Iterator(base: UnsafePointer(heapPtr), count: .init(__unchecked: _count.rawValue))
         } else {
             // Inline storage - get pointer to first element
-            let basePtr = unsafe _inlineReadPointerToElement(at: 0)
+            let basePtr = unsafe self.inline.read(at: 0)
             return unsafe Iterator(base: basePtr, count: .init(__unchecked: _count.rawValue))
         }
     }
