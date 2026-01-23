@@ -3,7 +3,7 @@
 // Hypothesis: Set.Ordered can conform to Memory.Contiguous.Protocol without
 // constraint poisoning, but Array.Bounded cannot. Find the structural difference.
 //
-// Status: RESOLVED ✓
+// Status: RESOLVED ✓ (Pattern incompatibility confirmed, keeping double implementation)
 // Methodology: [EXP-004a] Incremental Construction
 //
 // ROOT CAUSE IDENTIFIED:
@@ -30,10 +30,18 @@
 // - Test 5 (WithDeinitNoMarker): N/A - deinit requires explicit ~Copyable
 //
 // CONCLUSION:
-// - Array.Bounded: Remove ~Copyable → can conform to Memory.Contiguous.Protocol
-// - Array.Unbounded: Remove ~Copyable → can conform to Memory.Contiguous.Protocol
-// - Array.Inline: Keep ~Copyable (deinit) → CANNOT conform
-// - Array.Small: Keep ~Copyable (deinit) → CANNOT conform
+// Array types use the "double implementation" pattern:
+// - Base implementation in `extension Foo where Element: ~Copyable {}`
+// - CoW shadow implementation in `extension Foo where Element: Copyable {}`
+//
+// This pattern is INCOMPATIBLE with Memory.Contiguous.Protocol conformance because:
+// 1. Protocol has `associatedtype Element` → requires Element: Copyable (SE-0427)
+// 2. Adding conformance poisons `where Element: ~Copyable` extensions
+//
+// DECISION: Keep double implementation pattern, do NOT conform to Memory.Contiguous.Protocol
+//
+// Alternative: Set.Ordered uses single-implementation pattern (no shadow) and CAN conform.
+// But Array prefers the double pattern for explicit CoW semantics.
 
 // MARK: - Minimal Protocol (like Memory.Contiguous.Protocol)
 
