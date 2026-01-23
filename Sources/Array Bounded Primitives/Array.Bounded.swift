@@ -36,7 +36,10 @@ extension Array.Bounded where Element: Copyable {
     ///   - offset: The signed offset from the base.
     /// - Returns: The element at the computed position, or `nil` if out of bounds.
     @inlinable
-    public func element(at base: Array<Element>.Index, offsetBy offset: Array<Element>.Offset) -> Element? {
+    public func element(
+        at base: Array<Element>.Index,
+        offsetBy offset: Array<Element>.Index.Offset
+    ) -> Element? {
         guard let newIndex = base + offset else { return nil }
         guard newIndex < count else { return nil }
         return unsafe _cachedPtr[newIndex.position.rawValue]

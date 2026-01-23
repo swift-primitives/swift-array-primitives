@@ -25,20 +25,5 @@ extension Array where Element: ~Copyable {
     /// print(array[arrayIdx])  // 5
     /// ```
     public typealias Index = Index_Primitives.Index<Element>
-
-    /// Signed offset type for index arithmetic.
-    ///
-    /// Follows affine space semantics:
-    /// - `index2 - index1 → offset` (displacement between indices)
-    /// - `index + offset → index?` (translation, nil if negative result)
-    ///
-    /// ## Example
-    ///
-    /// ```swift
-    /// let idx: Array<Int>.Index = try Array<Int>.Index(5)
-    /// let offset: Array<Int>.Offset = 3
-    /// let newIdx = (idx + offset)!  // Index at position 8
-    /// ```
-    public typealias Offset = Index_Primitives.Index<Element>.Offset
 }
 
