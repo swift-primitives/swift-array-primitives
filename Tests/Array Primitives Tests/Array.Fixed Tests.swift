@@ -48,7 +48,8 @@ extension ArrayFixedTests.Unit {
     @Test("Init with negative count throws")
     func initWithNegativeCountThrows() {
         #expect(throws: Array<Int>.Fixed.Error.self) {
-            try Array<Int>.Fixed(count: -1) { $0 }
+            // unchecked here, because -1 literal is Array.Index.Count and this has precondition on ExpressibleByIntLiteral
+            try Array<Int>.Fixed(count: .init(__unchecked: -1)) { $0 }
         }
     }
 
@@ -192,7 +193,7 @@ extension ArrayFixedTests.EdgeCase {
     @Test("Large array maintains invariants")
     func largeArrayMaintainsInvariants() throws {
         let size = 10_000
-        var array = try Array<Int>.Fixed(count: size) { $0 }
+        var array = try Array<Int>.Fixed(count: .init(__unchecked: size)) { $0 }
 
         #expect(array.count.rawValue == size)
 
