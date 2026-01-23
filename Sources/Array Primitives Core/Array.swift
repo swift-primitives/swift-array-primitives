@@ -138,7 +138,7 @@ public enum Array<Element: ~Copyable>: ~Copyable {
     /// When `Element` is `Copyable`, `Bounded` uses copy-on-write semantics:
     /// copies share storage until mutation.
     @safe
-    public struct Bounded: ~Copyable {
+    public struct Bounded {
 
         // MARK: - Properties
 
@@ -178,7 +178,7 @@ public enum Array<Element: ~Copyable>: ~Copyable {
     /// When `Element` is `Copyable`, `Array.Unbounded` uses copy-on-write semantics:
     /// copies share storage until mutation.
     @safe
-    public struct Unbounded<let N: Int>: ~Copyable {
+    public struct Unbounded<let N: Int> {
 
         // MARK: - ElementStorage (nested to inherit Element's ~Copyable context)
 
