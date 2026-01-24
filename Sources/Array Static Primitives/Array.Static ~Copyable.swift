@@ -36,8 +36,9 @@ extension Array.Static where Element: ~Copyable {
     /// - Returns: The removed element, or `nil` if the array is empty.
     @inlinable
     public mutating func removeLast() -> Element? {
-        guard count > 0, let count = count - 1 else { return nil }
-        return storage.move(at: .init(count))
+        guard let newCount = count - 1 else { return nil }
+        count = newCount
+        return storage.move(at: .init(newCount))
     }
 }
 
@@ -192,12 +193,12 @@ extension Array.Static where Element: ~Copyable {
     /// variants (Fixed, Array) for direct access.
     @inlinable
     public func withSpan<R, E: Swift.Error>(
-        _ body: (Span<Element>) throws(E) -> R
+        _ body: (Swift.Span<Element>) throws(E) -> R
     ) throws(E) -> R {
         return try unsafe withUnsafePointer(to: storage.raw) { storagePtr throws(E) -> R in
             let basePtr = unsafe UnsafeRawPointer(storagePtr)
             let elementPtr = unsafe basePtr.assumingMemoryBound(to: Element.self)
-            let span = unsafe Span(_unsafeStart: elementPtr, count: count.rawValue)
+            let span = unsafe Swift.Span(_unsafeStart: elementPtr, count: count.rawValue)
             return try body(span)
         }
     }
