@@ -12,6 +12,7 @@
 public import Array_Primitives_Core
 public import Index_Primitives
 public import Property_Primitives
+public import Range_Primitives
 public import Sequence_Primitives
 
 // MARK: - Drain Property
@@ -86,11 +87,11 @@ where Tag == Sequence.Drain, Base == Array<Element>.Static<n>, Element: ~Copyabl
     @_lifetime(&self)
     @inlinable
     public mutating func callAsFunction(_ body: (consuming Element) -> Void) {
-        let count = unsafe base.pointee.count.rawValue
-        guard count > 0 else { return }
-        for i in 0..<count {
-            body(unsafe base.pointee.storage.move(at: .init(__unchecked: (), position: i)))
+        let count = unsafe base.pointee.count
+        guard count > .zero else { return }
+        (0..<count).drain { i in
+            body(unsafe base.pointee.storage.move(at: i))
         }
-        unsafe base.pointee.count = Index<Element>.Count(__unchecked: 0)
+        unsafe base.pointee.count = .zero
     }
 }

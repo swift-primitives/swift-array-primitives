@@ -44,6 +44,7 @@ let package = Package(
                 .product(name: "Index Primitives", package: "swift-index-primitives"),
                 .product(name: "Collection Primitives", package: "swift-collection-primitives"),
                 .product(name: "Property Primitives", package: "swift-property-primitives"),
+                .product(name: "Range Primitives", package: "swift-range-primitives"),
                 .product(name: "Sequence Primitives", package: "swift-sequence-primitives"),
             ]
         ),
@@ -54,6 +55,7 @@ let package = Package(
             dependencies: [
                 "Array Primitives Core",
                 .product(name: "Collection Primitives", package: "swift-collection-primitives"),
+                .product(name: "Range Primitives", package: "swift-range-primitives"),
             ]
         ),
         .target(
@@ -69,6 +71,7 @@ let package = Package(
             dependencies: [
                 "Array Primitives Core",
                 .product(name: "Collection Primitives", package: "swift-collection-primitives"),
+                .product(name: "Range Primitives", package: "swift-range-primitives"),
             ]
         ),
         .target(

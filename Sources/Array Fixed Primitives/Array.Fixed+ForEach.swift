@@ -12,6 +12,7 @@
 public import Array_Primitives_Core
 public import Index_Primitives
 public import Property_Primitives
+public import Range_Primitives
 public import Sequence_Primitives
 
 // MARK: - ForEach Property
@@ -62,9 +63,9 @@ where Tag == Sequence.ForEach, Base == Array<Element>.Fixed, Element: ~Copyable 
     /// - Parameter body: A closure called with each borrowed element.
     @inlinable
     public func callAsFunction(_ body: (borrowing Element) -> Void) {
-        let count = base.pointee._count.rawValue
-        for i in 0..<count {
-            unsafe body((base.pointee._cachedPtr + i).pointee)
+        let count = base.pointee._count
+        (0..<count).forEach { i in
+            unsafe body(base.pointee._cachedPtr[i])
         }
     }
 

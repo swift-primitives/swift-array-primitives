@@ -12,6 +12,7 @@
 public import Array_Primitives_Core
 public import Index_Primitives
 public import Property_Primitives
+public import Range_Primitives
 public import Sequence_Primitives
 
 // MARK: - ForEach Property
@@ -65,20 +66,21 @@ where Tag == Sequence.ForEach, Base == Array<Element>.Small<n>, Element: ~Copyab
     /// - Parameter body: A closure called with each borrowed element.
     @inlinable
     public func callAsFunction(_ body: (borrowing Element) -> Void) {
-        let count = unsafe base.pointee.count.rawValue
-        guard count > 0 else { return }
+        let count = unsafe base.pointee.count
+        guard count > .zero else { return }
 
         if let heapState = unsafe base.pointee.heap {
             _ = unsafe heapState.storage.withUnsafeMutablePointerToElements { elements in
-                for i in 0..<count {
-                    unsafe body((elements + i).pointee)
+                (0..<count).forEach { i in
+                    unsafe body(elements[i])
                 }
             }
         } else {
+            // Inline storage uses stride-based raw pointer arithmetic
             let stride = MemoryLayout<Element>.stride
             unsafe withUnsafePointer(to: base.pointee.inline) { storagePtr in
                 let basePtr = unsafe UnsafeRawPointer(storagePtr)
-                for i in 0..<count {
+                for i in 0..<count.rawValue {
                     let elementPtr = unsafe (basePtr + i * stride)
                         .assumingMemoryBound(to: Element.self)
                     unsafe body(elementPtr.pointee)
@@ -113,16 +115,17 @@ where Tag == Sequence.ForEach, Base == Array<Element>.Small<n>, Element: Copyabl
     @inlinable
     public mutating func consuming(_ body: (Element) -> Void) {
         let count = unsafe base.pointee.count
-        guard count > 0 else { return }
+        guard count > .zero else { return }
 
         if let heapState = unsafe base.pointee.heap {
             _ = unsafe heapState.storage.withUnsafeMutablePointerToElements { elements in
-                for i in 0..<count.rawValue {
-                    unsafe body((elements + i).pointee)
+                (0..<count).forEach { i in
+                    unsafe body(elements[i])
                 }
             }
             heapState.storage.deinitialize()
         } else {
+            // Inline storage uses stride-based raw pointer arithmetic
             let stride = MemoryLayout<Element>.stride
             unsafe withUnsafePointer(to: base.pointee.inline) { storagePtr in
                 let basePtr = unsafe UnsafeRawPointer(storagePtr)
