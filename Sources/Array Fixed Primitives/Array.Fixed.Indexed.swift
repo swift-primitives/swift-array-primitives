@@ -93,6 +93,6 @@ extension Array.Fixed.Indexed {
     public var isEmpty: Bool { _storage.isEmpty }
 }
 
-// MARK: - Sendable
 
-extension Array.Fixed.Indexed: @unchecked Sendable where Element: Sendable, Tag: ~Copyable {}
+
+
