@@ -15,7 +15,7 @@ extension Array where Element: Copyable {
     package mutating func makeUnique() {
         if !isKnownUniquelyReferenced(&storage) {
             storage = storage.copy()
-            unsafe (_cachedPtr = storage.pointer(at: 0))  // CRITICAL: Update cached pointer
+            unsafe (_cachedPtr = storage.pointer(at: .zero))  // CRITICAL: Update cached pointer
         }
     }
 }
@@ -80,5 +80,86 @@ extension Array where Element: Copyable {
             precondition(index < count, "Index out of bounds")
             unsafe _cachedPtr[index] = newValue
         }
+    }
+}
+
+extension Array: Collection.`Protocol` where Element: Copyable {}
+
+// MARK: - Iterator
+
+extension Array where Element: Copyable {
+    /// Pointer-based iterator for Array.
+    ///
+    /// Zero-copy iteration using typed `Index<Element>` for position tracking.
+    /// The iterator holds a pointer to the storage, not a copy of the elements.
+    ///
+    /// ## Safety
+    ///
+    /// The iterator is only valid while the source array exists and is not mutated.
+    /// This matches the semantics of stdlib's Array.Iterator.
+    @safe
+    public struct Iterator: IteratorProtocol {
+        @usableFromInline
+        let base: UnsafePointer<Element>
+
+        @usableFromInline
+        let end: Index.Count
+
+        @usableFromInline
+        var position: Index
+
+        @usableFromInline @unsafe
+        init(base: UnsafePointer<Element>, count: Index.Count) {
+            unsafe self.base = base
+            self.end = count
+            self.position = .zero
+        }
+
+        @inlinable
+        public mutating func next() -> Element? {
+            guard position < end else { return nil }
+            let result = unsafe base[position]
+            position = (position + 1)!
+            return result
+        }
+    }
+}
+
+extension Array.Iterator: @unchecked Sendable where Element: Sendable {}
+
+extension Array: Collection.Access.Random where Element: Copyable {}
+
+// MARK: - ForEach: Consuming Operations (Copyable only)
+
+extension Property.View.Typed
+where Tag == Sequence.ForEach, Base == Array<Element>, Element: Copyable {
+    /// Consuming iteration: `.forEach.consuming { }`
+    ///
+    /// Iterates over all elements and then clears the array.
+    /// Only available for `Copyable` elements.
+    ///
+    /// - Parameter body: A closure called with each element.
+    @_lifetime(&self)
+    @inlinable
+    public mutating func consuming(_ body: (Element) -> Void) {
+        let count = unsafe base.pointee.storage.header
+        guard count > 0 else { return }
+        unsafe base.pointee.storage.withUnsafeMutablePointerToElements { elements in
+            for i in 0..<count {
+                unsafe body(elements[i])
+            }
+        }
+        unsafe base.pointee.storage.deinitialize()
+    }
+}
+
+extension Array: Sequence.`Protocol` where Element: Copyable {
+    /// Returns a pointer-based iterator over the array elements.
+    ///
+    /// Zero-copy iteration - no allocation, no element copying.
+    /// Uses typed `Index<Element>` for position tracking.
+    @inlinable
+    public borrowing func makeIterator() -> Iterator {
+        unsafe Iterator(base: UnsafePointer(_cachedPtr), count: .init(__unchecked: count.rawValue))
     }
 }

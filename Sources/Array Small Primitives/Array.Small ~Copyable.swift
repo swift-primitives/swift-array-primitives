@@ -277,7 +277,7 @@ extension Array.Small where Element: ~Copyable {
             if let heap {
                 // Note: Using `var` is required for custom subscript with unsafeMutableAddress
                 // to work through optional binding. See: Experiments/pointer-subscript-modify
-                var ptr = heap.pointer
+                var ptr = unsafe heap.pointer
                 yield &(unsafe ptr[index])
             } else {
                 yield &(unsafe inline.pointer(at: index).pointee)

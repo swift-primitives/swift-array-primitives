@@ -35,13 +35,13 @@ extension Array.Fixed {
 
         if count == 0 {
             self._storage = Array.Storage.createEmpty()
-            unsafe self._cachedPtr = _storage.pointer(at: 0)
+            unsafe self._cachedPtr = _storage.pointer(at: .zero)
             self._count = .zero
             return
         }
 
         self._storage = Array.Storage.create(capacity: count, initializingWith: initializer)
-        unsafe self._cachedPtr = _storage.pointer(at: 0)
+        unsafe self._cachedPtr = _storage.pointer(at: .zero)
         self._count = count
     }
 }
@@ -68,13 +68,13 @@ extension Array.Fixed {
 
         if count == 0 {
             self._storage = Array.Storage.createEmpty()
-            unsafe self._cachedPtr = _storage.pointer(at: 0)
+            unsafe self._cachedPtr = _storage.pointer(at: .zero)
             self._count = .zero
             return
         }
 
         self._storage = Array.Storage.create(capacity: count, initializingWith: initializer)
-        unsafe self._cachedPtr = _storage.pointer(at: 0)
+        unsafe self._cachedPtr = _storage.pointer(at: .zero)
         self._count = count
     }
 }

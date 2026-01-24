@@ -13,7 +13,7 @@ extension Array.Fixed where Element: Copyable {
     package mutating func makeUnique() {
         if !isKnownUniquelyReferenced(&_storage) {
             _storage = _storage.copy()
-            unsafe _cachedPtr = _storage.pointer(at: 0)
+            unsafe _cachedPtr = _storage.pointer(at: .zero)
         }
     }
 }
