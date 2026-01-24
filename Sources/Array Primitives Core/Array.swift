@@ -138,7 +138,7 @@ public struct Array<Element: ~Copyable>: ~Copyable {
     @safe
     public struct Fixed {
         @usableFromInline
-        var _storage: Array.Storage
+        var storage: Array.Storage
 
         /// Cached pointer for Span access.
         @usableFromInline
