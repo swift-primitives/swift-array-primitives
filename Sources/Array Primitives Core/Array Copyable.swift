@@ -28,7 +28,7 @@ extension Array where Element: Copyable {
     @inlinable
     public mutating func append(_ element: Element) {
         makeUnique()
-        let count = Index.Count.init(__unchecked: _storage.header)
+        let count = _storage.count
         ensureCapacity(count + 1)
         _storage.initialize(to: element, at: .init(count))
         _storage.header = (count + 1).rawValue

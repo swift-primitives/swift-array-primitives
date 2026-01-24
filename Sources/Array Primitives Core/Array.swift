@@ -86,6 +86,9 @@ public struct Array<Element: ~Copyable>: ~Copyable {
     /// Used by: `Array`, `Array.Fixed`, `Array.Small` (heap mode).
     @usableFromInline
     package final class Storage: ManagedBuffer<Int, Element> {
+        @usableFromInline
+        package var count: Index.Count { .init(__unchecked: self.header) }
+        
         deinit {
             let count = header
             guard count > 0 else { return }
