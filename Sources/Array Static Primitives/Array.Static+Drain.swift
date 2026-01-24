@@ -89,7 +89,7 @@ where Tag == Sequence.Drain, Base == Array<Element>.Static<n>, Element: ~Copyabl
     public mutating func callAsFunction(_ body: (consuming Element) -> Void) {
         let count = unsafe base.pointee.count
         guard count > .zero else { return }
-        (0..<count).drain { i in
+        (0..<count).forEach { i in
             body(unsafe base.pointee.storage.move(at: i))
         }
         unsafe base.pointee.count = .zero

@@ -72,13 +72,13 @@ where Tag == Sequence.Drain, Base == Array<Element>.Small<n>, Element: ~Copyable
 
         if let heapState = unsafe base.pointee.heap {
             _ = unsafe heapState.storage.withUnsafeMutablePointerToElements { elements in
-                (0..<count).drain { i in
+                (0..<count).forEach { i in
                     unsafe body((elements + i).move())
                 }
             }
             unsafe base.pointee.heap!.storage.header = 0
         } else {
-            (0..<count).drain { i in
+            (0..<count).forEach { i in
                 body(unsafe base.pointee.inline.move(at: i))
             }
         }
