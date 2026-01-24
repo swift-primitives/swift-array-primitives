@@ -12,6 +12,7 @@
 // Public API extensions for the base Array type (growable, heap-allocated).
 // Note: Array struct is declared in Array.swift to enable conditional Copyable.
 
+public import Array_Primitives_Core
 import Index_Primitives
 
 extension Array where Element: ~Copyable {

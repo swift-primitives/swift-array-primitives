@@ -5,6 +5,8 @@
 //  Created by Coen ten Thije Boonkkamp on 24/01/2026.
 //
 
+public import Array_Primitives_Core
+
 // MARK: - Copy-on-Write (package access for cross-module use)
 
 extension Array where Element: Copyable {

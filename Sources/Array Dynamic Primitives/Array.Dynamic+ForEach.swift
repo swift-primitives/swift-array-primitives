@@ -9,6 +9,7 @@
 //
 // ===----------------------------------------------------------------------===//
 
+public import Array_Primitives_Core
 public import Index_Primitives
 public import Property_Primitives
 public import Range_Primitives
@@ -65,10 +66,10 @@ where Tag == Sequence.ForEach, Base == Array<Element>, Element: ~Copyable {
     /// - Parameter body: A closure called with each borrowed element.
     @inlinable
     public func callAsFunction(_ body: (borrowing Element) -> Void) {
-        let count = Index<Element>.Count(__unchecked: base.pointee.storage.header)
-        guard count > .zero else { return }
+        let count = base.pointee.storage.header
+        guard count > 0 else { return }
         _ = base.pointee.storage.withUnsafeMutablePointerToElements { elements in
-            (0..<count).forEach { i in
+            for i in 0..<count {
                 body(elements[i])
             }
         }
@@ -99,10 +100,10 @@ where Tag == Sequence.ForEach, Base == Array<Element>, Element: Copyable {
     @_lifetime(&self)
     @inlinable
     public mutating func consuming(_ body: (Element) -> Void) {
-        let count = Index<Element>.Count(__unchecked: base.pointee.storage.header)
-        guard count > .zero else { return }
+        let count = base.pointee.storage.header
+        guard count > 0 else { return }
         _ = base.pointee.storage.withUnsafeMutablePointerToElements { elements in
-            (0..<count).forEach { i in
+            for i in 0..<count {
                 body(elements[i])
             }
         }

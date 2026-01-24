@@ -9,6 +9,7 @@
 //
 // ===----------------------------------------------------------------------===//
 
+public import Array_Primitives_Core
 import Index_Primitives
 public import Property_Primitives
 public import Range_Primitives
@@ -66,10 +67,10 @@ where Tag == Sequence.Drain, Base == Array<Element>, Element: ~Copyable {
     @_lifetime(&self)
     @inlinable
     public mutating func callAsFunction(_ body: (consuming Element) -> Void) {
-        let count = Index<Element>.Count(__unchecked: base.pointee.storage.header)
-        guard count > .zero else { return }
+        let count = base.pointee.storage.header
+        guard count > 0 else { return }
         _ = base.pointee.storage.withUnsafeMutablePointerToElements { elements in
-            (0..<count).drain { i in
+            for i in 0..<count {
                 body((elements + i).move())
             }
         }

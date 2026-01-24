@@ -5,6 +5,7 @@
 //  Created by Coen ten Thije Boonkkamp on 23/01/2026.
 //
 
+public import Array_Primitives_Core
 public import Sequence_Primitives
 import Index_Primitives
 

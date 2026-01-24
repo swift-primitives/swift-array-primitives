@@ -1,3 +1,4 @@
+public import Array_Primitives_Core
 import Index_Primitives
 
 // MARK: - Swift.Sequence Conformance

@@ -35,21 +35,27 @@ let package = Package(
         .package(path: "../swift-range-primitives"),
     ],
     targets: [
-        // Core types with ~Copyable support and base Array API
+        // Core types with ~Copyable support (Array, Fixed, Static, Small structs)
         .target(
             name: "Array Primitives Core",
             dependencies: [
                 .product(name: "Standard Library Extensions", package: "swift-standard-library-extensions"),
                 .product(name: "Bit Primitives", package: "swift-bit-primitives"),
                 .product(name: "Index Primitives", package: "swift-index-primitives"),
-                .product(name: "Collection Primitives", package: "swift-collection-primitives"),
                 .product(name: "Property Primitives", package: "swift-property-primitives"),
-                .product(name: "Range Primitives", package: "swift-range-primitives"),
-                .product(name: "Sequence Primitives", package: "swift-sequence-primitives"),
             ]
         ),
         // Per-variant modules: Swift.Sequence/Collection conformances (Element: Copyable)
         // Separate modules to avoid constraint poisoning on Core types
+        .target(
+            name: "Array Dynamic Primitives",  // Base Array (growable, heap)
+            dependencies: [
+                "Array Primitives Core",
+                .product(name: "Collection Primitives", package: "swift-collection-primitives"),
+                .product(name: "Sequence Primitives", package: "swift-sequence-primitives"),
+                .product(name: "Range Primitives", package: "swift-range-primitives"),
+            ]
+        ),
         .target(
             name: "Array Fixed Primitives",  // Fixed-count heap array
             dependencies: [
@@ -86,6 +92,7 @@ let package = Package(
             name: "Array Primitives",
             dependencies: [
                 "Array Primitives Core",
+                "Array Dynamic Primitives",
                 "Array Fixed Primitives",
                 "Array Static Primitives",
                 "Array Small Primitives",
