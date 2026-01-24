@@ -12,6 +12,7 @@
 public import Array_Primitives_Core
 public import Index_Primitives
 public import Property_Primitives
+public import Range_Primitives
 public import Sequence_Primitives
 
 // MARK: - ForEach Property
@@ -81,8 +82,8 @@ where Tag == Sequence.ForEach, Base == Array<Element>.Static<n>, Element: ~Copya
     @inlinable
     public func callAsFunction(_ body: (borrowing Element) -> Void) {
         let count = unsafe base.pointee.count
-        for i in 0..<count.rawValue {
-            unsafe body(base.pointee.storage.read(at:  .init(__unchecked: (), position: i)).pointee)
+        (0..<count).forEach { i in
+            unsafe body(base.pointee.storage.read(at: i).pointee)
         }
     }
 
@@ -95,8 +96,8 @@ where Tag == Sequence.ForEach, Base == Array<Element>.Static<n>, Element: ~Copya
     @inlinable
     public func borrowing(_ body: (borrowing Element) -> Void) {
         let count = unsafe base.pointee.count
-        for i in 0..<count.rawValue {
-            unsafe body(base.pointee.storage.read(at: .init(__unchecked: (), position: i)).pointee)
+        (0..<count).forEach { i in
+            unsafe body(base.pointee.storage.read(at: i).pointee)
         }
     }
 }
@@ -115,8 +116,8 @@ where Tag == Sequence.ForEach, Base == Array<Element>.Static<n>, Element: Copyab
     @inlinable
     public mutating func consuming(_ body: (Element) -> Void) {
         let count = unsafe base.pointee.count
-        for i in 0..<count.rawValue {
-            unsafe body(base.pointee.storage.read(at:  .init(__unchecked: (), position: i)).pointee)
+        (0..<count).forEach { i in
+            unsafe body(base.pointee.storage.read(at: i).pointee)
         }
         unsafe base.pointee.storage.deinitialize(count: count)
         unsafe base.pointee.count = Index<Element>.Count(__unchecked: 0)

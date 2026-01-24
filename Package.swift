@@ -32,6 +32,7 @@ let package = Package(
         .package(path: "../swift-collection-primitives"),
         .package(path: "../swift-property-primitives"),
         .package(path: "../swift-sequence-primitives"),
+        .package(path: "../swift-range-primitives"),
     ],
     targets: [
         // Core types with ~Copyable support and base Array API
@@ -60,6 +61,7 @@ let package = Package(
             dependencies: [
                 "Array Primitives Core",
                 .product(name: "Collection Primitives", package: "swift-collection-primitives"),
+                .product(name: "Range Primitives", package: "swift-range-primitives"),
             ]
         ),
         .target(

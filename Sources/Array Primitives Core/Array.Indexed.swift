@@ -13,7 +13,7 @@ import Index_Primitives
 
 // MARK: - Array.Indexed
 
-extension Array where Element: Copyable {
+extension Array {
     /// A wrapper providing phantom-typed index access to unbounded array storage.
     ///
     /// `Indexed<Tag>` wraps an `Array<Element>` and provides subscript
@@ -54,7 +54,9 @@ extension Array where Element: Copyable {
     public struct Indexed<Tag: Copyable>: Copyable, @unchecked Sendable {
         @usableFromInline
         var _storage: Array<Element>
-
+        
+        public typealias Index = Array<Tag>.Index
+        
         /// Creates an indexed wrapper around the given storage.
         ///
         /// - Parameter storage: The unbounded array to wrap.
@@ -62,78 +64,41 @@ extension Array where Element: Copyable {
         public init(_ storage: consuming Array<Element>) {
             self._storage = storage
         }
+    }
+}
 
-        /// The phantom-typed count for bounds checking.
-        ///
-        /// Use with `Index<Tag>` for typed bounds checks:
-        /// ```swift
-        /// guard node < indexed.count else { return }
-        /// ```
-        @inlinable
-        public var count: Index.Count {
-            Index.Count(__unchecked: _storage.count.rawValue)
+extension Array.Indexed {
+    /// The phantom-typed count for bounds checking.
+    ///
+    /// Use with `Index<Tag>` for typed bounds checks:
+    /// ```swift
+    /// guard node < indexed.count else { return }
+    /// ```
+    @inlinable
+    public var count: Index.Count {
+        Index.Count(__unchecked: _storage.count.rawValue)
+    }
+    
+    //        public typealias Index = Array<Tag>.Index
+    
+    /// Accesses the element at the given phantom-typed index.
+    ///
+    /// - Parameter index: The typed index of the element to access.
+    /// - Precondition: `index` must be within bounds.
+    @inlinable
+    public subscript(index: Index) -> Element {
+        get {
+            precondition(index.position.rawValue < _storage.count.rawValue, "Index out of bounds")
+            return unsafe _storage.storage.read(at: index.position.rawValue).pointee
         }
-
-//        public typealias Index = Array<Tag>.Index
-        
-        /// Accesses the element at the given phantom-typed index.
-        ///
-        /// - Parameter index: The typed index of the element to access.
-        /// - Precondition: `index` must be within bounds.
-        @inlinable
-        public subscript(index: Index) -> Element {
-            get {
-                precondition(index.position.rawValue < _storage.count.rawValue, "Index out of bounds")
-                return unsafe _storage.storage.read(at: index.position.rawValue).pointee
-            }
-            set {
-                precondition(index.position.rawValue < _storage.count.rawValue, "Index out of bounds")
-                _storage.makeUnique()
-                _ = _storage.storage.move(at: index)
-                _storage.storage.initialize(to: newValue, at: index)
-            }
+        set {
+            precondition(index.position.rawValue < _storage.count.rawValue, "Index out of bounds")
+            _storage.makeUnique()
+            // Convert Index<Tag> position to Index<Element> for storage access
+            let storageIndex = Array<Element>.Index(__unchecked: (), position: index.position.rawValue)
+            _ = _storage.storage.move(at: storageIndex)
+            _storage.storage.initialize(to: newValue, at: storageIndex)
         }
     }
 }
 
-// MARK: - Passthrough Properties
-
-extension Array.Indexed where Element: Copyable {
-    /// Whether the array is empty.
-    @inlinable
-    public var isEmpty: Bool { _storage.isEmpty }
-
-    /// The current capacity of the array.
-    @inlinable
-    public var capacity: Int { _storage.capacity }
-}
-
-// MARK: - Mutating Operations
-
-extension Array.Indexed where Element: Copyable {
-    /// Appends an element to the array.
-    ///
-    /// - Parameter element: The element to append.
-    /// - Complexity: O(1) amortized.
-    @inlinable
-    public mutating func append(_ element: Element) {
-        _storage.append(element)
-    }
-
-    /// Removes and returns the last element, or nil if empty.
-    ///
-    /// - Returns: The removed element, or `nil` if the array is empty.
-    /// - Complexity: O(1).
-    @inlinable
-    public mutating func removeLast() -> Element? {
-        _storage.removeLast()
-    }
-
-    /// Removes all elements from the array.
-    ///
-    /// - Parameter keepingCapacity: Whether to keep the current capacity.
-    @inlinable
-    public mutating func removeAll(keepingCapacity: Bool = false) {
-        _storage.removeAll(keepingCapacity: keepingCapacity)
-    }
-}
