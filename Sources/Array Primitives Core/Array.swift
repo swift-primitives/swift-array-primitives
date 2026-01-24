@@ -52,25 +52,22 @@ public struct Array<Element: ~Copyable>: ~Copyable {
     @usableFromInline
     package var storage: Array.Storage
 
-    /// Cached pointer to element storage. Stored in struct to enable property-based access.
-    /// CRITICAL: Must be updated whenever _storage is replaced (reallocation, CoW copy).
+    // Cached pointer to element storage for single-dereference subscript access.
+    // If this lived in Storage (ManagedBuffer), every subscript would require:
+    //   1. Dereference storage (class reference)
+    //   2. Call withUnsafeMutablePointerToElements to get pointer
+    //   3. Access element
+    // By caching the pointer in the struct, subscript is a single pointer dereference.
+    // CRITICAL: Must be updated whenever storage is replaced (reallocation, CoW copy).
     @usableFromInline
     package var _cachedPtr: UnsafeMutablePointer<Element>
 
     // MARK: - Initialization
-
-    /// Creates an empty growable array.
-    @inlinable
-    public init() {
-        self.storage = Array.Storage.create(minimumCapacity: 0)
-        unsafe (self._cachedPtr = storage.pointer(at: .zero))
-    }
-
     /// Creates an empty array with initial capacity hint.
     ///
     /// - Parameter initialCapacity: The initial capacity to allocate.
     @inlinable
-    public init(initialCapacity: Array.Index.Count) {
+    public init(initialCapacity: Array.Index.Count = .zero) {
         self.storage = Array.Storage.create(minimumCapacity: initialCapacity)
         unsafe (self._cachedPtr = storage.pointer(at: .zero))
     }
@@ -132,7 +129,6 @@ public struct Array<Element: ~Copyable>: ~Copyable {
     /// copies share storage until mutation.
     @safe
     public struct Fixed {
-
         @usableFromInline
         var _storage: Array.Storage
 
