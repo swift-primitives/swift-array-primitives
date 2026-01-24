@@ -162,22 +162,22 @@ extension Array.Small where Element: ~Copyable {
     /// Provides read-only span access to the array elements.
     @inlinable
     public func withSpan<R, E: Swift.Error>(
-        _ body: (Span<Element>) throws(E) -> R
+        _ body: (Swift.Span<Element>) throws(E) -> R
     ) throws(E) -> R {
         if count.rawValue > 0 {
             if let heap {
-                let span = unsafe Span(_unsafeStart: heap.pointer, count: count.rawValue)
+                let span = unsafe Swift.Span(_unsafeStart: heap.pointer, count: count.rawValue)
                 return try body(span)
             } else {
                 return try unsafe withUnsafePointer(to: inline) { storagePtr throws(E) -> R in
                     let basePtr = unsafe UnsafeRawPointer(storagePtr)
                     let elementPtr = unsafe basePtr.assumingMemoryBound(to: Element.self)
-                    let span = unsafe Span(_unsafeStart: elementPtr, count: count.rawValue)
+                    let span = unsafe Swift.Span(_unsafeStart: elementPtr, count: count.rawValue)
                     return try body(span)
                 }
             }
         } else {
-            let span = unsafe Span(_unsafeStart: UnsafePointer<Element>(bitPattern: 1)!, count: 0)
+            let span = unsafe Swift.Span(_unsafeStart: UnsafePointer<Element>(bitPattern: 1)!, count: 0)
             return try body(span)
         }
     }

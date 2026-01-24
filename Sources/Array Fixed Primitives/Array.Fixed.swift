@@ -58,10 +58,10 @@ extension Array.Fixed where Element: ~Copyable {
     /// - The returned span is lifetime-dependent; the compiler is expected to diagnose escapes.
     /// - Violating this contract is undefined behavior.
     @inlinable
-    public var span: Span<Element> {
+    public var span: Swift.Span<Element> {
         @_lifetime(borrow self)
         borrowing get {
-            unsafe Span(_unsafeStart: _cachedPtr, count: _count.rawValue)
+            unsafe Swift.Span(_unsafeStart: _cachedPtr, count: _count.rawValue)
         }
     }
 

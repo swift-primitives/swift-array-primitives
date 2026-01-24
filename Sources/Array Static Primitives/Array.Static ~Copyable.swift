@@ -36,9 +36,9 @@ extension Array.Static where Element: ~Copyable {
     /// - Returns: The removed element, or `nil` if the array is empty.
     @inlinable
     public mutating func removeLast() -> Element? {
-        guard let newCount = count - 1 else { return nil }
-        count = newCount
-        return storage.move(at: .init(newCount))
+        guard let new: Index.Count = count - 1 else { return nil }
+        self.count = new
+        return storage.move(at: .init(new))
     }
 }
 

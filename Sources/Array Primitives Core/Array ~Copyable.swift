@@ -152,12 +152,12 @@ extension Array where Element: ~Copyable {
     /// - The returned span is lifetime-dependent; the compiler is expected to diagnose escapes.
     /// - Violating this contract is undefined behavior.
     @inlinable
-    public var span: Span<Element> {
+    public var span: Swift.Span<Element> {
         @_lifetime(borrow self)
         borrowing get {
             let count = storage.header
             // _cachedPtr from ManagedBuffer is always valid; pointer irrelevant when count == 0
-            return unsafe Span(_unsafeStart: _cachedPtr, count: count)
+            return unsafe Swift.Span(_unsafeStart: _cachedPtr, count: count)
         }
     }
 
