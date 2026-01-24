@@ -28,10 +28,10 @@ extension Array where Element: Copyable {
     @inlinable
     public mutating func append(_ element: Element) {
         makeUnique()
-        let count = _storage.header
+        let count = Index.Count.init(__unchecked: _storage.header)
         ensureCapacity(count + 1)
-        _storage.initialize(to: element, at: .init(__unchecked: (), position: count))
-        _storage.header = count + 1
+        _storage.initialize(to: element, at: .init(count))
+        _storage.header = (count + 1).rawValue
     }
 
     /// Removes and returns the last element (CoW-aware).

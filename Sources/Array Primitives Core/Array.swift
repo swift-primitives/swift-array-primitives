@@ -63,7 +63,7 @@ public struct Array<Element: ~Copyable>: ~Copyable {
     @inlinable
     public init() {
         self._storage = Array.Storage.create(minimumCapacity: 0)
-        unsafe (self._cachedPtr = _storage.pointer(at: 0))
+        unsafe (self._cachedPtr = _storage.pointer(at: .zero))
     }
 
     /// Creates an empty array with initial capacity hint.
@@ -72,7 +72,7 @@ public struct Array<Element: ~Copyable>: ~Copyable {
     @inlinable
     public init(initialCapacity: Array.Index.Count) {
         self._storage = Array.Storage.create(minimumCapacity: initialCapacity)
-        unsafe (self._cachedPtr = _storage.pointer(at: 0))
+        unsafe (self._cachedPtr = _storage.pointer(at: .zero))
     }
     
     // MARK: - Unified Storage (nested to inherit Element's ~Copyable context)

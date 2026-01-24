@@ -17,18 +17,18 @@ import Index_Primitives
 extension Array where Element: ~Copyable {
     /// Ensures the array has capacity for at least the specified number of elements.
     @usableFromInline
-    package mutating func ensureCapacity(_ minimumCapacity: Int) {
-        guard _storage.capacity < minimumCapacity else { return }
+    package mutating func ensureCapacity(_ minimumCapacity: Index.Count) {
+        guard Index.Count.init(__unchecked: _storage.capacity) < minimumCapacity else { return }
 
         // Growth factor 2.0, minimum capacity 4
         let newCapacity = Swift.max(minimumCapacity, _storage.capacity * 2, 4)
-        let newStorage = Array.Storage.create(minimumCapacity: .init(__unchecked: newCapacity))
+        let newStorage = Array.Storage.create(minimumCapacity: newCapacity)
         let currentCount = _storage.header
 
         _storage.move(to: newStorage)
         newStorage.header = currentCount
         _storage = newStorage
-        unsafe (_cachedPtr = _storage.pointer(at: 0))  // CRITICAL: Update cached pointer
+        unsafe (_cachedPtr = _storage.pointer(at: .zero))  // CRITICAL: Update cached pointer
     }
 }
 
@@ -60,10 +60,10 @@ extension Array where Element: ~Copyable {
     /// - Complexity: O(1) amortized.
     @inlinable
     public mutating func append(_ element: consuming Element) {
-        let count = _storage.header
+        let count = Index.Count(__unchecked: _storage.header)
         ensureCapacity(count + 1)
-        _storage.initialize(to: element, at: .init(__unchecked: (), position: count))
-        _storage.header = count + 1
+        _storage.initialize(to: element, at: .init(count))
+        _storage.header = (count + .one).rawValue
     }
 
     /// Removes and returns the last element, or nil if empty.
@@ -108,7 +108,6 @@ extension Array where Element: ~Copyable {
             body(unsafe (elements + index.position.rawValue).pointee)
         }
     }
-
 }
 
 // MARK: - Safe Element Access (Copyable elements only)
@@ -239,5 +238,6 @@ extension Array where Element: ~Copyable {
         }
     }
 }
+
 
 
