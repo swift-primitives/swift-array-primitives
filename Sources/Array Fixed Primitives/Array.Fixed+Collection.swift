@@ -11,24 +11,3 @@ extension Array.Fixed: Collection.`Protocol` {}
 
 extension Array.Fixed: Collection.Access.Random {}
 
-// MARK: - Collection.Indexed Conformance
-
-extension Array.Fixed: Collection.Indexed where Element: ~Copyable {
-    public typealias Index = Array<Element>.Index
-
-    @inlinable
-    public var startIndex: Index { .zero }
-
-    @inlinable
-    public var endIndex: Index { Index(count) }
-
-    @inlinable
-    public func index(after i: Index) -> Index { (i + 1)! }
-}
-
-// MARK: - Collection.Bidirectional Conformance
-
-extension Array.Fixed: Collection.Bidirectional where Element: ~Copyable {
-    @inlinable
-    public func index(before i: Index) -> Index { (i - 1)! }
-}

@@ -140,12 +140,13 @@ public struct Array<Element: ~Copyable>: ~Copyable {
         @usableFromInline
         var storage: Array.Storage
 
+        /// The number of elements in the array.
+        public let count: Index.Count
+
         /// Cached pointer for Span access.
         @usableFromInline
         package var _cachedPtr: UnsafeMutablePointer<Element>
 
-        /// The number of elements in the array.
-        public let count: Index.Count
 
         // Note: No deinit needed - Storage handles cleanup
     }
