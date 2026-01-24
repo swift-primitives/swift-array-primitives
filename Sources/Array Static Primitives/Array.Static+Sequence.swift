@@ -60,9 +60,9 @@ extension Array.Static: Sequence.`Protocol` {
     @inlinable
     public borrowing func makeIterator() -> Iterator {
         // Get pointer to first element (or a valid pointer if empty)
-        if _count.rawValue > 0 {
-            let basePtr = unsafe storage.read(at: 0)
-            return unsafe Iterator(base: basePtr, count: .init(__unchecked: _count.rawValue))
+        if count > 0 {
+            let basePtr = unsafe storage.read(at: .zero)
+            return unsafe Iterator(base: basePtr, count: count)
         } else {
             // Empty array - pointer is irrelevant, count is zero
             return unsafe Iterator(base: UnsafePointer<Element>(bitPattern: 1)!, count: .zero)

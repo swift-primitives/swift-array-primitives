@@ -86,11 +86,11 @@ where Tag == Sequence.Drain, Base == Array<Element>.Static<n>, Element: ~Copyabl
     @_lifetime(&self)
     @inlinable
     public mutating func callAsFunction(_ body: (consuming Element) -> Void) {
-        let count = unsafe base.pointee._count.rawValue
+        let count = unsafe base.pointee.count.rawValue
         guard count > 0 else { return }
         for i in 0..<count {
             body(unsafe base.pointee.storage.move(at: i))
         }
-        unsafe base.pointee._count = Index<Element>.Count(__unchecked: 0)
+        unsafe base.pointee.count = Index<Element>.Count(__unchecked: 0)
     }
 }

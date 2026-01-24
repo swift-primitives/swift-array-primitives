@@ -84,7 +84,15 @@ public struct Array<Element: ~Copyable>: ~Copyable {
     @usableFromInline
     package final class Storage: ManagedBuffer<Int, Element> {
         @usableFromInline
-        package var count: Index.Count { .init(__unchecked: self.header) }
+        package var count: Index.Count {
+            get {
+                .init(__unchecked: self.header)
+            }
+            
+            set {
+                header = newValue.rawValue
+            }
+        }
         
         deinit {
             let count = header
@@ -175,7 +183,7 @@ public struct Array<Element: ~Copyable>: ~Copyable {
 
         /// Current element count.
         @usableFromInline
-        package var _count: Index.Count
+        package var count: Index.Count
 
         /// Workaround for Swift compiler bug where deinit element cleanup
         /// fails for ~Copyable structs that contain only value-type properties.
@@ -188,11 +196,10 @@ public struct Array<Element: ~Copyable>: ~Copyable {
         @inlinable
         public init() {
             self.storage = Storage.Inline<capacity>()
-            self._count = .zero
+            self.count = .zero
         }
 
         deinit {
-            let count = _count.rawValue
             guard count > 0 else { return }
             storage.deinitialize(count: count)
         }

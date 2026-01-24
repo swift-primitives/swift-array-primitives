@@ -119,7 +119,7 @@ extension Array.Small where Element: ~Copyable {
             }
         } else {
             // Inline mode - deinitialize via Storage.Inline
-            inline.deinitialize(count: count.rawValue)
+            inline.deinitialize(count: count)
         }
         count = .zero
     }

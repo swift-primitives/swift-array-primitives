@@ -18,8 +18,8 @@ extension Array.Static where Element: Copyable {
     /// - Returns: The element at the index, or `nil` if out of bounds.
     @inlinable
     public func element(at index: Index) -> Element? {
-        guard index < _count else { return nil }
-        return unsafe storage.read(at: index.position.rawValue).pointee
+        guard index < count else { return nil }
+        return unsafe storage.read(at: index).pointee
     }
 }
 
@@ -36,8 +36,8 @@ extension Array.Static where Element: Copyable {
         offsetBy offset: Index.Offset
     ) -> Element? {
         guard let newIndex = base + offset else { return nil }
-        guard newIndex < _count else { return nil }
-        return unsafe storage.read(at: newIndex.position.rawValue).pointee
+        guard newIndex < count else { return nil }
+        return unsafe storage.read(at: newIndex).pointee
     }
 }
 
@@ -49,11 +49,11 @@ extension Array.Static where Element: Copyable {
     @inlinable
     public subscript(index: Index) -> Element {
         get {
-            precondition(index < _count, "Index out of bounds")
-            return unsafe storage.read(at: index.position.rawValue).pointee
+            precondition(index < count, "Index out of bounds")
+            return unsafe storage.read(at: index).pointee
         }
         set {
-            precondition(index < _count, "Index out of bounds")
+            precondition(index < count, "Index out of bounds")
             unsafe storage.pointer(at: index.position.rawValue).pointee = newValue
         }
     }

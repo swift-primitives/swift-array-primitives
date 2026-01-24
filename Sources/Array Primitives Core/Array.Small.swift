@@ -74,15 +74,14 @@ extension Array where Element: ~Copyable {
         }
 
         deinit {
-            let elementCount = count.rawValue
-            guard elementCount > 0 else { return }
+            guard count > 0 else { return }
 
             if let heapState = heap {
                 // Elements are on heap - ElementStorage handles cleanup via its deinit
-                heapState.storage.header = elementCount
+                heapState.storage.count = count
             } else {
                 // Elements are inline - clean up via Storage.Inline
-                inline.deinitialize(count: elementCount)
+                inline.deinitialize(count: count)
             }
         }
     }

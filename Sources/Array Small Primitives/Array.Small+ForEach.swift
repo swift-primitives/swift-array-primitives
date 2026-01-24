@@ -112,7 +112,7 @@ where Tag == Sequence.ForEach, Base == Array<Element>.Small<n>, Element: Copyabl
     @_lifetime(&self)
     @inlinable
     public mutating func consuming(_ body: (Element) -> Void) {
-        let count = unsafe base.pointee.count.rawValue
+        let count = unsafe base.pointee.count
         guard count > 0 else { return }
 
         if let heapState = unsafe base.pointee.heap {

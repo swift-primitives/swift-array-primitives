@@ -112,11 +112,11 @@ extension Array.Storage.Inline where Element: ~Copyable {
     /// - Precondition: Index must be in bounds (caller's responsibility).
     @usableFromInline
     @unsafe
-    package func read(at index: Int) -> UnsafePointer<Element> {
+    package func read(at index: Array.Index) -> UnsafePointer<Element> {
         let stride = MemoryLayout<Element>.stride
         return unsafe Swift.withUnsafePointer(to: raw) { rawPointer in
             let base = unsafe UnsafeRawPointer(rawPointer)
-            return unsafe (base + index * stride).assumingMemoryBound(to: Element.self)
+            return unsafe (base + index.position.rawValue * stride).assumingMemoryBound(to: Element.self)
         }
     }
 
@@ -148,9 +148,9 @@ extension Array.Storage.Inline where Element: ~Copyable {
     /// - Postcondition: All elements are deinitialized.
     /// - Note: Non-mutating to allow use from deinit contexts.
     @usableFromInline
-    package func deinitialize(count: Int) {
+    package func deinitialize(count: Array.Index.Count) {
         guard count > 0 else { return }
-        deinitialize(in: 0..<count)
+        deinitialize(in: 0..<count.rawValue)
     }
 
     /// Moves all elements to heap storage.
