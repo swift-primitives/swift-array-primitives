@@ -89,7 +89,7 @@ where Tag == Sequence.Drain, Base == Array<Element>.Static<n>, Element: ~Copyabl
         let count = unsafe base.pointee._count.rawValue
         guard count > 0 else { return }
         for i in 0..<count {
-            body(unsafe base.pointee._storage.move(at: i))
+            body(unsafe base.pointee.storage.move(at: i))
         }
         unsafe base.pointee._count = Index<Element>.Count(__unchecked: 0)
     }

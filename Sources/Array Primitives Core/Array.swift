@@ -171,7 +171,7 @@ public struct Array<Element: ~Copyable>: ~Copyable {
         /// This provides a uniform API: `pointer(at:)`, `read(at:)`, `move(at:)`,
         /// `initialize(to:at:)`, `deinitialize(count:)`.
         @usableFromInline
-        package var _storage: Array<Element>.Storage.Inline<capacity>
+        package var storage: Array<Element>.Storage.Inline<capacity>
 
         /// Current element count.
         @usableFromInline
@@ -187,14 +187,14 @@ public struct Array<Element: ~Copyable>: ~Copyable {
         /// Creates an empty inline array.
         @inlinable
         public init() {
-            self._storage = Storage.Inline<capacity>()
+            self.storage = Storage.Inline<capacity>()
             self._count = .zero
         }
 
         deinit {
             let count = _count.rawValue
             guard count > 0 else { return }
-            _storage.deinitialize(count: count)
+            storage.deinitialize(count: count)
         }
     }
 

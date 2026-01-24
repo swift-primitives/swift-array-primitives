@@ -29,7 +29,7 @@ extension Array.Static where Element: ~Copyable {
         guard _count.rawValue < capacity else {
             throw .overflow
         }
-        _storage.initialize(to: element, at: _count.rawValue)
+        storage.initialize(to: element, at: _count.rawValue)
         _count = Index.Count(__unchecked: _count.rawValue + 1)
     }
 
@@ -41,7 +41,7 @@ extension Array.Static where Element: ~Copyable {
         guard _count.rawValue > 0 else { return nil }
         let newCount = _count.rawValue - 1
         _count = Index.Count(__unchecked: newCount)
-        return _storage.move(at: newCount)
+        return storage.move(at: newCount)
     }
 }
 
@@ -58,7 +58,7 @@ extension Array.Static where Element: ~Copyable {
     @inlinable
     public func withElement<R>(at index: Index, _ body: (borrowing Element) -> R) -> R {
         precondition(index < _count, "Index out of bounds")
-        return unsafe body(_storage.read(at: index.position.rawValue).pointee)
+        return unsafe body(storage.read(at: index.position.rawValue).pointee)
     }
 }
 
@@ -98,10 +98,10 @@ extension Array.Static where Element: ~Copyable {
         _read {
             // Type proves: 0 <= index < capacity
             // For full arrays: count == capacity, so 0 <= index < count ✓
-            yield unsafe _storage.read(at: index.rawValue).pointee
+            yield unsafe storage.read(at: index.rawValue).pointee
         }
         _modify {
-            yield &(unsafe _storage.pointer(at: index.rawValue).pointee)
+            yield &(unsafe storage.pointer(at: index.rawValue).pointee)
         }
     }
 }
@@ -117,11 +117,11 @@ extension Array.Static where Element: ~Copyable {
     public subscript(index: Index) -> Element {
         _read {
             precondition(index < _count, "Index out of bounds")
-            yield unsafe _storage.read(at: index.position.rawValue).pointee
+            yield unsafe storage.read(at: index.position.rawValue).pointee
         }
         _modify {
             precondition(index < _count, "Index out of bounds")
-            yield &(unsafe _storage.pointer(at: index.position.rawValue).pointee)
+            yield &(unsafe storage.pointer(at: index.position.rawValue).pointee)
         }
     }
 }
@@ -154,7 +154,7 @@ extension Array.Static where Element: ~Copyable {
     public func withUnsafeBufferPointer<R, E: Swift.Error>(
         _ body: (UnsafeBufferPointer<Element>) throws(E) -> R
     ) throws(E) -> R {
-        return try unsafe withUnsafePointer(to: _storage.raw) { storagePtr throws(E) -> R in
+        return try unsafe withUnsafePointer(to: storage.raw) { storagePtr throws(E) -> R in
             let basePtr = unsafe UnsafeRawPointer(storagePtr)
             let elementPtr = unsafe basePtr.assumingMemoryBound(to: Element.self)
             return try unsafe body(UnsafeBufferPointer(start: _count.rawValue > 0 ? elementPtr : nil, count: _count.rawValue))
@@ -170,7 +170,7 @@ extension Array.Static where Element: ~Copyable {
     public mutating func withUnsafeMutableBufferPointer<R, E: Swift.Error>(
         _ body: (UnsafeMutableBufferPointer<Element>) throws(E) -> R
     ) throws(E) -> R {
-        return try unsafe withUnsafeMutablePointer(to: &_storage.raw) { storagePtr throws(E) -> R in
+        return try unsafe withUnsafeMutablePointer(to: &storage.raw) { storagePtr throws(E) -> R in
             let basePtr = UnsafeMutableRawPointer(storagePtr)
             let elementPtr = unsafe basePtr.assumingMemoryBound(to: Element.self)
             return try unsafe body(UnsafeMutableBufferPointer(start: _count.rawValue > 0 ? elementPtr : nil, count: _count.rawValue))
@@ -198,7 +198,7 @@ extension Array.Static where Element: ~Copyable {
     public func withSpan<R, E: Swift.Error>(
         _ body: (Span<Element>) throws(E) -> R
     ) throws(E) -> R {
-        return try unsafe withUnsafePointer(to: _storage.raw) { storagePtr throws(E) -> R in
+        return try unsafe withUnsafePointer(to: storage.raw) { storagePtr throws(E) -> R in
             let basePtr = unsafe UnsafeRawPointer(storagePtr)
             let elementPtr = unsafe basePtr.assumingMemoryBound(to: Element.self)
             let span = unsafe Span(_unsafeStart: elementPtr, count: _count.rawValue)
@@ -224,7 +224,7 @@ extension Array.Static where Element: ~Copyable {
     public mutating func withMutableSpan<R, E: Swift.Error>(
         _ body: (borrowing MutableSpan<Element>) throws(E) -> R
     ) throws(E) -> R {
-        return try unsafe withUnsafeMutablePointer(to: &_storage.raw) { storagePtr throws(E) -> R in
+        return try unsafe withUnsafeMutablePointer(to: &storage.raw) { storagePtr throws(E) -> R in
             let basePtr = UnsafeMutableRawPointer(storagePtr)
             let elementPtr = unsafe basePtr.assumingMemoryBound(to: Element.self)
             let span = unsafe MutableSpan(_unsafeStart: elementPtr, count: _count.rawValue)
@@ -242,14 +242,14 @@ extension Array.Static where Element: ~Copyable {
     @usableFromInline
     @unsafe
     package mutating func _pointerToElement(at index: Int) -> UnsafeMutablePointer<Element> {
-        unsafe _storage.pointer(at: index)
+        unsafe storage.pointer(at: index)
     }
 
     /// Returns a read-only pointer to the element at the given index.
     @usableFromInline
     @unsafe
     package func _readPointerToElement(at index: Int) -> UnsafePointer<Element> {
-        unsafe _storage.read(at: index)
+        unsafe storage.read(at: index)
     }
 }
 
@@ -260,7 +260,7 @@ extension Array.Static where Element: ~Copyable {
     @inlinable
     public mutating func removeAll() {
         guard _count.rawValue > 0 else { return }
-        _storage.deinitialize(count: _count.rawValue)
+        storage.deinitialize(count: _count.rawValue)
         _count = .zero
     }
 }
