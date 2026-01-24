@@ -106,21 +106,17 @@ extension Array<Bit>.Vector {
         get {
             let i = index.position.rawValue
             precondition(i >= 0 && i < _count, "Index out of bounds")
-            let wordIndex = i / Self._bitsPerWord
-            let bitIndex = i % Self._bitsPerWord
-            let mask: UInt = 1 << bitIndex
-            return (_storage[wordIndex] & mask) != 0
+            let loc = index.location(bitsPerWord: Self._bitsPerWord)
+            return (_storage[loc.word] & loc.mask) != 0
         }
         set {
             let i = index.position.rawValue
             precondition(i >= 0 && i < _count, "Index out of bounds")
-            let wordIndex = i / Self._bitsPerWord
-            let bitIndex = i % Self._bitsPerWord
-            let mask: UInt = 1 << bitIndex
+            let loc = index.location(bitsPerWord: Self._bitsPerWord)
             if newValue {
-                _storage[wordIndex] |= mask
+                _storage[loc.word] |= loc.mask
             } else {
-                _storage[wordIndex] &= ~mask
+                _storage[loc.word] &= ~loc.mask
             }
         }
     }
@@ -131,10 +127,8 @@ extension Array<Bit>.Vector {
         guard i >= 0 && i < _count else {
             throw .bounds(index: i, count: _count)
         }
-        let wordIndex = i / Self._bitsPerWord
-        let bitIndex = i % Self._bitsPerWord
-        let mask: UInt = 1 << bitIndex
-        return (_storage[wordIndex] & mask) != 0
+        let loc = index.location(bitsPerWord: Self._bitsPerWord)
+        return (_storage[loc.word] & loc.mask) != 0
     }
 }
 
@@ -147,10 +141,8 @@ extension Array<Bit>.Vector {
         guard i >= 0 && i < _count else {
             throw .bounds(index: i, count: _count)
         }
-        let wordIndex = i / Self._bitsPerWord
-        let bitIndex = i % Self._bitsPerWord
-        let mask: UInt = 1 << bitIndex
-        _storage[wordIndex] |= mask
+        let loc = index.location(bitsPerWord: Self._bitsPerWord)
+        _storage[loc.word] |= loc.mask
     }
 
     @inlinable
@@ -159,10 +151,8 @@ extension Array<Bit>.Vector {
         guard i >= 0 && i < _count else {
             throw .bounds(index: i, count: _count)
         }
-        let wordIndex = i / Self._bitsPerWord
-        let bitIndex = i % Self._bitsPerWord
-        let mask: UInt = 1 << bitIndex
-        _storage[wordIndex] &= ~mask
+        let loc = index.location(bitsPerWord: Self._bitsPerWord)
+        _storage[loc.word] &= ~loc.mask
     }
 
     @inlinable
@@ -171,10 +161,8 @@ extension Array<Bit>.Vector {
         guard i >= 0 && i < _count else {
             throw .bounds(index: i, count: _count)
         }
-        let wordIndex = i / Self._bitsPerWord
-        let bitIndex = i % Self._bitsPerWord
-        let mask: UInt = 1 << bitIndex
-        _storage[wordIndex] ^= mask
+        let loc = index.location(bitsPerWord: Self._bitsPerWord)
+        _storage[loc.word] ^= loc.mask
     }
 
     @inlinable
@@ -277,11 +265,9 @@ extension Array<Bit>.Vector {
     @inlinable
     public var last: Bool? {
         guard _count > 0 else { return nil }
-        let lastIndex = _count - 1
-        let wordIndex = lastIndex / Self._bitsPerWord
-        let bitIndex = lastIndex % Self._bitsPerWord
-        let mask: UInt = 1 << bitIndex
-        return (_storage[wordIndex] & mask) != 0
+        let loc = Bit.Index.Location(word: (_count - 1) / Self._bitsPerWord,
+                                     bit: (_count - 1) % Self._bitsPerWord)
+        return (_storage[loc.word] & loc.mask) != 0
     }
 
     /// Returns the number of `true` values in the array.
@@ -312,17 +298,15 @@ extension Array<Bit>.Vector {
     /// Appends a boolean value to the array.
     @inlinable
     public mutating func append(_ value: Bool) {
-        let newIndex = _count
-        let wordIndex = newIndex / Self._bitsPerWord
-        let bitIndex = newIndex % Self._bitsPerWord
+        let loc = Bit.Index.Location(word: _count / Self._bitsPerWord,
+                                     bit: _count % Self._bitsPerWord)
 
-        if wordIndex >= _storage.count {
+        if loc.word >= _storage.count {
             _storage.append(0)
         }
 
         if value {
-            let mask: UInt = 1 << bitIndex
-            _storage[wordIndex] |= mask
+            _storage[loc.word] |= loc.mask
         }
 
         _count += 1
@@ -340,11 +324,10 @@ extension Array<Bit>.Vector {
     public mutating func popLast() -> Bool? {
         guard _count > 0 else { return nil }
         _count -= 1
-        let wordIndex = _count / Self._bitsPerWord
-        let bitIndex = _count % Self._bitsPerWord
-        let mask: UInt = 1 << bitIndex
-        let value = (_storage[wordIndex] & mask) != 0
-        _storage[wordIndex] &= ~mask
+        let loc = Bit.Index.Location(word: _count / Self._bitsPerWord,
+                                     bit: _count % Self._bitsPerWord)
+        let value = (_storage[loc.word] & loc.mask) != 0
+        _storage[loc.word] &= ~loc.mask
         return value
     }
 
@@ -353,10 +336,9 @@ extension Array<Bit>.Vector {
     public mutating func removeLast() {
         precondition(_count > 0, "Cannot remove from empty array")
         _count -= 1
-        let wordIndex = _count / Self._bitsPerWord
-        let bitIndex = _count % Self._bitsPerWord
-        let mask: UInt = 1 << bitIndex
-        _storage[wordIndex] &= ~mask
+        let loc = Bit.Index.Location(word: _count / Self._bitsPerWord,
+                                     bit: _count % Self._bitsPerWord)
+        _storage[loc.word] &= ~loc.mask
     }
 
     /// Removes all elements from the array.

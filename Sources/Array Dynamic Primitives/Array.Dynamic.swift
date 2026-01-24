@@ -106,7 +106,7 @@ extension Array where Element: ~Copyable {
     public func withElement<R>(at index: Index, _ body: (borrowing Element) -> R) -> R {
         precondition(index < count, "Index out of bounds")
         return unsafe storage.withUnsafeMutablePointerToElements { elements in
-            body(unsafe (elements + index.position.rawValue).pointee)
+            body(unsafe (elements + index).pointee)
         }
     }
 }
@@ -120,8 +120,8 @@ extension Array where Element: Copyable {
     /// - Returns: The element at the index, or `nil` if out of bounds.
     @inlinable
     public func element(at index: Index) -> Element? {
-        guard index.position.rawValue < count.rawValue else { return nil }
-        return unsafe _cachedPtr[index.position.rawValue]
+        guard index < count else { return nil }
+        return unsafe _cachedPtr[index]
     }
 
     /// Returns element at index offset from given base index.
@@ -136,8 +136,8 @@ extension Array where Element: Copyable {
         offsetBy offset: Index.Offset
     ) -> Element? {
         guard let newIndex = base + offset else { return nil }
-        guard newIndex.position.rawValue < count.rawValue else { return nil }
-        return unsafe _cachedPtr[newIndex.position.rawValue]
+        guard newIndex < count else { return nil }
+        return unsafe _cachedPtr[newIndex]
     }
 }
 
@@ -230,12 +230,12 @@ extension Array where Element: ~Copyable {
     @inlinable
     public subscript(index: Index) -> Element {
         _read {
-            precondition(index.position.rawValue < storage.header, "Index out of bounds")
-            yield unsafe _cachedPtr[index.position.rawValue]
+            precondition(index < count, "Index out of bounds")
+            yield unsafe _cachedPtr[index]
         }
         _modify {
-            precondition(index.position.rawValue < storage.header, "Index out of bounds")
-            yield &(unsafe _cachedPtr[index.position.rawValue])
+            precondition(index < count, "Index out of bounds")
+            yield &(unsafe _cachedPtr[index])
         }
     }
 }

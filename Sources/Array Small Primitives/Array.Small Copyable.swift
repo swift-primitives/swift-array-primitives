@@ -17,7 +17,7 @@ extension Array.Small where Element: Copyable {
     public func element(at index: Index) -> Element? {
         guard index < count else { return nil }
         if let heap {
-            return unsafe heap.pointer[index.position.rawValue]
+            return unsafe heap.pointer[index]
         } else {
             // Use withUnsafePointer directly - inline accessor requires mutating context
             let stride = MemoryLayout<Element>.stride
@@ -44,7 +44,7 @@ extension Array.Small where Element: Copyable {
         guard let newIndex = base + offset else { return nil }
         guard newIndex < count else { return nil }
         if let heap {
-            return unsafe heap.pointer[newIndex.position.rawValue]
+            return unsafe heap.pointer[newIndex]
         } else {
             // Use withUnsafePointer directly - inline accessor requires mutating context
             let stride = MemoryLayout<Element>.stride
@@ -70,7 +70,7 @@ extension Array.Small where Element: Copyable {
         get {
             precondition(index < count, "Index out of bounds")
             if let heap {
-                return unsafe heap.pointer[index.position.rawValue]
+                return unsafe heap.pointer[index]
             } else {
                 // Use withUnsafePointer directly - inline accessor requires mutating context
                 let stride = MemoryLayout<Element>.stride

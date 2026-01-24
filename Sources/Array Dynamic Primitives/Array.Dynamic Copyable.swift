@@ -72,13 +72,13 @@ extension Array where Element: Copyable {
     @inlinable
     public subscript(index: Index) -> Element {
         get {
-            precondition(index.position.rawValue < storage.header, "Index out of bounds")
-            return unsafe _cachedPtr[index.position.rawValue]
+            precondition(index < count, "Index out of bounds")
+            return unsafe _cachedPtr[index]
         }
         set {
             makeUnique()
-            precondition(index.position.rawValue < storage.header, "Index out of bounds")
-            unsafe _cachedPtr[index.position.rawValue] = newValue
+            precondition(index < count, "Index out of bounds")
+            unsafe _cachedPtr[index] = newValue
         }
     }
 }

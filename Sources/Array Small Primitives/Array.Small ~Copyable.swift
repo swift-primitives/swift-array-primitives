@@ -140,7 +140,7 @@ extension Array.Small where Element: ~Copyable {
         precondition(index < count, "Index out of bounds")
         if let heap {
             return unsafe heap.storage.withUnsafeMutablePointerToElements { elements in
-                body(unsafe (elements + index.position.rawValue).pointee)
+                body(unsafe (elements + index).pointee)
             }
         } else {
             // Use withUnsafePointer directly - inline accessor requires mutating context
@@ -267,7 +267,7 @@ extension Array.Small where Element: ~Copyable {
         mutating _read {
             precondition(index < count, "Index out of bounds")
             if let heap {
-                yield unsafe heap.pointer[index.position.rawValue]
+                yield unsafe heap.pointer[index]
             } else {
                 yield unsafe inline.read(at: index).pointee
             }
@@ -275,7 +275,10 @@ extension Array.Small where Element: ~Copyable {
         _modify {
             precondition(index < count, "Index out of bounds")
             if let heap {
-                yield &(unsafe heap.pointer[index.position.rawValue])
+                // Note: Using `var` is required for custom subscript with unsafeMutableAddress
+                // to work through optional binding. See: Experiments/pointer-subscript-modify
+                var ptr = heap.pointer
+                yield &(unsafe ptr[index])
             } else {
                 yield &(unsafe inline.pointer(at: index).pointee)
             }

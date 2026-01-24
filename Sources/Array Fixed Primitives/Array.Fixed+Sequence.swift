@@ -35,7 +35,7 @@ extension Array.Fixed {
         @inlinable
         public mutating func next() -> Element? {
             guard index < end else { return nil }
-            let result = unsafe base[index.position.rawValue]
+            let result = unsafe base[index]
             index = (index + 1)!
             return result
         }

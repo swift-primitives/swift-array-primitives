@@ -24,7 +24,7 @@ extension Array.Fixed where Element: Copyable {
     @inlinable
     public func element(at index: Index) -> Element? {
         guard index < count else { return nil }
-        return unsafe _cachedPtr[index.position.rawValue]
+        return unsafe _cachedPtr[index]
     }
 }
 
@@ -42,7 +42,7 @@ extension Array.Fixed where Element: Copyable {
     ) -> Element? {
         guard let newIndex = base + offset else { return nil }
         guard newIndex < count else { return nil }
-        return unsafe _cachedPtr[newIndex.position.rawValue]
+        return unsafe _cachedPtr[newIndex]
     }
 }
 
@@ -146,7 +146,7 @@ extension Array.Fixed where Element: ~Copyable {
     @inlinable
     public func withElement<R>(at index: Index, _ body: (borrowing Element) -> R) -> R {
         precondition(index < _count, "Index out of bounds")
-        return unsafe body((_cachedPtr + index.position.rawValue).pointee)
+        return unsafe body((_cachedPtr + index).pointee)
     }
 
 }
@@ -162,11 +162,11 @@ extension Array.Fixed where Element: ~Copyable {
     public subscript(index: Index) -> Element {
         _read {
             precondition(index < _count, "Index out of bounds")
-            yield unsafe _cachedPtr[index.position.rawValue]
+            yield unsafe _cachedPtr[index]
         }
         _modify {
             precondition(index < _count, "Index out of bounds")
-            yield &(unsafe _cachedPtr[index.position.rawValue])
+            yield &(unsafe _cachedPtr[index])
         }
     }
 }
@@ -180,11 +180,11 @@ extension Array.Fixed where Element: Copyable {
     public subscript(index: Index) -> Element {
         get {
             precondition(index < _count, "Index out of bounds")
-            return unsafe _cachedPtr[index.position.rawValue]
+            return unsafe _cachedPtr[index]
         }
         set {
             precondition(index < _count, "Index out of bounds")
-            unsafe _cachedPtr[index.position.rawValue] = newValue
+            unsafe _cachedPtr[index] = newValue
         }
     }
 }

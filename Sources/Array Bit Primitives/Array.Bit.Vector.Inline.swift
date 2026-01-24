@@ -117,21 +117,17 @@ extension Array<Bit>.Vector.Inline {
         get {
             let i = index.position.rawValue
             precondition(i >= 0 && i < _count, "Index out of bounds")
-            let wordIndex = i / Self._bitsPerWord
-            let bitIndex = i % Self._bitsPerWord
-            let mask: UInt = 1 << bitIndex
-            return (_storage[wordIndex] & mask) != 0
+            let loc = index.location(bitsPerWord: Self._bitsPerWord)
+            return (_storage[loc.word] & loc.mask) != 0
         }
         set {
             let i = index.position.rawValue
             precondition(i >= 0 && i < _count, "Index out of bounds")
-            let wordIndex = i / Self._bitsPerWord
-            let bitIndex = i % Self._bitsPerWord
-            let mask: UInt = 1 << bitIndex
+            let loc = index.location(bitsPerWord: Self._bitsPerWord)
             if newValue {
-                _storage[wordIndex] |= mask
+                _storage[loc.word] |= loc.mask
             } else {
-                _storage[wordIndex] &= ~mask
+                _storage[loc.word] &= ~loc.mask
             }
         }
     }
@@ -148,10 +144,8 @@ extension Array<Bit>.Vector.Inline {
         guard i >= 0 && i < _count else {
             throw .bounds(index: i, count: _count)
         }
-        let wordIndex = i / Self._bitsPerWord
-        let bitIndex = i % Self._bitsPerWord
-        let mask: UInt = 1 << bitIndex
-        return (_storage[wordIndex] & mask) != 0
+        let loc = index.location(bitsPerWord: Self._bitsPerWord)
+        return (_storage[loc.word] & loc.mask) != 0
     }
 }
 
@@ -164,10 +158,8 @@ extension Array<Bit>.Vector.Inline {
         guard i >= 0 && i < _count else {
             throw .bounds(index: i, count: _count)
         }
-        let wordIndex = i / Self._bitsPerWord
-        let bitIndex = i % Self._bitsPerWord
-        let mask: UInt = 1 << bitIndex
-        _storage[wordIndex] |= mask
+        let loc = index.location(bitsPerWord: Self._bitsPerWord)
+        _storage[loc.word] |= loc.mask
     }
 
     @inlinable
@@ -176,10 +168,8 @@ extension Array<Bit>.Vector.Inline {
         guard i >= 0 && i < _count else {
             throw .bounds(index: i, count: _count)
         }
-        let wordIndex = i / Self._bitsPerWord
-        let bitIndex = i % Self._bitsPerWord
-        let mask: UInt = 1 << bitIndex
-        _storage[wordIndex] &= ~mask
+        let loc = index.location(bitsPerWord: Self._bitsPerWord)
+        _storage[loc.word] &= ~loc.mask
     }
 
     @inlinable
@@ -188,10 +178,8 @@ extension Array<Bit>.Vector.Inline {
         guard i >= 0 && i < _count else {
             throw .bounds(index: i, count: _count)
         }
-        let wordIndex = i / Self._bitsPerWord
-        let bitIndex = i % Self._bitsPerWord
-        let mask: UInt = 1 << bitIndex
-        _storage[wordIndex] ^= mask
+        let loc = index.location(bitsPerWord: Self._bitsPerWord)
+        _storage[loc.word] ^= loc.mask
     }
 
     @inlinable

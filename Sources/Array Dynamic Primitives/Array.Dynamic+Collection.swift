@@ -44,7 +44,7 @@ extension Array where Element: Copyable {
         @inlinable
         public mutating func next() -> Element? {
             guard position < end else { return nil }
-            let result = unsafe base[position.rawValue.rawValue]
+            let result = unsafe base[position]
             position = (position + 1)!
             return result
         }
