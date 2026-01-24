@@ -100,7 +100,7 @@ extension Array.Small where Element: Copyable {
                     _ = _storage.heap!.storage.move(at: index)
                     _storage.heap!.storage.initialize(to: newValue, at: index)
                 } else {
-                    unsafe _storage.inline.pointer(at: index.position.rawValue).pointee = newValue
+                    unsafe _storage.inline.pointer(at: index).pointee = newValue
                 }
             }
         }

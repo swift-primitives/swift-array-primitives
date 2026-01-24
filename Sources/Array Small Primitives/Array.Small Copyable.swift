@@ -88,7 +88,7 @@ extension Array.Small where Element: Copyable {
                 _ = heap!.storage.move(at: index)
                 heap!.storage.initialize(to: newValue, at: index)
             } else {
-                unsafe inline.pointer(at: index.position.rawValue).pointee = newValue
+                unsafe inline.pointer(at: index).pointee = newValue
             }
         }
     }

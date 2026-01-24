@@ -78,7 +78,7 @@ where Tag == Sequence.Drain, Base == Array<Element>.Small<n>, Element: ~Copyable
             unsafe base.pointee.heap!.storage.header = 0
         } else {
             for i in 0..<count {
-                body(unsafe base.pointee.inline.move(at: i))
+                body(unsafe base.pointee.inline.move(at: .init(__unchecked: (), position: i)))
             }
         }
         unsafe base.pointee.count = .zero

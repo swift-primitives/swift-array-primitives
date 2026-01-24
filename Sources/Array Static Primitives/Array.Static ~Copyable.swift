@@ -27,7 +27,7 @@ extension Array.Static where Element: ~Copyable {
         guard count.rawValue < capacity else {
             throw .overflow
         }
-        storage.initialize(to: element, at: count.rawValue)
+        storage.initialize(to: element, at: .init(count))
         count = Index.Count(__unchecked: count.rawValue + 1)
     }
 
@@ -36,10 +36,8 @@ extension Array.Static where Element: ~Copyable {
     /// - Returns: The removed element, or `nil` if the array is empty.
     @inlinable
     public mutating func removeLast() -> Element? {
-        guard count.rawValue > 0 else { return nil }
-        let newCount = count.rawValue - 1
-        count = Index.Count(__unchecked: newCount)
-        return storage.move(at: newCount)
+        guard count > 0, let count = count - 1 else { return nil }
+        return storage.move(at: .init(count))
     }
 }
 
@@ -56,7 +54,7 @@ extension Array.Static where Element: ~Copyable {
     @inlinable
     public func withElement<R>(at index: Index, _ body: (borrowing Element) -> R) -> R {
         precondition(index < count, "Index out of bounds")
-        return unsafe body(storage.read(at: index.position.rawValue).pointee)
+        return unsafe body(storage.read(at: index).pointee)
     }
 }
 
@@ -96,10 +94,10 @@ extension Array.Static where Element: ~Copyable {
         _read {
             // Type proves: 0 <= index < capacity
             // For full arrays: count == capacity, so 0 <= index < count ✓
-            yield unsafe storage.read(at: index.rawValue).pointee
+            yield unsafe storage.read(at: index.unbounded).pointee
         }
         _modify {
-            yield &(unsafe storage.pointer(at: index.rawValue).pointee)
+            yield &(unsafe storage.pointer(at: index.unbounded).pointee)
         }
     }
 }
@@ -115,11 +113,11 @@ extension Array.Static where Element: ~Copyable {
     public subscript(index: Index) -> Element {
         _read {
             precondition(index < count, "Index out of bounds")
-            yield unsafe storage.read(at: index.position.rawValue).pointee
+            yield unsafe storage.read(at: index).pointee
         }
         _modify {
             precondition(index < count, "Index out of bounds")
-            yield &(unsafe storage.pointer(at: index.position.rawValue).pointee)
+            yield &(unsafe storage.pointer(at: index).pointee)
         }
     }
 }
@@ -239,14 +237,14 @@ extension Array.Static where Element: ~Copyable {
     /// Returns a mutable pointer to the element at the given index.
     @usableFromInline
     @unsafe
-    package mutating func _pointerToElement(at index: Int) -> UnsafeMutablePointer<Element> {
+    package mutating func _pointerToElement(at index: Index) -> UnsafeMutablePointer<Element> {
         unsafe storage.pointer(at: index)
     }
 
     /// Returns a read-only pointer to the element at the given index.
     @usableFromInline
     @unsafe
-    package func _readPointerToElement(at index: Int) -> UnsafePointer<Element> {
+    package func _readPointerToElement(at index: Index) -> UnsafePointer<Element> {
         unsafe storage.read(at: index)
     }
 }

@@ -70,7 +70,7 @@ extension Array.Small where Element: ~Copyable {
             count = count + .one
         } else if count.rawValue < inlineCapacity {
             // Inline mode with room
-            let ptr = unsafe inline.pointer(at: count.rawValue)
+            let ptr = unsafe inline.pointer(at: Array.Index(count))
             unsafe ptr.initialize(to: element)
             count = count + .one
         } else {
@@ -99,7 +99,7 @@ extension Array.Small where Element: ~Copyable {
             // Inline mode
             let newCount = count.rawValue - 1
             count = Index.Count(__unchecked: newCount)
-            let ptr = unsafe inline.pointer(at: newCount)
+            let ptr = unsafe inline.pointer(at: Array.Index(__unchecked: (), position: newCount))
             return unsafe ptr.move()
         }
     }
@@ -269,7 +269,7 @@ extension Array.Small where Element: ~Copyable {
             if let heap {
                 yield unsafe heap.pointer[index.position.rawValue]
             } else {
-                yield unsafe inline.read(at: index.position.rawValue).pointee
+                yield unsafe inline.read(at: index).pointee
             }
         }
         _modify {
@@ -277,7 +277,7 @@ extension Array.Small where Element: ~Copyable {
             if let heap {
                 yield &(unsafe heap.pointer[index.position.rawValue])
             } else {
-                yield &(unsafe inline.pointer(at: index.position.rawValue).pointee)
+                yield &(unsafe inline.pointer(at: index).pointee)
             }
         }
     }

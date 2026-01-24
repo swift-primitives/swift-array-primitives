@@ -72,11 +72,11 @@ extension Array.Storage.Inline where Element: ~Copyable {
     /// - Precondition: Index must be in bounds (caller's responsibility).
     @usableFromInline
     @unsafe
-    package mutating func pointer(at index: Int) -> UnsafeMutablePointer<Element> {
+    package mutating func pointer(at index: Array.Index) -> UnsafeMutablePointer<Element> {
         let stride = MemoryLayout<Element>.stride
         return unsafe Swift.withUnsafeMutablePointer(to: &raw) { rawPointer in
             let base = UnsafeMutableRawPointer(rawPointer)
-            return unsafe (base + index * stride).assumingMemoryBound(to: Element.self)
+            return unsafe (base + index.position.rawValue * stride).assumingMemoryBound(to: Element.self)
         }
     }
 
@@ -87,7 +87,7 @@ extension Array.Storage.Inline where Element: ~Copyable {
     ///   - index: The index to initialize.
     /// - Precondition: The slot at index must be uninitialized.
     @usableFromInline
-    package mutating func initialize(to element: consuming Element, at index: Int) {
+    package mutating func initialize(to element: consuming Element, at index: Array.Index) {
         let ptr = unsafe pointer(at: index)
         unsafe ptr.initialize(to: element)
     }
@@ -99,7 +99,7 @@ extension Array.Storage.Inline where Element: ~Copyable {
     /// - Precondition: The slot at index must be initialized.
     /// - Postcondition: The slot at index is deinitialized.
     @usableFromInline
-    package mutating func move(at index: Int) -> Element {
+    package mutating func move(at index: Array.Index) -> Element {
         unsafe pointer(at: index).move()
     }
 

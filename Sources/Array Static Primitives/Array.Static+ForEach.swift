@@ -81,8 +81,8 @@ where Tag == Sequence.ForEach, Base == Array<Element>.Static<n>, Element: ~Copya
     @inlinable
     public func callAsFunction(_ body: (borrowing Element) -> Void) {
         let count = unsafe base.pointee.count
-        for i in 0..<count {
-            unsafe body(base.pointee.storage.read(at: i).pointee)
+        for i in 0..<count.rawValue {
+            unsafe body(base.pointee.storage.read(at:  .init(__unchecked: (), position: i)).pointee)
         }
     }
 
@@ -95,8 +95,8 @@ where Tag == Sequence.ForEach, Base == Array<Element>.Static<n>, Element: ~Copya
     @inlinable
     public func borrowing(_ body: (borrowing Element) -> Void) {
         let count = unsafe base.pointee.count
-        for i in 0..<count {
-            unsafe body(base.pointee.storage.read(at: i).pointee)
+        for i in 0..<count.rawValue {
+            unsafe body(base.pointee.storage.read(at: .init(__unchecked: (), position: i)).pointee)
         }
     }
 }
@@ -115,8 +115,8 @@ where Tag == Sequence.ForEach, Base == Array<Element>.Static<n>, Element: Copyab
     @inlinable
     public mutating func consuming(_ body: (Element) -> Void) {
         let count = unsafe base.pointee.count
-        for i in 0..<count {
-            unsafe body(base.pointee.storage.read(at: i).pointee)
+        for i in 0..<count.rawValue {
+            unsafe body(base.pointee.storage.read(at:  .init(__unchecked: (), position: i)).pointee)
         }
         unsafe base.pointee.storage.deinitialize(count: count)
         unsafe base.pointee.count = Index<Element>.Count(__unchecked: 0)

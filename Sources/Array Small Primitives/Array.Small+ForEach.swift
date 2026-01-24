@@ -117,7 +117,7 @@ where Tag == Sequence.ForEach, Base == Array<Element>.Small<n>, Element: Copyabl
 
         if let heapState = unsafe base.pointee.heap {
             _ = unsafe heapState.storage.withUnsafeMutablePointerToElements { elements in
-                for i in 0..<count {
+                for i in 0..<count.rawValue {
                     unsafe body((elements + i).pointee)
                 }
             }
@@ -126,7 +126,7 @@ where Tag == Sequence.ForEach, Base == Array<Element>.Small<n>, Element: Copyabl
             let stride = MemoryLayout<Element>.stride
             unsafe withUnsafePointer(to: base.pointee.inline) { storagePtr in
                 let basePtr = unsafe UnsafeRawPointer(storagePtr)
-                for i in 0..<count {
+                for i in 0..<count.rawValue {
                     let elementPtr = unsafe (basePtr + i * stride)
                         .assumingMemoryBound(to: Element.self)
                     unsafe body(elementPtr.pointee)

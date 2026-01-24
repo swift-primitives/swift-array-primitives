@@ -74,11 +74,11 @@ extension Array.Static where Element: Copyable {
         public subscript(index: Index) -> Element {
             get {
                 precondition(index.position.rawValue < _storage.count.rawValue, "Index out of bounds")
-                return unsafe _storage._readPointerToElement(at: index.position.rawValue).pointee
+                return unsafe _storage._readPointerToElement(at: index).pointee
             }
             set {
                 precondition(index.position.rawValue < _storage.count.rawValue, "Index out of bounds")
-                unsafe _storage._pointerToElement(at: index.position.rawValue).pointee = newValue
+                unsafe _storage._pointerToElement(at: index).pointee = newValue
             }
         }
 
@@ -104,10 +104,10 @@ extension Array.Static where Element: Copyable {
             get {
                 // Type proves: 0 <= index < capacity
                 // For full arrays: count == capacity, so 0 <= index < count ✓
-                unsafe _storage._readPointerToElement(at: index.rawValue).pointee
+                unsafe _storage._readPointerToElement(at: index.unbounded).pointee
             }
             set {
-                unsafe _storage._pointerToElement(at: index.rawValue).pointee = newValue
+                unsafe _storage._pointerToElement(at: index.unbounded).pointee = newValue
             }
         }
     }
