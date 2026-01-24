@@ -63,7 +63,7 @@ where Tag == Sequence.ForEach, Base == Array<Element>.Fixed, Element: ~Copyable 
     /// - Parameter body: A closure called with each borrowed element.
     @inlinable
     public func callAsFunction(_ body: (borrowing Element) -> Void) {
-        let count = unsafe base.pointee._count
+        let count = unsafe base.pointee.count
         (0..<count).forEach { i in
             unsafe body(base.pointee._cachedPtr[i])
         }

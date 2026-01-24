@@ -10,7 +10,7 @@ public import Index_Primitives
 extension Array.Fixed: Swift.Sequence where Element: Copyable {
     /// Returns the count as the underestimated count since we know the exact size.
     @inlinable
-    public var underestimatedCount: Int { _count.rawValue }
+    public var underestimatedCount: Int { count.rawValue }
 }
 
 // MARK: - Swift.Collection Conformance

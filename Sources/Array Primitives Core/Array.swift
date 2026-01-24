@@ -145,7 +145,7 @@ public struct Array<Element: ~Copyable>: ~Copyable {
         package var _cachedPtr: UnsafeMutablePointer<Element>
 
         /// The number of elements in the array.
-        public let _count: Index.Count
+        public let count: Index.Count
 
         // Note: No deinit needed - Storage handles cleanup
     }

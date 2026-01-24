@@ -53,6 +53,6 @@ extension Array.Fixed: Sequence.`Protocol` {
     /// Uses typed `Index<Element>` for position tracking.
     @inlinable
     public borrowing func makeIterator() -> Array.Fixed.Iterator {
-        unsafe Iterator(base: UnsafePointer(_cachedPtr), count: .init(__unchecked: _count.rawValue))
+        unsafe Iterator(base: UnsafePointer(_cachedPtr), count: .init(__unchecked: count.rawValue))
     }
 }

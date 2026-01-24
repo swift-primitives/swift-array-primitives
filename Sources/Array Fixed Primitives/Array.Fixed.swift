@@ -7,11 +7,11 @@ public import Index_Primitives
 extension Array.Fixed {
     /// The number of elements in the array.
     @inlinable
-    public var count: Index.Count { _count }
+    public var count: Index.Count { count }
 
     /// Whether the array is empty.
     @inlinable
-    public var isEmpty: Bool { _count == .zero }
+    public var isEmpty: Bool { count == .zero }
 }
 
 // MARK: - Safe Element Access (Copyable elements only)
@@ -61,7 +61,7 @@ extension Array.Fixed where Element: ~Copyable {
     public var span: Swift.Span<Element> {
         @_lifetime(borrow self)
         borrowing get {
-            unsafe Swift.Span(_unsafeStart: _cachedPtr, count: _count.rawValue)
+            unsafe Swift.Span(_unsafeStart: _cachedPtr, count: count.rawValue)
         }
     }
 
@@ -79,7 +79,7 @@ extension Array.Fixed where Element: ~Copyable {
     public var mutableSpan: MutableSpan<Element> {
         @_lifetime(&self)
         mutating get {
-            unsafe MutableSpan(_unsafeStart: _cachedPtr, count: _count.rawValue)
+            unsafe MutableSpan(_unsafeStart: _cachedPtr, count: count.rawValue)
         }
     }
 }
@@ -96,7 +96,7 @@ extension Array.Fixed where Element: Copyable {
         @_lifetime(&self)
         mutating get {
             makeUnique()
-            return unsafe MutableSpan(_unsafeStart: _cachedPtr, count: _count.rawValue)
+            return unsafe MutableSpan(_unsafeStart: _cachedPtr, count: count.rawValue)
         }
     }
 }
@@ -114,7 +114,7 @@ extension Array.Fixed where Element: ~Copyable {
     public func withUnsafeBufferPointer<R, E: Swift.Error>(
         _ body: (UnsafeBufferPointer<Element>) throws(E) -> R
     ) throws(E) -> R {
-        try unsafe body(UnsafeBufferPointer(start: _count.rawValue > 0 ? _cachedPtr : nil, count: _count.rawValue))
+        try unsafe body(UnsafeBufferPointer(start: count.rawValue > 0 ? _cachedPtr : nil, count: count.rawValue))
     }
 
     /// Provides mutable access to the underlying contiguous storage.
@@ -126,7 +126,7 @@ extension Array.Fixed where Element: ~Copyable {
     public mutating func withUnsafeMutableBufferPointer<R, E: Swift.Error>(
         _ body: (UnsafeMutableBufferPointer<Element>) throws(E) -> R
     ) throws(E) -> R {
-        try unsafe body(UnsafeMutableBufferPointer(start: _count.rawValue > 0 ? _cachedPtr : nil, count: _count.rawValue))
+        try unsafe body(UnsafeMutableBufferPointer(start: count.rawValue > 0 ? _cachedPtr : nil, count: count.rawValue))
     }
 }
 
@@ -145,7 +145,7 @@ extension Array.Fixed where Element: ~Copyable {
     /// - Precondition: The index must be in bounds.
     @inlinable
     public func withElement<R>(at index: Index, _ body: (borrowing Element) -> R) -> R {
-        precondition(index < _count, "Index out of bounds")
+        precondition(index < count, "Index out of bounds")
         return unsafe body((_cachedPtr + index).pointee)
     }
 
@@ -161,11 +161,11 @@ extension Array.Fixed where Element: ~Copyable {
     @inlinable
     public subscript(index: Index) -> Element {
         _read {
-            precondition(index < _count, "Index out of bounds")
+            precondition(index < count, "Index out of bounds")
             yield unsafe _cachedPtr[index]
         }
         _modify {
-            precondition(index < _count, "Index out of bounds")
+            precondition(index < count, "Index out of bounds")
             yield &(unsafe _cachedPtr[index])
         }
     }
@@ -179,11 +179,11 @@ extension Array.Fixed where Element: Copyable {
     @inlinable
     public subscript(index: Index) -> Element {
         get {
-            precondition(index < _count, "Index out of bounds")
+            precondition(index < count, "Index out of bounds")
             return unsafe _cachedPtr[index]
         }
         set {
-            precondition(index < _count, "Index out of bounds")
+            precondition(index < count, "Index out of bounds")
             unsafe _cachedPtr[index] = newValue
         }
     }
