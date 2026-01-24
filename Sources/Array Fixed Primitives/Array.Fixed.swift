@@ -22,7 +22,7 @@ extension Array.Fixed where Element: Copyable {
     /// - Parameter index: The typed index of the element to access.
     /// - Returns: The element at the index, or `nil` if out of bounds.
     @inlinable
-    public func element(at index: Array<Element>.Index) -> Element? {
+    public func element(at index: Index) -> Element? {
         guard index < count else { return nil }
         return unsafe _cachedPtr[index.position.rawValue]
     }
@@ -37,8 +37,8 @@ extension Array.Fixed where Element: Copyable {
     /// - Returns: The element at the computed position, or `nil` if out of bounds.
     @inlinable
     public func element(
-        at base: Array<Element>.Index,
-        offsetBy offset: Array<Element>.Index.Offset
+        at base: Index,
+        offsetBy offset: Index.Offset
     ) -> Element? {
         guard let newIndex = base + offset else { return nil }
         guard newIndex < count else { return nil }
@@ -159,7 +159,7 @@ extension Array.Fixed where Element: ~Copyable {
     /// - Parameter index: The typed index of the element to access.
     /// - Precondition: `index` must be in bounds.
     @inlinable
-    public subscript(index: Array<Element>.Index) -> Element {
+    public subscript(index: Index) -> Element {
         _read {
             precondition(index < _count, "Index out of bounds")
             yield unsafe _cachedPtr[index.position.rawValue]
@@ -177,7 +177,7 @@ extension Array.Fixed where Element: Copyable {
     /// - Parameter index: The typed index of the element to access.
     /// - Precondition: `index` must be in bounds.
     @inlinable
-    public subscript(index: Array<Element>.Index) -> Element {
+    public subscript(index: Index) -> Element {
         get {
             precondition(index < _count, "Index out of bounds")
             return unsafe _cachedPtr[index.position.rawValue]

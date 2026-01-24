@@ -69,23 +69,23 @@ extension Array.Small where Element: ~Copyable {
     public mutating func append(_ element: consuming Element) {
         if var heapState = heap {
             // Heap mode
-            let currentCount = heapState.storage.header
-            heapState.ensureCapacity(currentCount + 1)
+            let currentCount: Array.Index.Count = .init(__unchecked: heapState.storage.header)
+            heapState.ensureCapacity(currentCount + .one)
             heap = heapState  // Write back mutation
-            heap!.storage.initialize(to: element, at: currentCount)
-            heap!.storage.header = currentCount + 1
-            count = Index.Count(__unchecked: count.rawValue + 1)
+            heap!.storage.initialize(to: element, at: Index(currentCount))
+            heap!.storage.header = currentCount.rawValue + 1
+            count = count + .one
         } else if count.rawValue < inlineCapacity {
             // Inline mode with room
             let ptr = unsafe inline.pointer(at: count.rawValue)
             unsafe ptr.initialize(to: element)
-            count = Index.Count(__unchecked: count.rawValue + 1)
+            count = count + .one
         } else {
             // Need to spill
-            spill(minimumCapacity: count + 1)
-            heap!.storage.initialize(to: element, at: count.rawValue)
+            spill(minimumCapacity: count + .one)
+            heap!.storage.initialize(to: element, at: Index(count))
             heap!.storage.header = count.rawValue + 1
-            count = Index.Count(__unchecked: count.rawValue + 1)
+            count = count + .one
         }
     }
 
@@ -98,10 +98,10 @@ extension Array.Small where Element: ~Copyable {
 
         if let heapState = heap {
             // Heap mode
-            let newCount = count.rawValue - 1
-            count = Index.Count(__unchecked: newCount)
-            heap!.storage.header = newCount
-            return heapState.storage.move(at: newCount)
+            guard let newCount = count - .one else { return nil }
+            heap!.storage.header = newCount.rawValue
+            count = newCount
+            return heapState.storage.move(at: Index(newCount))
         } else {
             // Inline mode
             let newCount = count.rawValue - 1
@@ -270,7 +270,7 @@ extension Array.Small where Element: Copyable {
     /// - Parameter index: The typed index of the element to access.
     /// - Returns: The element at the index, or `nil` if out of bounds.
     @inlinable
-    public func element(at index: Array<Element>.Index) -> Element? {
+    public func element(at index: Index) -> Element? {
         guard index < count else { return nil }
         if let heapState = heap {
             return unsafe heapState.pointer[index.position.rawValue]
@@ -294,8 +294,8 @@ extension Array.Small where Element: Copyable {
     /// - Returns: The element at the computed position, or `nil` if out of bounds.
     @inlinable
     public func element(
-        at base: Array<Element>.Index,
-        offsetBy offset: Array<Element>.Index.Offset
+        at base: Index,
+        offsetBy offset: Index.Offset
     ) -> Element? {
         guard let newIndex = base + offset else { return nil }
         guard newIndex < count else { return nil }
@@ -322,7 +322,7 @@ extension Array.Small where Element: Copyable {
     /// - Parameter index: The typed index of the element to access.
     /// - Precondition: `index` must be in bounds.
     @inlinable
-    public subscript(index: Array<Element>.Index) -> Element {
+    public subscript(index: Index) -> Element {
         get {
             precondition(index < count, "Index out of bounds")
             if let heapState = heap {
@@ -341,8 +341,8 @@ extension Array.Small where Element: Copyable {
         set {
             precondition(index < count, "Index out of bounds")
             if heap != nil {
-                _ = heap!.storage.move(at: index.position.rawValue)
-                heap!.storage.initialize(to: newValue, at: index.position.rawValue)
+                _ = heap!.storage.move(at: index)
+                heap!.storage.initialize(to: newValue, at: index)
             } else {
                 unsafe inline.pointer(at: index.position.rawValue).pointee = newValue
             }
@@ -356,7 +356,7 @@ extension Array.Small where Element: ~Copyable {
     /// - Parameter index: The typed index of the element to access.
     /// - Precondition: `index` must be in bounds.
     @inlinable
-    public subscript(index: Array<Element>.Index) -> Element {
+    public subscript(index: Index) -> Element {
         // Note: _read must be mutating because inline storage access requires &self
         // to obtain a pointer. This is a fundamental limitation - see Non-Mutating-Accessor-Problem.md
         mutating _read {

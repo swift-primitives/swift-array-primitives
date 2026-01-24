@@ -5,9 +5,8 @@
 //  Created by Coen ten Thije Boonkkamp on 23/01/2026.
 //
 
-public import Array_Primitives_Core
 public import Sequence_Primitives
-public import Index_Primitives
+import Index_Primitives
 
 extension Array: Sequence.`Protocol` where Element: Copyable {
     /// Returns a pointer-based iterator over the array elements.

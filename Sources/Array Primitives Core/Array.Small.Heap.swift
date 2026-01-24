@@ -9,6 +9,9 @@
 //
 // ===----------------------------------------------------------------------===//
 
+import Index_Primitives
+public import Array_Primitives_Core
+
 extension Array.Small where Element: ~Copyable {
     /// Combined heap storage reference and cached element pointer.
     ///
@@ -39,17 +42,19 @@ extension Array.Small where Element: ~Copyable {
         /// Creates new heap storage with specified capacity.
         @usableFromInline
         package static func create(minimumCapacity: Array.Index.Count) -> Array<Element>.Storage {
-            let newCapacity = Swift.max(minimumCapacity.rawValue, inlineCapacity * 2, 8)
-            return Array<Element>.Storage.create(minimumCapacity: .init(__unchecked: newCapacity))
+            Array<Element>.Storage.create(
+                minimumCapacity: max(minimumCapacity, inlineCapacity * 2, 8)
+            )
         }
 
         /// Ensures capacity, reallocating if needed.
         @usableFromInline
-        package mutating func ensureCapacity(_ minimumCapacity: Int) {
-            guard storage.capacity < minimumCapacity else { return }
-
-            let newCapacity = Swift.max(minimumCapacity, storage.capacity * 2, 8)
-            let newStorage = Array<Element>.Storage.create(minimumCapacity: .init(__unchecked: newCapacity))
+        package mutating func ensureCapacity(_ minimumCapacity: Array.Index.Count) {
+            let storageCapacity = Array.Index.Count(__unchecked: storage.capacity)
+            guard storageCapacity < minimumCapacity else { return }
+            
+            let newCapacity: Array.Index.Count = max(minimumCapacity, storageCapacity * 2, 8)
+            let newStorage = Array<Element>.Storage.create(minimumCapacity: newCapacity)
             let currentCount = storage.header
 
             storage.move(to: newStorage)

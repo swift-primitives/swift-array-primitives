@@ -10,7 +10,6 @@
 // ===----------------------------------------------------------------------===//
 
 import Index_Primitives
-public import Array_Primitives_Core
 
 // MARK: - Array.Indexed
 
@@ -75,6 +74,8 @@ extension Array where Element: Copyable {
             Index.Count(__unchecked: _storage.count.rawValue)
         }
 
+//        public typealias Index = Array<Tag>.Index
+        
         /// Accesses the element at the given phantom-typed index.
         ///
         /// - Parameter index: The typed index of the element to access.
@@ -88,8 +89,8 @@ extension Array where Element: Copyable {
             set {
                 precondition(index.position.rawValue < _storage.count.rawValue, "Index out of bounds")
                 _storage.makeUnique()
-                _ = _storage._storage.move(at: index.position.rawValue)
-                _storage._storage.initialize(to: newValue, at: index.position.rawValue)
+                _ = _storage._storage.move(at: index)
+                _storage._storage.initialize(to: newValue, at: index)
             }
         }
     }

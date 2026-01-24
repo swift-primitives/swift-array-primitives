@@ -61,8 +61,8 @@ extension Array.Storage where Element: ~Copyable {
     /// - Precondition: Index must be in bounds (caller's responsibility).
     @usableFromInline
     @unsafe
-    package func pointer(at index: Int) -> UnsafeMutablePointer<Element> {
-        unsafe withUnsafeMutablePointerToElements { unsafe $0 + index }
+    package func pointer(at index: Array.Index) -> UnsafeMutablePointer<Element> {
+        unsafe withUnsafeMutablePointerToElements { unsafe $0 + index.position.rawValue }
     }
 
     /// Initializes element at the given index.
@@ -72,7 +72,7 @@ extension Array.Storage where Element: ~Copyable {
     ///   - index: The index to initialize.
     /// - Precondition: The slot at index must be uninitialized.
     @usableFromInline
-    package func initialize(to element: consuming Element, at index: Int) {
+    package func initialize(to element: consuming Element, at index: Array.Index) {
         let ptr = unsafe pointer(at: index)
         unsafe ptr.initialize(to: element)
     }
@@ -84,7 +84,7 @@ extension Array.Storage where Element: ~Copyable {
     /// - Precondition: The slot at index must be initialized.
     /// - Postcondition: The slot at index is deinitialized.
     @usableFromInline
-    package func move(at index: Int) -> Element {
+    package func move(at index: Array.Index) -> Element {
         unsafe pointer(at: index).move()
     }
 }

@@ -31,9 +31,10 @@ let package = Package(
         .package(path: "../swift-index-primitives"),
         .package(path: "../swift-collection-primitives"),
         .package(path: "../swift-property-primitives"),
+        .package(path: "../swift-sequence-primitives"),
     ],
     targets: [
-        // Internal: Core types with ~Copyable support (no Sequence/Collection.Protocol conformances)
+        // Core types with ~Copyable support and base Array API
         .target(
             name: "Array Primitives Core",
             dependencies: [
@@ -42,19 +43,13 @@ let package = Package(
                 .product(name: "Index Primitives", package: "swift-index-primitives"),
                 .product(name: "Collection Primitives", package: "swift-collection-primitives"),
                 .product(name: "Property Primitives", package: "swift-property-primitives"),
+                .product(name: "Sequence Primitives", package: "swift-sequence-primitives"),
             ]
         ),
         // Per-variant modules: Swift.Sequence/Collection conformances (Element: Copyable)
         // Separate modules to avoid constraint poisoning on Core types
         .target(
-            name: "Array Fixed Primitives",  // Fixed-count heap array (was Bounded)
-            dependencies: [
-                "Array Primitives Core",
-                .product(name: "Collection Primitives", package: "swift-collection-primitives"),
-            ]
-        ),
-        .target(
-            name: "Array Unbounded Primitives",  // Base Array extensions (growable)
+            name: "Array Fixed Primitives",  // Fixed-count heap array
             dependencies: [
                 "Array Primitives Core",
                 .product(name: "Collection Primitives", package: "swift-collection-primitives"),
@@ -87,7 +82,6 @@ let package = Package(
             dependencies: [
                 "Array Primitives Core",
                 "Array Fixed Primitives",
-                "Array Unbounded Primitives",
                 "Array Static Primitives",
                 "Array Small Primitives",
                 "Array Bit Primitives",

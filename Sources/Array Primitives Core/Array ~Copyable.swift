@@ -12,8 +12,26 @@
 // Public API extensions for the base Array type (growable, heap-allocated).
 // Note: Array struct is declared in Array.swift to enable conditional Copyable.
 
-public import Index_Primitives
-public import Array_Primitives_Core
+import Index_Primitives
+
+extension Array where Element: ~Copyable {
+    /// Ensures the array has capacity for at least the specified number of elements.
+    @usableFromInline
+    package mutating func ensureCapacity(_ minimumCapacity: Int) {
+        guard _storage.capacity < minimumCapacity else { return }
+
+        // Growth factor 2.0, minimum capacity 4
+        let newCapacity = Swift.max(minimumCapacity, _storage.capacity * 2, 4)
+        let newStorage = Array.Storage.create(minimumCapacity: .init(__unchecked: newCapacity))
+        let currentCount = _storage.header
+
+        _storage.move(to: newStorage)
+        newStorage.header = currentCount
+        _storage = newStorage
+        unsafe (_cachedPtr = _storage.pointer(at: 0))  // CRITICAL: Update cached pointer
+    }
+}
+
 
 // MARK: - Properties
 
@@ -43,8 +61,8 @@ extension Array where Element: ~Copyable {
     @inlinable
     public mutating func append(_ element: consuming Element) {
         let count = _storage.header
-        _ensureCapacity(count + 1)
-        _storage.initialize(to: element, at: count)
+        ensureCapacity(count + 1)
+        _storage.initialize(to: element, at: .init(__unchecked: (), position: count))
         _storage.header = count + 1
     }
 
@@ -57,7 +75,7 @@ extension Array where Element: ~Copyable {
         let count = _storage.header
         guard count > 0 else { return nil }
         _storage.header = count - 1
-        return _storage.move(at: count - 1)
+        return _storage.move(at: .init(__unchecked: (), position: count - 1))
     }
 
     /// Removes all elements from the array.
@@ -68,51 +86,7 @@ extension Array where Element: ~Copyable {
         _storage.deinitialize()
         if !keepingCapacity {
             _storage = Array.Storage.create(minimumCapacity: 0)
-            unsafe (_cachedPtr = _storage.pointer(at: 0))
-        }
-    }
-}
-
-// MARK: - Copy-on-Write (Copyable elements only)
-
-extension Array where Element: Copyable {
-    /// Appends an element to the array (CoW-aware).
-    ///
-    /// This method shadows the base `append(_:)` when `Element: Copyable`,
-    /// providing copy-on-write semantics.
-    @inlinable
-    public mutating func append(_ element: Element) {
-        makeUnique()
-        let count = _storage.header
-        _ensureCapacity(count + 1)
-        _storage.initialize(to: element, at: count)
-        _storage.header = count + 1
-    }
-
-    /// Removes and returns the last element (CoW-aware).
-    ///
-    /// This method shadows the base `removeLast()` when `Element: Copyable`,
-    /// providing copy-on-write semantics.
-    @inlinable
-    public mutating func removeLast() -> Element? {
-        makeUnique()
-        let count = _storage.header
-        guard count > 0 else { return nil }
-        _storage.header = count - 1
-        return _storage.move(at: count - 1)
-    }
-
-    /// Removes all elements from the array (CoW-aware).
-    ///
-    /// This method shadows the base `removeAll(keepingCapacity:)` when `Element: Copyable`,
-    /// providing copy-on-write semantics.
-    @inlinable
-    public mutating func removeAll(keepingCapacity: Bool = false) {
-        makeUnique()
-        _storage.deinitialize()
-        if !keepingCapacity {
-            _storage = Array.Storage.create(minimumCapacity: 0)
-            unsafe (_cachedPtr = _storage.pointer(at: 0))
+            unsafe (_cachedPtr = _storage.pointer(at: .zero))
         }
     }
 }
@@ -145,7 +119,7 @@ extension Array where Element: Copyable {
     /// - Parameter index: The typed index of the element to access.
     /// - Returns: The element at the index, or `nil` if out of bounds.
     @inlinable
-    public func element(at index: Array<Element>.Index) -> Element? {
+    public func element(at index: Index) -> Element? {
         guard index.position.rawValue < count.rawValue else { return nil }
         return unsafe _cachedPtr[index.position.rawValue]
     }
@@ -158,8 +132,8 @@ extension Array where Element: Copyable {
     /// - Returns: The element at the computed position, or `nil` if out of bounds.
     @inlinable
     public func element(
-        at base: Array<Element>.Index,
-        offsetBy offset: Array<Element>.Index.Offset
+        at base: Index,
+        offsetBy offset: Index.Offset
     ) -> Element? {
         guard let newIndex = base + offset else { return nil }
         guard newIndex.position.rawValue < count.rawValue else { return nil }
@@ -248,41 +222,22 @@ extension Array where Element: ~Copyable {
     }
 }
 
-
-
 extension Array where Element: ~Copyable {
     /// Accesses the element at the given typed index.
     ///
     /// - Parameter index: The typed index of the element to access.
     /// - Precondition: `index` must be in bounds.
     @inlinable
-    public subscript(index: Array<Element>.Index) -> Element {
+    public subscript(index: Index) -> Element {
         _read {
-            precondition(index.position.rawValue < _rawCount, "Index out of bounds")
+            precondition(index.position.rawValue < _storage.header, "Index out of bounds")
             yield unsafe _cachedPtr[index.position.rawValue]
         }
         _modify {
-            precondition(index.position.rawValue < _rawCount, "Index out of bounds")
+            precondition(index.position.rawValue < _storage.header, "Index out of bounds")
             yield &(unsafe _cachedPtr[index.position.rawValue])
         }
     }
 }
 
-extension Array where Element: Copyable {
-    /// Accesses the element at the given typed index with copy-on-write semantics.
-    ///
-    /// - Parameter index: The typed index of the element to access.
-    /// - Precondition: `index` must be in bounds.
-    @inlinable
-    public subscript(index: Array<Element>.Index) -> Element {
-        get {
-            precondition(index.position.rawValue < _rawCount, "Index out of bounds")
-            return unsafe _cachedPtr[index.position.rawValue]
-        }
-        set {
-            makeUnique()
-            precondition(index.position.rawValue < _rawCount, "Index out of bounds")
-            unsafe _cachedPtr[index.position.rawValue] = newValue
-        }
-    }
-}
+

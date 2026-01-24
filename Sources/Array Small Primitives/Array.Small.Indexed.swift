@@ -97,8 +97,8 @@ extension Array.Small where Element: Copyable {
             set {
                 precondition(index.position.rawValue < _storage.count.rawValue, "Index out of bounds")
                 if _storage.heap != nil {
-                    _ = _storage.heap!.storage.move(at: index.position.rawValue)
-                    _storage.heap!.storage.initialize(to: newValue, at: index.position.rawValue)
+                    _ = _storage.heap!.storage.move(at: index)
+                    _storage.heap!.storage.initialize(to: newValue, at: index)
                 } else {
                     unsafe _storage.inline.pointer(at: index.position.rawValue).pointee = newValue
                 }

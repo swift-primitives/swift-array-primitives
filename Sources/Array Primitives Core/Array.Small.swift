@@ -16,6 +16,7 @@
 // for the workaround. Public API is in Array Small Primitives module.
 
 public import Index_Primitives
+public import Array_Primitives_Core
 
 extension Array where Element: ~Copyable {
 

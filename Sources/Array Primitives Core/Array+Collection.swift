@@ -6,8 +6,7 @@
 //
 
 public import Collection_Primitives
-public import Array_Primitives_Core
-public import Index_Primitives
+import Index_Primitives
 
 extension Array: Collection.`Protocol` where Element: Copyable {}
 
@@ -69,8 +68,6 @@ extension Array.Iterator: @unchecked Sendable where Element: Sendable {}
 extension Array: Collection.Access.Random where Element: Copyable {}
 
 extension Array: Collection.Indexed where Element: ~Copyable {
-    public typealias Index = Array<Element>.Index
-
     @inlinable
     public var startIndex: Index { .zero }
 

@@ -9,6 +9,8 @@
 //
 // ===----------------------------------------------------------------------===//
 
+public import Array_Primitives_Core
+
 // MARK: - Hoisted Error Type
 //
 // Error type is hoisted to module level for typed throws compatibility.
