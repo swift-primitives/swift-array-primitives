@@ -11,9 +11,9 @@ extension Array where Element: Copyable {
     /// Ensures the storage is uniquely referenced before mutation.
     @usableFromInline
     package mutating func makeUnique() {
-        if !isKnownUniquelyReferenced(&_storage) {
-            _storage = _storage.copy()
-            unsafe (_cachedPtr = _storage.pointer(at: 0))  // CRITICAL: Update cached pointer
+        if !isKnownUniquelyReferenced(&storage) {
+            storage = storage.copy()
+            unsafe (_cachedPtr = storage.pointer(at: 0))  // CRITICAL: Update cached pointer
         }
     }
 }
@@ -28,10 +28,10 @@ extension Array where Element: Copyable {
     @inlinable
     public mutating func append(_ element: Element) {
         makeUnique()
-        let count = _storage.count
+        let count = storage.count
         ensureCapacity(count + 1)
-        _storage.initialize(to: element, at: .init(count))
-        _storage.header = (count + 1).rawValue
+        storage.initialize(to: element, at: .init(count))
+        storage.header = (count + 1).rawValue
     }
 
     /// Removes and returns the last element (CoW-aware).
@@ -41,10 +41,10 @@ extension Array where Element: Copyable {
     @inlinable
     public mutating func removeLast() -> Element? {
         makeUnique()
-        let count = _storage.header
+        let count = storage.header
         guard count > 0 else { return nil }
-        _storage.header = count - 1
-        return _storage.move(at: .init(__unchecked: (), position: count - 1))
+        storage.header = count - 1
+        return storage.move(at: .init(__unchecked: (), position: count - 1))
     }
 
     /// Removes all elements from the array (CoW-aware).
@@ -54,10 +54,10 @@ extension Array where Element: Copyable {
     @inlinable
     public mutating func removeAll(keepingCapacity: Bool = false) {
         makeUnique()
-        _storage.deinitialize()
+        storage.deinitialize()
         if !keepingCapacity {
-            _storage = Array.Storage.create(minimumCapacity: 0)
-            unsafe (_cachedPtr = _storage.pointer(at: .zero))
+            storage = Array.Storage.create(minimumCapacity: 0)
+            unsafe (_cachedPtr = storage.pointer(at: .zero))
         }
     }
 }
@@ -70,12 +70,12 @@ extension Array where Element: Copyable {
     @inlinable
     public subscript(index: Index) -> Element {
         get {
-            precondition(index.position.rawValue < _storage.header, "Index out of bounds")
+            precondition(index.position.rawValue < storage.header, "Index out of bounds")
             return unsafe _cachedPtr[index.position.rawValue]
         }
         set {
             makeUnique()
-            precondition(index.position.rawValue < _storage.header, "Index out of bounds")
+            precondition(index.position.rawValue < storage.header, "Index out of bounds")
             unsafe _cachedPtr[index.position.rawValue] = newValue
         }
     }

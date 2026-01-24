@@ -18,17 +18,17 @@ extension Array where Element: ~Copyable {
     /// Ensures the array has capacity for at least the specified number of elements.
     @usableFromInline
     package mutating func ensureCapacity(_ minimumCapacity: Index.Count) {
-        guard Index.Count.init(__unchecked: _storage.capacity) < minimumCapacity else { return }
+        guard Index.Count.init(__unchecked: storage.capacity) < minimumCapacity else { return }
 
         // Growth factor 2.0, minimum capacity 4
-        let newCapacity = Swift.max(minimumCapacity, _storage.capacity * 2, 4)
+        let newCapacity = Swift.max(minimumCapacity, storage.capacity * 2, 4)
         let newStorage = Array.Storage.create(minimumCapacity: newCapacity)
-        let currentCount = _storage.header
+        let currentCount = storage.header
 
-        _storage.move(to: newStorage)
+        storage.move(to: newStorage)
         newStorage.header = currentCount
-        _storage = newStorage
-        unsafe (_cachedPtr = _storage.pointer(at: .zero))  // CRITICAL: Update cached pointer
+        storage = newStorage
+        unsafe (_cachedPtr = storage.pointer(at: .zero))  // CRITICAL: Update cached pointer
     }
 }
 
@@ -39,16 +39,16 @@ extension Array where Element: ~Copyable {
     /// The number of elements in the array.
     @inlinable
     public var count: Index.Count {
-        Index.Count(__unchecked: _storage.header)
+        Index.Count(__unchecked: storage.header)
     }
 
     /// Whether the array is empty.
     @inlinable
-    public var isEmpty: Bool { _storage.header == 0 }
+    public var isEmpty: Bool { storage.header == 0 }
 
     /// The current capacity of the array.
     @inlinable
-    public var capacity: Int { _storage.capacity }
+    public var capacity: Int { storage.capacity }
 }
 
 // MARK: - Core Operations (Base - for ~Copyable elements)
@@ -60,10 +60,10 @@ extension Array where Element: ~Copyable {
     /// - Complexity: O(1) amortized.
     @inlinable
     public mutating func append(_ element: consuming Element) {
-        let count = Index.Count(__unchecked: _storage.header)
+        let count = Index.Count(__unchecked: storage.header)
         ensureCapacity(count + 1)
-        _storage.initialize(to: element, at: .init(count))
-        _storage.header = (count + .one).rawValue
+        storage.initialize(to: element, at: .init(count))
+        storage.header = (count + .one).rawValue
     }
 
     /// Removes and returns the last element, or nil if empty.
@@ -72,10 +72,10 @@ extension Array where Element: ~Copyable {
     /// - Complexity: O(1).
     @inlinable
     public mutating func removeLast() -> Element? {
-        let count = _storage.header
+        let count = storage.header
         guard count > 0 else { return nil }
-        _storage.header = count - 1
-        return _storage.move(at: .init(__unchecked: (), position: count - 1))
+        storage.header = count - 1
+        return storage.move(at: .init(__unchecked: (), position: count - 1))
     }
 
     /// Removes all elements from the array.
@@ -83,10 +83,10 @@ extension Array where Element: ~Copyable {
     /// - Parameter keepingCapacity: Whether to keep the current capacity.
     @inlinable
     public mutating func removeAll(keepingCapacity: Bool = false) {
-        _storage.deinitialize()
+        storage.deinitialize()
         if !keepingCapacity {
-            _storage = Array.Storage.create(minimumCapacity: 0)
-            unsafe (_cachedPtr = _storage.pointer(at: .zero))
+            storage = Array.Storage.create(minimumCapacity: 0)
+            unsafe (_cachedPtr = storage.pointer(at: .zero))
         }
     }
 }
@@ -104,7 +104,7 @@ extension Array where Element: ~Copyable {
     @inlinable
     public func withElement<R>(at index: Index, _ body: (borrowing Element) -> R) -> R {
         precondition(index < count, "Index out of bounds")
-        return unsafe _storage.withUnsafeMutablePointerToElements { elements in
+        return unsafe storage.withUnsafeMutablePointerToElements { elements in
             body(unsafe (elements + index.position.rawValue).pointee)
         }
     }
@@ -155,7 +155,7 @@ extension Array where Element: ~Copyable {
     public var span: Span<Element> {
         @_lifetime(borrow self)
         borrowing get {
-            let count = _storage.header
+            let count = storage.header
             // _cachedPtr from ManagedBuffer is always valid; pointer irrelevant when count == 0
             return unsafe Span(_unsafeStart: _cachedPtr, count: count)
         }
@@ -175,7 +175,7 @@ extension Array where Element: ~Copyable {
     public var mutableSpan: MutableSpan<Element> {
         @_lifetime(&self)
         mutating get {
-            let count = _storage.header
+            let count = storage.header
             // _cachedPtr from ManagedBuffer is always valid; pointer irrelevant when count == 0
             return unsafe MutableSpan(_unsafeStart: _cachedPtr, count: count)
         }
@@ -195,7 +195,7 @@ extension Array where Element: ~Copyable {
     public func withUnsafeBufferPointer<R, E: Swift.Error>(
         _ body: (UnsafeBufferPointer<Element>) throws(E) -> R
     ) throws(E) -> R {
-        let count = _storage.header
+        let count = storage.header
         if count > 0 {
             return try unsafe body(UnsafeBufferPointer(start: _cachedPtr, count: count))
         } else {
@@ -212,7 +212,7 @@ extension Array where Element: ~Copyable {
     public mutating func withUnsafeMutableBufferPointer<R, E: Swift.Error>(
         _ body: (UnsafeMutableBufferPointer<Element>) throws(E) -> R
     ) throws(E) -> R {
-        let count = _storage.header
+        let count = storage.header
         if count > 0 {
             return try unsafe body(UnsafeMutableBufferPointer(start: _cachedPtr, count: count))
         } else {
@@ -229,11 +229,11 @@ extension Array where Element: ~Copyable {
     @inlinable
     public subscript(index: Index) -> Element {
         _read {
-            precondition(index.position.rawValue < _storage.header, "Index out of bounds")
+            precondition(index.position.rawValue < storage.header, "Index out of bounds")
             yield unsafe _cachedPtr[index.position.rawValue]
         }
         _modify {
-            precondition(index.position.rawValue < _storage.header, "Index out of bounds")
+            precondition(index.position.rawValue < storage.header, "Index out of bounds")
             yield &(unsafe _cachedPtr[index.position.rawValue])
         }
     }

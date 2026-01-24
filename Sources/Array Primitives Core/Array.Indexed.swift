@@ -84,13 +84,13 @@ extension Array where Element: Copyable {
         public subscript(index: Index) -> Element {
             get {
                 precondition(index.position.rawValue < _storage.count.rawValue, "Index out of bounds")
-                return unsafe _storage._storage.read(at: index.position.rawValue).pointee
+                return unsafe _storage.storage.read(at: index.position.rawValue).pointee
             }
             set {
                 precondition(index.position.rawValue < _storage.count.rawValue, "Index out of bounds")
                 _storage.makeUnique()
-                _ = _storage._storage.move(at: index)
-                _storage._storage.initialize(to: newValue, at: index)
+                _ = _storage.storage.move(at: index)
+                _storage.storage.initialize(to: newValue, at: index)
             }
         }
     }

@@ -65,13 +65,13 @@ where Tag == Sequence.Drain, Base == Array<Element>, Element: ~Copyable {
     @_lifetime(&self)
     @inlinable
     public mutating func callAsFunction(_ body: (consuming Element) -> Void) {
-        let count = base.pointee._storage.header
+        let count = base.pointee.storage.header
         guard count > 0 else { return }
-        _ = base.pointee._storage.withUnsafeMutablePointerToElements { elements in
+        _ = base.pointee.storage.withUnsafeMutablePointerToElements { elements in
             for i in 0..<count {
                 body((elements + i).move())
             }
         }
-        base.pointee._storage.header = 0
+        base.pointee.storage.header = 0
     }
 }

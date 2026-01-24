@@ -50,7 +50,7 @@ public struct Array<Element: ~Copyable>: ~Copyable {
     // MARK: - Storage
 
     @usableFromInline
-    package var _storage: Array.Storage
+    package var storage: Array.Storage
 
     /// Cached pointer to element storage. Stored in struct to enable property-based access.
     /// CRITICAL: Must be updated whenever _storage is replaced (reallocation, CoW copy).
@@ -62,8 +62,8 @@ public struct Array<Element: ~Copyable>: ~Copyable {
     /// Creates an empty growable array.
     @inlinable
     public init() {
-        self._storage = Array.Storage.create(minimumCapacity: 0)
-        unsafe (self._cachedPtr = _storage.pointer(at: .zero))
+        self.storage = Array.Storage.create(minimumCapacity: 0)
+        unsafe (self._cachedPtr = storage.pointer(at: .zero))
     }
 
     /// Creates an empty array with initial capacity hint.
@@ -71,8 +71,8 @@ public struct Array<Element: ~Copyable>: ~Copyable {
     /// - Parameter initialCapacity: The initial capacity to allocate.
     @inlinable
     public init(initialCapacity: Array.Index.Count) {
-        self._storage = Array.Storage.create(minimumCapacity: initialCapacity)
-        unsafe (self._cachedPtr = _storage.pointer(at: .zero))
+        self.storage = Array.Storage.create(minimumCapacity: initialCapacity)
+        unsafe (self._cachedPtr = storage.pointer(at: .zero))
     }
     
     // MARK: - Unified Storage (nested to inherit Element's ~Copyable context)
