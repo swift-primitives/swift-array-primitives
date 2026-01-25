@@ -47,9 +47,9 @@ extension Array<Bit>.Vector {
         /// - Parameter capacity: The maximum number of bits.
         @inlinable
         public init(capacity: Index.Count) {
-            let wordCount = (capacity.rawValue + Self._bitsPerWord - 1) / Self._bitsPerWord
+            let storage = Bit.Index.Storage(capacity: capacity, bitsPerWord: Self._bitsPerWord)
             self._capacity = capacity
-            self._storage = ContiguousArray(repeating: 0, count: wordCount)
+            self._storage = ContiguousArray(repeating: 0, count: storage.wordCount)
             self._count = .zero
         }
 
@@ -64,9 +64,9 @@ extension Array<Bit>.Vector {
             guard count <= capacity else {
                 throw .overflow
             }
-            let wordCount = (capacity.rawValue + Self._bitsPerWord - 1) / Self._bitsPerWord
+            let storage = Bit.Index.Storage(capacity: capacity, bitsPerWord: Self._bitsPerWord)
             self._capacity = capacity
-            self._storage = ContiguousArray(repeating: 0, count: wordCount)
+            self._storage = ContiguousArray(repeating: 0, count: storage.wordCount)
             self._count = count
         }
     }
@@ -97,13 +97,13 @@ extension Array<Bit>.Vector.Fixed {
 
     /// Population count (number of set bits).
     @inlinable
-    public var popcount: Int {
+    public var popcount: Bit.Index.Count {
         var total = 0
-        let usedWords = (_count.rawValue + Self._bitsPerWord - 1) / Self._bitsPerWord
-        for i in 0..<usedWords {
+        let storage = Bit.Index.Storage(count: _count, bitsPerWord: Self._bitsPerWord)
+        for i in 0..<storage.wordCount {
             total += _storage[i].nonzeroBitCount
         }
-        return total
+        return Bit.Index.Count(__unchecked: total)
     }
 }
 
@@ -176,23 +176,22 @@ extension Array<Bit>.Vector.Fixed {
 
     @inlinable
     public mutating func clearAll() {
-        let usedWords = (_count.rawValue + Self._bitsPerWord - 1) / Self._bitsPerWord
-        for i in 0..<usedWords {
+        let storage = Bit.Index.Storage(count: _count, bitsPerWord: Self._bitsPerWord)
+        for i in 0..<storage.wordCount {
             _storage[i] = 0
         }
     }
 
     @inlinable
     public mutating func setAll() {
-        let usedWords = (_count.rawValue + Self._bitsPerWord - 1) / Self._bitsPerWord
-        for i in 0..<usedWords {
+        let storage = Bit.Index.Storage(count: _count, bitsPerWord: Self._bitsPerWord)
+        for i in 0..<storage.wordCount {
             _storage[i] = ~0
         }
         // Clear unused high bits
-        let unusedBits = usedWords * Self._bitsPerWord - _count.rawValue
-        if unusedBits > 0 && usedWords > 0 {
-            let lastWord = usedWords - 1
-            let mask: UInt = ~0 >> unusedBits
+        if storage.unusedBits > 0 && storage.wordCount > 0 {
+            let lastWord = storage.wordCount - 1
+            let mask: UInt = ~0 >> storage.unusedBits
             _storage[lastWord] = mask
         }
     }
@@ -270,19 +269,19 @@ extension Array<Bit>.Vector.Fixed {
     }
 
     @inlinable
-    public var trueCount: Int { popcount }
+    public var trueCount: Bit.Index.Count { popcount }
 
     @inlinable
-    public var falseCount: Int { _count.rawValue - popcount }
+    public var falseCount: Bit.Index.Count? { _count - popcount }
 
     @inlinable
     public var allTrue: Bool {
         guard _count > .zero else { return true }
-        return popcount == _count.rawValue
+        return popcount == _count
     }
 
     @inlinable
-    public var allFalse: Bool { popcount == 0 }
+    public var allFalse: Bool { popcount == .zero }
 }
 
 // MARK: - Initializers
@@ -370,8 +369,8 @@ extension Array<Bit>.Vector.Fixed: Equatable {
     @inlinable
     public static func == (lhs: Self, rhs: Self) -> Bool {
         guard lhs._count == rhs._count else { return false }
-        let wordCount = (lhs._count.rawValue + _bitsPerWord - 1) / _bitsPerWord
-        for i in 0..<wordCount {
+        let storage = Bit.Index.Storage(count: lhs._count, bitsPerWord: _bitsPerWord)
+        for i in 0..<storage.wordCount {
             if lhs._storage[i] != rhs._storage[i] { return false }
         }
         return true
@@ -384,8 +383,8 @@ extension Array<Bit>.Vector.Fixed: Hashable {
     @inlinable
     public func hash(into hasher: inout Hasher) {
         hasher.combine(_count)
-        let wordCount = (_count.rawValue + Self._bitsPerWord - 1) / Self._bitsPerWord
-        for i in 0..<wordCount {
+        let storage = Bit.Index.Storage(count: _count, bitsPerWord: Self._bitsPerWord)
+        for i in 0..<storage.wordCount {
             hasher.combine(_storage[i])
         }
     }

@@ -66,8 +66,8 @@ extension Array where Element == Bit {
 
         @inlinable
         public init(count: Index.Count) {
-            let wordCount = (count.rawValue + Self._bitsPerWord - 1) / Self._bitsPerWord
-            self._storage = ContiguousArray(repeating: 0, count: wordCount)
+            let storage = Bit.Index.Storage(count: count, bitsPerWord: Self._bitsPerWord)
+            self._storage = ContiguousArray(repeating: 0, count: storage.wordCount)
             self._count = count
         }
     }
@@ -83,12 +83,12 @@ extension Array<Bit>.Vector {
     public var isEmpty: Bool { _count == .zero }
 
     @inlinable
-    public var popcount: Int {
+    public var popcount: Bit.Index.Count {
         var total = 0
         for word in _storage {
             total += word.nonzeroBitCount
         }
-        return total
+        return Bit.Index.Count(__unchecked: total)
     }
 
     @usableFromInline
@@ -168,10 +168,10 @@ extension Array<Bit>.Vector {
         for i in 0..<_storage.count {
             _storage[i] = ~0
         }
-        let unusedBits = _storage.count * Self._bitsPerWord - _count.rawValue
-        if unusedBits > 0 && !_storage.isEmpty {
+        let storage = Bit.Index.Storage(count: _count, bitsPerWord: Self._bitsPerWord)
+        if storage.unusedBits > 0 && !_storage.isEmpty {
             let lastWord = _storage.count - 1
-            let mask: UInt = ~0 >> unusedBits
+            let mask: UInt = ~0 >> storage.unusedBits
             _storage[lastWord] = mask
         }
     }
@@ -182,41 +182,34 @@ extension Array<Bit>.Vector {
 extension Array<Bit>.Vector {
     @inlinable
     public mutating func resize(to newCount: Index.Count, fill: Bool = false) {
-        let oldCount = _count.rawValue
-        let newCountRaw = newCount.rawValue
+        let oldStorage = Bit.Index.Storage(count: _count, bitsPerWord: Self._bitsPerWord)
+        let newStorage = Bit.Index.Storage(count: newCount, bitsPerWord: Self._bitsPerWord)
         let oldWordCount = _storage.count
-        let newWordCount = (newCountRaw + Self._bitsPerWord - 1) / Self._bitsPerWord
 
-        if newWordCount > oldWordCount {
+        if newStorage.wordCount > oldWordCount {
             let fillValue: UInt = fill ? ~0 : 0
-            _storage.reserveCapacity(newWordCount)
-            for _ in oldWordCount..<newWordCount {
+            _storage.reserveCapacity(newStorage.wordCount)
+            for _ in oldWordCount..<newStorage.wordCount {
                 _storage.append(fillValue)
             }
-        } else if newWordCount < oldWordCount {
-            _storage.removeLast(oldWordCount - newWordCount)
+        } else if newStorage.wordCount < oldWordCount {
+            _storage.removeLast(oldWordCount - newStorage.wordCount)
         }
 
-        if fill && newCountRaw > oldCount && oldWordCount > 0 {
-            let oldBitInWord = oldCount % Self._bitsPerWord
-            if oldBitInWord > 0 {
-                let firstWordIndex = oldCount / Self._bitsPerWord
-                if firstWordIndex < newWordCount {
-                    let highMask: UInt = ~0 << oldBitInWord
-                    _storage[firstWordIndex] |= highMask
-                }
+        if fill && newCount > _count && oldWordCount > 0 {
+            let oldLoc = Bit.Index.Location(count: _count, bitsPerWord: Self._bitsPerWord)
+            if oldLoc.bit > 0 && oldLoc.word < newStorage.wordCount {
+                let highMask: UInt = ~0 << oldLoc.bit
+                _storage[oldLoc.word] |= highMask
             }
         }
 
         _count = newCount
 
-        if newWordCount > 0 {
-            let unusedBits = newWordCount * Self._bitsPerWord - newCountRaw
-            if unusedBits > 0 {
-                let lastWord = newWordCount - 1
-                let mask: UInt = ~0 >> unusedBits
-                _storage[lastWord] &= mask
-            }
+        if newStorage.wordCount > 0 && newStorage.unusedBits > 0 {
+            let lastWord = newStorage.wordCount - 1
+            let mask: UInt = ~0 >> newStorage.unusedBits
+            _storage[lastWord] &= mask
         }
     }
 }
@@ -259,23 +252,23 @@ extension Array<Bit>.Vector {
 
     /// Returns the number of `true` values in the array.
     @inlinable
-    public var trueCount: Int { popcount }
+    public var trueCount: Bit.Index.Count { popcount }
 
     /// Returns the number of `false` values in the array.
     @inlinable
-    public var falseCount: Int { _count.rawValue - popcount }
+    public var falseCount: Bit.Index.Count? { _count - popcount }
 
     /// Whether all elements are `true`.
     @inlinable
     public var allTrue: Bool {
         guard _count > .zero else { return true }
-        return popcount == _count.rawValue
+        return popcount == _count
     }
 
     /// Whether all elements are `false`.
     @inlinable
     public var allFalse: Bool {
-        popcount == 0
+        popcount == .zero
     }
 }
 
@@ -373,18 +366,14 @@ extension Array<Bit>.Vector {
     /// Creates a packed bit array with a repeated value.
     @inlinable
     public init(repeating value: Bool, count: Index.Count) {
-        let countRaw = count.rawValue
-        let wordCount = (countRaw + Self._bitsPerWord - 1) / Self._bitsPerWord
-        self._storage = ContiguousArray(repeating: value ? ~0 : 0, count: wordCount)
+        let storage = Bit.Index.Storage(count: count, bitsPerWord: Self._bitsPerWord)
+        self._storage = ContiguousArray(repeating: value ? ~0 : 0, count: storage.wordCount)
         self._count = count
 
-        if value && count > .zero {
-            let unusedBits = wordCount * Self._bitsPerWord - countRaw
-            if unusedBits > 0 {
-                let lastWord = wordCount - 1
-                let mask: UInt = ~0 >> unusedBits
-                _storage[lastWord] = mask
-            }
+        if value && count > .zero && storage.unusedBits > 0 {
+            let lastWord = storage.wordCount - 1
+            let mask: UInt = ~0 >> storage.unusedBits
+            _storage[lastWord] = mask
         }
     }
 

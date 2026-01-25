@@ -201,7 +201,7 @@ extension ArrayBitVectorTests.Unit {
         let bits = Array<Bit>.Vector([true, false, true, false, true])
 
         #expect(bits.trueCount == 3)
-        #expect(bits.falseCount == 2)
+        #expect(bits.falseCount == 2)  // Optional comparison works with ExpressibleByIntegerLiteral
     }
 
     @Test("allTrue and allFalse")
