@@ -12,7 +12,9 @@
 public import Array_Primitives_Core
 import Index_Primitives
 
-// MARK: - Array.Indexed
+// ============================================================================
+// MARK: - Array.Indexed Definition
+// ============================================================================
 
 extension Array {
     /// A wrapper providing phantom-typed index access to unbounded array storage.
@@ -55,9 +57,9 @@ extension Array {
     public struct Indexed<Tag: Copyable>: Copyable, @unchecked Sendable {
         @usableFromInline
         var _storage: Array<Element>
-        
+
         public typealias Index = Array<Tag>.Index
-        
+
         /// Creates an indexed wrapper around the given storage.
         ///
         /// - Parameter storage: The unbounded array to wrap.
@@ -67,6 +69,10 @@ extension Array {
         }
     }
 }
+
+// ============================================================================
+// MARK: - Properties
+// ============================================================================
 
 extension Array.Indexed {
     /// The phantom-typed count for bounds checking.
@@ -79,9 +85,13 @@ extension Array.Indexed {
     public var count: Index.Count {
         Index.Count(__unchecked: _storage.count.rawValue)
     }
-    
-    //        public typealias Index = Array<Tag>.Index
-    
+}
+
+// ============================================================================
+// MARK: - Subscripts
+// ============================================================================
+
+extension Array.Indexed {
     /// Accesses the element at the given phantom-typed index.
     ///
     /// - Parameter index: The typed index of the element to access.
@@ -102,4 +112,3 @@ extension Array.Indexed {
         }
     }
 }
-

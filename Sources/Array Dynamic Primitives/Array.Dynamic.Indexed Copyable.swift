@@ -1,13 +1,19 @@
+// ===----------------------------------------------------------------------===//
 //
-//  File.swift
-//  swift-array-primitives
+// This source file is part of the swift-primitives open source project
 //
-//  Created by Coen ten Thije Boonkkamp on 24/01/2026.
+// Copyright (c) 2024-2026 Coen ten Thije Boonkkamp and the swift-primitives project authors
+// Licensed under Apache License v2.0
 //
+// See LICENSE for license information
+//
+// ===----------------------------------------------------------------------===//
 
 public import Array_Primitives_Core
 
-// MARK: - Passthrough Properties
+// ============================================================================
+// MARK: - Properties
+// ============================================================================
 
 extension Array.Indexed where Element: Copyable {
     /// Whether the array is empty.
@@ -19,7 +25,9 @@ extension Array.Indexed where Element: Copyable {
     public var capacity: Int { _storage.capacity }
 }
 
+// ============================================================================
 // MARK: - Mutating Operations
+// ============================================================================
 
 extension Array.Indexed where Element: Copyable {
     /// Appends an element to the array.

@@ -15,26 +15,33 @@
 public import Array_Primitives_Core
 import Index_Primitives
 
-extension Array where Element: ~Copyable {
-    /// Ensures the array has capacity for at least the specified number of elements.
-    @usableFromInline
-    package mutating func ensureCapacity(_ minimumCapacity: Index.Count) {
-        guard Index.Count.init(__unchecked: storage.capacity) < minimumCapacity else { return }
+// ============================================================================
+// MARK: - Collection Conformances
+// ============================================================================
 
-        // Growth factor 2.0, minimum capacity 4
-        let newCapacity = Swift.max(minimumCapacity, storage.capacity * 2, 4)
-        let newStorage = Array.Storage.create(minimumCapacity: newCapacity)
-        let currentCount = storage.header
+// MARK: Collection.Indexed
 
-        storage.move(to: newStorage)
-        newStorage.header = currentCount
-        storage = newStorage
-        unsafe (_cachedPtr = storage.pointer(at: .zero))  // CRITICAL: Update cached pointer
-    }
+extension Array: Collection.Indexed where Element: ~Copyable {
+    @inlinable
+    public var startIndex: Index { .zero }
+
+    @inlinable
+    public var endIndex: Index { Index(count) }
+
+    @inlinable
+    public func index(after i: Index) -> Index { (i + 1)! }
 }
 
+// MARK: Collection.Bidirectional
 
+extension Array: Collection.Bidirectional where Element: ~Copyable {
+    @inlinable
+    public func index(before i: Index) -> Index { (i - 1)! }
+}
+
+// ============================================================================
 // MARK: - Properties
+// ============================================================================
 
 extension Array where Element: ~Copyable {
     /// The number of elements in the array.
@@ -52,9 +59,72 @@ extension Array where Element: ~Copyable {
     public var capacity: Int { storage.capacity }
 }
 
-// MARK: - Core Operations (Base - for ~Copyable elements)
+// ============================================================================
+// MARK: - Subscripts
+// ============================================================================
+
+// MARK: Index Subscript
 
 extension Array where Element: ~Copyable {
+    /// Accesses the element at the given typed index.
+    ///
+    /// - Parameter index: The typed index of the element to access.
+    /// - Precondition: `index` must be in bounds.
+    @inlinable
+    public subscript(index: Index) -> Element {
+        _read {
+            precondition(index < count, "Index out of bounds")
+            yield unsafe _cachedPtr[index]
+        }
+        _modify {
+            precondition(index < count, "Index out of bounds")
+            yield &(unsafe _cachedPtr[index])
+        }
+    }
+}
+
+// ============================================================================
+// MARK: - Element Access
+// ============================================================================
+
+extension Array where Element: ~Copyable {
+    /// Accesses the element at the given index via closure (for ~Copyable elements).
+    ///
+    /// - Parameters:
+    ///   - index: The index of the element.
+    ///   - body: A closure that receives a borrowed reference to the element.
+    /// - Returns: The result of the closure.
+    /// - Precondition: The index must be in bounds.
+    @inlinable
+    public func withElement<R>(at index: Index, _ body: (borrowing Element) -> R) -> R {
+        precondition(index < count, "Index out of bounds")
+        return unsafe storage.withUnsafeMutablePointerToElements { elements in
+            body(unsafe (elements + index).pointee)
+        }
+    }
+}
+
+// ============================================================================
+// MARK: - Mutating Operations
+// ============================================================================
+
+extension Array where Element: ~Copyable {
+    /// Ensures the array has capacity for at least the specified number of elements.
+    @usableFromInline
+    package mutating func ensureCapacity(_ minimumCapacity: Index.Count) {
+        guard Index.Count.init(__unchecked: storage.capacity) < minimumCapacity else { return }
+
+        // Growth factor 2.0, minimum capacity 4
+        let newCapacity = Swift.max(minimumCapacity, storage.capacity * 2, 4)
+        let newStorage = Array.Storage.create(minimumCapacity: newCapacity)
+        let currentCount = storage.header
+
+        storage.move(to: newStorage)
+        newStorage.header = currentCount
+        storage = newStorage
+        unsafe (_cachedPtr = storage.pointer(at: .zero))  // CRITICAL: Update cached pointer
+    }
+
     /// Appends an element to the array.
     ///
     /// - Parameter element: The element to append (consumed).
@@ -92,56 +162,9 @@ extension Array where Element: ~Copyable {
     }
 }
 
-// MARK: - Borrowed Element Access (for ~Copyable elements)
-
-extension Array where Element: ~Copyable {
-    /// Accesses the element at the given index via closure (for ~Copyable elements).
-    ///
-    /// - Parameters:
-    ///   - index: The index of the element.
-    ///   - body: A closure that receives a borrowed reference to the element.
-    /// - Returns: The result of the closure.
-    /// - Precondition: The index must be in bounds.
-    @inlinable
-    public func withElement<R>(at index: Index, _ body: (borrowing Element) -> R) -> R {
-        precondition(index < count, "Index out of bounds")
-        return unsafe storage.withUnsafeMutablePointerToElements { elements in
-            body(unsafe (elements + index).pointee)
-        }
-    }
-}
-
-// MARK: - Safe Element Access (Copyable elements only)
-
-extension Array where Element: Copyable {
-    /// Returns the element at the typed index, or nil if out of bounds.
-    ///
-    /// - Parameter index: The typed index of the element to access.
-    /// - Returns: The element at the index, or `nil` if out of bounds.
-    @inlinable
-    public func element(at index: Index) -> Element? {
-        guard index < count else { return nil }
-        return unsafe _cachedPtr[index]
-    }
-
-    /// Returns element at index offset from given base index.
-    ///
-    /// - Parameters:
-    ///   - base: The starting index.
-    ///   - offset: The signed offset from the base.
-    /// - Returns: The element at the computed position, or `nil` if out of bounds.
-    @inlinable
-    public func element(
-        at base: Index,
-        offsetBy offset: Index.Offset
-    ) -> Element? {
-        guard let newIndex = base + offset else { return nil }
-        guard newIndex < count else { return nil }
-        return unsafe _cachedPtr[newIndex]
-    }
-}
-
+// ============================================================================
 // MARK: - Span Access
+// ============================================================================
 
 extension Array where Element: ~Copyable {
     /// Read-only span of the array elements.
@@ -183,7 +206,9 @@ extension Array where Element: ~Copyable {
     }
 }
 
-// MARK: - Buffer Access (Escape Hatch for C Interop)
+// ============================================================================
+// MARK: - Buffer Access
+// ============================================================================
 
 @_spi(Unsafe)
 extension Array where Element: ~Copyable {
@@ -222,141 +247,11 @@ extension Array where Element: ~Copyable {
     }
 }
 
-extension Array where Element: ~Copyable {
-    /// Accesses the element at the given typed index.
-    ///
-    /// - Parameter index: The typed index of the element to access.
-    /// - Precondition: `index` must be in bounds.
-    @inlinable
-    public subscript(index: Index) -> Element {
-        _read {
-            precondition(index < count, "Index out of bounds")
-            yield unsafe _cachedPtr[index]
-        }
-        _modify {
-            precondition(index < count, "Index out of bounds")
-            yield &(unsafe _cachedPtr[index])
-        }
-    }
-}
+// ============================================================================
+// MARK: - Property Views
+// ============================================================================
 
-
-
-
-extension Array: Collection.Indexed where Element: ~Copyable {
-    @inlinable
-    public var startIndex: Index { .zero }
-
-    @inlinable
-    public var endIndex: Index { Index(count) }
-
-    @inlinable
-    public func index(after i: Index) -> Index { (i + 1)! }
-}
-
-// MARK: - Collection.Bidirectional Conformance
-
-extension Array: Collection.Bidirectional where Element: ~Copyable {
-    @inlinable
-    public func index(before i: Index) -> Index { (i - 1)! }
-}
-
-
-// MARK: - Drain: Operations (~Copyable)
-
-extension Property.View.Typed
-where Tag == Sequence.Drain, Base == Array<Element>, Element: ~Copyable {
-    /// Drain iteration: `.drain { }`
-    ///
-    /// Removes all elements from the array, passing each to the closure
-    /// with ownership. After this call, the array is empty but usable.
-    /// Works for ALL element types including `~Copyable`.
-    ///
-    /// - Parameter body: A closure called with each element (consuming).
-    @_lifetime(&self)
-    @inlinable
-    public mutating func callAsFunction(_ body: (consuming Element) -> Void) {
-        let count = unsafe base.pointee.storage.header
-        guard count > 0 else { return }
-        unsafe base.pointee.storage.withUnsafeMutablePointerToElements { elements in
-            for i in 0..<count {
-                unsafe body((elements + i).move())
-            }
-        }
-        unsafe base.pointee.storage.header = 0
-    }
-}
-
-extension Array where Element: ~Copyable {
-    /// Property view for draining operations.
-    ///
-    /// Provides `.drain { }` via `callAsFunction`, which removes all elements
-    /// from the array and passes each to the closure with ownership.
-    /// Works for ALL element types including `~Copyable`.
-    ///
-    /// After draining, the array is empty but still usable.
-    ///
-    /// ## Example
-    ///
-    /// ```swift
-    /// var array = Array<Int>()
-    /// array.append(1)
-    /// array.append(2)
-    /// array.append(3)
-    ///
-    /// // Drain all elements (takes ownership)
-    /// array.drain { element in
-    ///     process(element)
-    /// }
-    /// // array is now empty but still usable
-    /// array.append(4)
-    /// ```
-    @inlinable
-    public var drain: Property<Sequence.Drain, Self>.View.Typed<Element> {
-        mutating _read {
-            yield unsafe Property<Sequence.Drain, Self>.View.Typed<Element>(&self)
-        }
-        mutating _modify {
-            var view = unsafe Property<Sequence.Drain, Self>.View.Typed<Element>(&self)
-            yield &view
-        }
-    }
-}
-
-
-// MARK: - ForEach: Borrowing Operations (~Copyable)
-
-extension Property.View.Typed
-where Tag == Sequence.ForEach, Base == Array<Element>, Element: ~Copyable {
-    /// Borrowing iteration: `.forEach { }`
-    ///
-    /// Iterates over all elements without consuming them.
-    /// Works for ALL element types including `~Copyable`.
-    ///
-    /// - Parameter body: A closure called with each borrowed element.
-    @inlinable
-    public func callAsFunction(_ body: (borrowing Element) -> Void) {
-        let count = unsafe base.pointee.storage.header
-        guard count > 0 else { return }
-        unsafe base.pointee.storage.withUnsafeMutablePointerToElements { elements in
-            for i in 0..<count {
-                unsafe body(elements[i])
-            }
-        }
-    }
-
-    /// Explicit borrowing iteration: `.forEach.borrowing { }`
-    ///
-    /// Same as `callAsFunction`, but with explicit naming for clarity.
-    /// Works for ALL element types including `~Copyable`.
-    ///
-    /// - Parameter body: A closure called with each borrowed element.
-    @inlinable
-    public func borrowing(_ body: (borrowing Element) -> Void) {
-        callAsFunction(body)
-    }
-}
-
+// MARK: ForEach Property View
 
 extension Array where Element: ~Copyable {
     /// Property view for iteration operations.
@@ -395,3 +290,98 @@ extension Array where Element: ~Copyable {
     }
 }
 
+// MARK: ForEach: Borrowing Operations (~Copyable)
+
+extension Property.View.Typed
+where Tag == Sequence.ForEach, Base == Array<Element>, Element: ~Copyable {
+    /// Borrowing iteration: `.forEach { }`
+    ///
+    /// Iterates over all elements without consuming them.
+    /// Works for ALL element types including `~Copyable`.
+    ///
+    /// - Parameter body: A closure called with each borrowed element.
+    @inlinable
+    public func callAsFunction(_ body: (borrowing Element) -> Void) {
+        let count = unsafe base.pointee.storage.header
+        guard count > 0 else { return }
+        unsafe base.pointee.storage.withUnsafeMutablePointerToElements { elements in
+            for i in 0..<count {
+                unsafe body(elements[i])
+            }
+        }
+    }
+
+    /// Explicit borrowing iteration: `.forEach.borrowing { }`
+    ///
+    /// Same as `callAsFunction`, but with explicit naming for clarity.
+    /// Works for ALL element types including `~Copyable`.
+    ///
+    /// - Parameter body: A closure called with each borrowed element.
+    @inlinable
+    public func borrowing(_ body: (borrowing Element) -> Void) {
+        callAsFunction(body)
+    }
+}
+
+// MARK: Drain Property View
+
+extension Array where Element: ~Copyable {
+    /// Property view for draining operations.
+    ///
+    /// Provides `.drain { }` via `callAsFunction`, which removes all elements
+    /// from the array and passes each to the closure with ownership.
+    /// Works for ALL element types including `~Copyable`.
+    ///
+    /// After draining, the array is empty but still usable.
+    ///
+    /// ## Example
+    ///
+    /// ```swift
+    /// var array = Array<Int>()
+    /// array.append(1)
+    /// array.append(2)
+    /// array.append(3)
+    ///
+    /// // Drain all elements (takes ownership)
+    /// array.drain { element in
+    ///     process(element)
+    /// }
+    /// // array is now empty but still usable
+    /// array.append(4)
+    /// ```
+    @inlinable
+    public var drain: Property<Sequence.Drain, Self>.View.Typed<Element> {
+        mutating _read {
+            yield unsafe Property<Sequence.Drain, Self>.View.Typed<Element>(&self)
+        }
+        mutating _modify {
+            var view = unsafe Property<Sequence.Drain, Self>.View.Typed<Element>(&self)
+            yield &view
+        }
+    }
+}
+
+// MARK: Drain: Operations (~Copyable)
+
+extension Property.View.Typed
+where Tag == Sequence.Drain, Base == Array<Element>, Element: ~Copyable {
+    /// Drain iteration: `.drain { }`
+    ///
+    /// Removes all elements from the array, passing each to the closure
+    /// with ownership. After this call, the array is empty but usable.
+    /// Works for ALL element types including `~Copyable`.
+    ///
+    /// - Parameter body: A closure called with each element (consuming).
+    @_lifetime(&self)
+    @inlinable
+    public mutating func callAsFunction(_ body: (consuming Element) -> Void) {
+        let count = unsafe base.pointee.storage.header
+        guard count > 0 else { return }
+        unsafe base.pointee.storage.withUnsafeMutablePointerToElements { elements in
+            for i in 0..<count {
+                unsafe body((elements + i).move())
+            }
+        }
+        unsafe base.pointee.storage.header = 0
+    }
+}

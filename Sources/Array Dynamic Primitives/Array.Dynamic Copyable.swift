@@ -1,13 +1,19 @@
+// ===----------------------------------------------------------------------===//
 //
-//  File.swift
-//  swift-array-primitives
+// This source file is part of the swift-primitives open source project
 //
-//  Created by Coen ten Thije Boonkkamp on 24/01/2026.
+// Copyright (c) 2024-2026 Coen ten Thije Boonkkamp and the swift-primitives project authors
+// Licensed under Apache License v2.0
 //
+// See LICENSE for license information
+//
+// ===----------------------------------------------------------------------===//
 
 public import Array_Primitives_Core
 
-// MARK: - Copy-on-Write (package access for cross-module use)
+// ============================================================================
+// MARK: - Copy-on-Write
+// ============================================================================
 
 extension Array where Element: Copyable {
     /// Ensures the storage is uniquely referenced before mutation.
@@ -20,7 +26,64 @@ extension Array where Element: Copyable {
     }
 }
 
-// MARK: - Copy-on-Write (Copyable elements only)
+// ============================================================================
+// MARK: - Subscripts
+// ============================================================================
+
+extension Array where Element: Copyable {
+    /// Accesses the element at the given typed index with copy-on-write semantics.
+    ///
+    /// - Parameter index: The typed index of the element to access.
+    /// - Precondition: `index` must be in bounds.
+    @inlinable
+    public subscript(index: Index) -> Element {
+        get {
+            precondition(index < count, "Index out of bounds")
+            return unsafe _cachedPtr[index]
+        }
+        set {
+            makeUnique()
+            precondition(index < count, "Index out of bounds")
+            unsafe _cachedPtr[index] = newValue
+        }
+    }
+}
+
+// ============================================================================
+// MARK: - Element Access
+// ============================================================================
+
+extension Array where Element: Copyable {
+    /// Returns the element at the typed index, or nil if out of bounds.
+    ///
+    /// - Parameter index: The typed index of the element to access.
+    /// - Returns: The element at the index, or `nil` if out of bounds.
+    @inlinable
+    public func element(at index: Index) -> Element? {
+        guard index < count else { return nil }
+        return unsafe _cachedPtr[index]
+    }
+
+    /// Returns element at index offset from given base index.
+    ///
+    /// - Parameters:
+    ///   - base: The starting index.
+    ///   - offset: The signed offset from the base.
+    /// - Returns: The element at the computed position, or `nil` if out of bounds.
+    @inlinable
+    public func element(
+        at base: Index,
+        offsetBy offset: Index.Offset
+    ) -> Element? {
+        guard let newIndex = base + offset else { return nil }
+        guard newIndex < count else { return nil }
+        return unsafe _cachedPtr[newIndex]
+    }
+}
+
+// ============================================================================
+// MARK: - Mutating Operations (CoW)
+// ============================================================================
 
 extension Array where Element: Copyable {
     /// Appends an element to the array (CoW-aware).
@@ -64,72 +127,9 @@ extension Array where Element: Copyable {
     }
 }
 
-extension Array where Element: Copyable {
-    /// Accesses the element at the given typed index with copy-on-write semantics.
-    ///
-    /// - Parameter index: The typed index of the element to access.
-    /// - Precondition: `index` must be in bounds.
-    @inlinable
-    public subscript(index: Index) -> Element {
-        get {
-            precondition(index < count, "Index out of bounds")
-            return unsafe _cachedPtr[index]
-        }
-        set {
-            makeUnique()
-            precondition(index < count, "Index out of bounds")
-            unsafe _cachedPtr[index] = newValue
-        }
-    }
-}
-
-extension Array: Collection.`Protocol` where Element: Copyable {}
-
-// MARK: - Iterator
-
-extension Array where Element: Copyable {
-    /// Pointer-based iterator for Array.
-    ///
-    /// Zero-copy iteration using typed `Index<Element>` for position tracking.
-    /// The iterator holds a pointer to the storage, not a copy of the elements.
-    ///
-    /// ## Safety
-    ///
-    /// The iterator is only valid while the source array exists and is not mutated.
-    /// This matches the semantics of stdlib's Array.Iterator.
-    @safe
-    public struct Iterator: IteratorProtocol {
-        @usableFromInline
-        let base: UnsafePointer<Element>
-
-        @usableFromInline
-        let end: Index.Count
-
-        @usableFromInline
-        var position: Index
-
-        @usableFromInline @unsafe
-        init(base: UnsafePointer<Element>, count: Index.Count) {
-            unsafe self.base = base
-            self.end = count
-            self.position = .zero
-        }
-
-        @inlinable
-        public mutating func next() -> Element? {
-            guard position < end else { return nil }
-            let result = unsafe base[position]
-            position = (position + 1)!
-            return result
-        }
-    }
-}
-
-extension Array.Iterator: @unchecked Sendable where Element: Sendable {}
-
-extension Array: Collection.Access.Random where Element: Copyable {}
-
-// MARK: - ForEach: Consuming Operations (Copyable only)
+// ============================================================================
+// MARK: - Property View Operations
+// ============================================================================
 
 extension Property.View.Typed
 where Tag == Sequence.ForEach, Base == Array<Element>, Element: Copyable {
@@ -150,16 +150,5 @@ where Tag == Sequence.ForEach, Base == Array<Element>, Element: Copyable {
             }
         }
         unsafe base.pointee.storage.deinitialize()
-    }
-}
-
-extension Array: Sequence.`Protocol` where Element: Copyable {
-    /// Returns a pointer-based iterator over the array elements.
-    ///
-    /// Zero-copy iteration - no allocation, no element copying.
-    /// Uses typed `Index<Element>` for position tracking.
-    @inlinable
-    public borrowing func makeIterator() -> Iterator {
-        unsafe Iterator(base: UnsafePointer(_cachedPtr), count: .init(__unchecked: count.rawValue))
     }
 }
