@@ -1,7 +1,330 @@
-public import Array_Primitives_Core
-public import Index_Primitives
+// ===----------------------------------------------------------------------===//
+//
+// This source file is part of the swift-primitives open source project
+//
+// Copyright (c) 2024-2026 Coen ten Thije Boonkkamp and the swift-primitives project authors
+// Licensed under Apache License v2.0
+//
+// See LICENSE for license information
+//
+// ===----------------------------------------------------------------------===//
 
+public import Array_Primitives_Core
+public import Collection_Primitives
+public import Index_Primitives
+public import Property_Primitives
+public import Range_Primitives
+public import Sequence_Primitives
+
+// ============================================================================
+// MARK: - Collection Protocol Conformances
+// ============================================================================
+
+// MARK: - Collection.Protocol Conformance
+// Note: Index, startIndex, endIndex, index(after:) defined in Collection.Indexed conformance
+
+extension Array.Static: Collection.`Protocol` {}
+
+// MARK: - Collection.Access.Random Conformance
+// Note: Collection.Bidirectional conformance is provided below
+// for ALL element types (including ~Copyable) via `where Element: ~Copyable`.
+
+extension Array.Static: Collection.Access.Random {}
+
+// MARK: - Collection.Indexed Conformance
+
+extension Array.Static: Collection.Indexed where Element: ~Copyable {
+    public typealias Index = Array<Element>.Index
+
+    @inlinable
+    public var startIndex: Index { .zero }
+
+    @inlinable
+    public var endIndex: Index { Index(count) }
+
+    @inlinable
+    public func index(after i: Index) -> Index { (i + 1)! }
+}
+
+// MARK: - Collection.Bidirectional Conformance
+
+extension Array.Static: Collection.Bidirectional where Element: ~Copyable {
+    @inlinable
+    public func index(before i: Index) -> Index { (i - 1)! }
+}
+
+// Note: Array.Static cannot conform to Swift.Collection because it is unconditionally
+// ~Copyable (has deinit for inline storage cleanup). Swift.Collection requires Self: Copyable.
+
+// ============================================================================
+// MARK: - Sequence Protocol Conformances
+// ============================================================================
+
+// MARK: - Iterator
+
+extension Array.Static {
+    /// Pointer-based iterator for Array.Static.
+    ///
+    /// Zero-copy iteration using typed `Index<Element>` for position tracking.
+    /// The iterator holds a pointer to the inline storage.
+    ///
+    /// ## Safety
+    ///
+    /// The iterator is only valid while the source array exists and is not mutated.
+    /// Since Array.Static uses inline storage that moves with the struct, the
+    /// iterator must be used within the same scope where it was created.
+    @safe
+    public struct Iterator: IteratorProtocol {
+        @usableFromInline
+        let base: UnsafePointer<Element>
+
+        @usableFromInline
+        let end: Index.Count
+
+        @usableFromInline
+        var position: Index
+
+        @usableFromInline @unsafe
+        init(base: UnsafePointer<Element>, count: Index.Count) {
+            unsafe self.base = base
+            self.end = count
+            self.position = .zero
+        }
+
+        @inlinable
+        public mutating func next() -> Element? {
+            guard position < end else { return nil }
+            let result = unsafe base[position]
+            position = (position + 1)!
+            return result
+        }
+    }
+}
+
+extension Array.Static.Iterator: @unchecked Sendable where Element: Sendable {}
+
+// MARK: - Sequence.Protocol Conformance
+
+extension Array.Static: Sequence.`Protocol` {
+    /// Returns a pointer-based iterator over the array elements.
+    ///
+    /// Zero-copy iteration - no allocation, no element copying.
+    /// Uses typed `Index<Element>` for position tracking.
+    ///
+    /// ## Note
+    ///
+    /// Array.Static uses inline storage. The iterator captures a pointer to
+    /// element 0, which is valid for the duration of this borrow.
+    @inlinable
+    public borrowing func makeIterator() -> Iterator {
+        // Get pointer to first element (or a valid pointer if empty)
+        if count > 0 {
+            let basePtr = unsafe storage.read(at: .zero)
+            return unsafe Iterator(base: basePtr, count: count)
+        } else {
+            // Empty array - pointer is irrelevant, count is zero
+            return unsafe Iterator(base: UnsafePointer<Element>(bitPattern: 1)!, count: .zero)
+        }
+    }
+}
+
+// ============================================================================
+// MARK: - ForEach Property View
+// ============================================================================
+
+extension Array.Static where Element: ~Copyable {
+    /// Property view for iteration operations.
+    ///
+    /// Provides iteration patterns for ALL element types including `~Copyable`:
+    /// - `.forEach { }` — Borrowing iteration via `callAsFunction`
+    /// - `.forEach.borrowing { }` — Explicit borrowing iteration
+    ///
+    /// For `Copyable` elements only:
+    /// - `.forEach.consuming { }` — Consuming iteration (clears array)
+    ///
+    /// ## Example
+    ///
+    /// ```swift
+    /// var array = Array<Int>.Inline<8>()
+    /// try array.append(1)
+    /// try array.append(2)
+    /// try array.append(3)
+    ///
+    /// // Borrowing iteration (works for ALL elements)
+    /// array.forEach { print($0) }
+    ///
+    /// // Consuming iteration (Copyable elements only)
+    /// array.forEach.consuming { print($0) }
+    /// // array is now empty
+    /// ```
+    ///
+    /// ## ~Copyable Elements
+    ///
+    /// For `~Copyable` elements, `.forEach { }` provides borrowing access:
+    ///
+    /// ```swift
+    /// struct Handle: ~Copyable { var id: Int }
+    ///
+    /// var handles = Array<Handle>.Inline<4>()
+    /// try handles.append(Handle(id: 1))
+    /// try handles.append(Handle(id: 2))
+    ///
+    /// handles.forEach { print($0.id) }  // Borrows each handle
+    /// // handles still contains both handles
+    /// ```
+    @inlinable
+    public var forEach: Property<Sequence.ForEach, Self>.View.Typed<Element>.Valued<capacity> {
+        mutating _read {
+            yield unsafe Property<Sequence.ForEach, Self>.View.Typed<Element>.Valued<capacity>(&self)
+        }
+        mutating _modify {
+            var view = unsafe Property<Sequence.ForEach, Self>.View.Typed<Element>.Valued<capacity>(&self)
+            yield &view
+        }
+    }
+}
+
+// MARK: - ForEach: Borrowing Operations (~Copyable)
+
+extension Property.View.Typed.Valued
+where Tag == Sequence.ForEach, Base == Array<Element>.Static<n>, Element: ~Copyable {
+    /// Borrowing iteration: `.forEach { }`
+    ///
+    /// Iterates over all elements without consuming them.
+    /// Works for ALL element types including `~Copyable`.
+    ///
+    /// - Parameter body: A closure called with each borrowed element.
+    @inlinable
+    public func callAsFunction(_ body: (borrowing Element) -> Void) {
+        let count = unsafe base.pointee.count
+        (0..<count).forEach { i in
+            unsafe body(base.pointee.storage.read(at: i).pointee)
+        }
+    }
+
+    /// Explicit borrowing iteration: `.forEach.borrowing { }`
+    ///
+    /// Same as `callAsFunction`, but with explicit naming for clarity.
+    /// Works for ALL element types including `~Copyable`.
+    ///
+    /// - Parameter body: A closure called with each borrowed element.
+    @inlinable
+    public func borrowing(_ body: (borrowing Element) -> Void) {
+        let count = unsafe base.pointee.count
+        (0..<count).forEach { i in
+            unsafe body(base.pointee.storage.read(at: i).pointee)
+        }
+    }
+}
+
+// MARK: - ForEach: Consuming Operations (Copyable only)
+
+extension Property.View.Typed.Valued
+where Tag == Sequence.ForEach, Base == Array<Element>.Static<n>, Element: Copyable {
+    /// Consuming iteration: `.forEach.consuming { }`
+    ///
+    /// Iterates over all elements and then clears the array.
+    /// Only available for `Copyable` elements.
+    ///
+    /// - Parameter body: A closure called with each element.
+    @_lifetime(&self)
+    @inlinable
+    public mutating func consuming(_ body: (Element) -> Void) {
+        let count = unsafe base.pointee.count
+        (0..<count).forEach { i in
+            unsafe body(base.pointee.storage.read(at: i).pointee)
+        }
+        unsafe base.pointee.storage.deinitialize(count: count)
+        unsafe base.pointee.count = Index<Element>.Count(__unchecked: 0)
+    }
+}
+
+// ============================================================================
+// MARK: - Drain Property View
+// ============================================================================
+
+extension Array.Static where Element: ~Copyable {
+    /// Property view for draining operations.
+    ///
+    /// Provides `.drain { }` via `callAsFunction`, which removes all elements
+    /// from the array and passes each to the closure with ownership.
+    /// Works for ALL element types including `~Copyable`.
+    ///
+    /// After draining, the array is empty but still usable.
+    ///
+    /// ## Example
+    ///
+    /// ```swift
+    /// var array = Array<Int>.Inline<8>()
+    /// try array.append(1)
+    /// try array.append(2)
+    /// try array.append(3)
+    ///
+    /// // Drain all elements (takes ownership)
+    /// array.drain { element in
+    ///     process(element)
+    /// }
+    /// // array is now empty but still usable
+    /// try array.append(4)
+    /// ```
+    ///
+    /// ## ~Copyable Elements
+    ///
+    /// For `~Copyable` elements, `.drain { }` transfers ownership:
+    ///
+    /// ```swift
+    /// struct Handle: ~Copyable {
+    ///     var id: Int
+    ///     consuming func close() { print("Closing \(id)") }
+    /// }
+    ///
+    /// var handles = Array<Handle>.Inline<4>()
+    /// try handles.append(Handle(id: 1))
+    /// try handles.append(Handle(id: 2))
+    ///
+    /// handles.drain { handle in
+    ///     handle.close()  // Takes ownership, can consume
+    /// }
+    /// // handles is now empty
+    /// ```
+    @inlinable
+    public var drain: Property<Sequence.Drain, Self>.View.Typed<Element>.Valued<capacity> {
+        mutating _read {
+            yield unsafe Property<Sequence.Drain, Self>.View.Typed<Element>.Valued<capacity>(&self)
+        }
+        mutating _modify {
+            var view = unsafe Property<Sequence.Drain, Self>.View.Typed<Element>.Valued<capacity>(&self)
+            yield &view
+        }
+    }
+}
+
+// MARK: - Drain: Operations (~Copyable)
+
+extension Property.View.Typed.Valued
+where Tag == Sequence.Drain, Base == Array<Element>.Static<n>, Element: ~Copyable {
+    /// Drain iteration: `.drain { }`
+    ///
+    /// Removes all elements from the array, passing each to the closure
+    /// with ownership. After this call, the array is empty but usable.
+    /// Works for ALL element types including `~Copyable`.
+    ///
+    /// - Parameter body: A closure called with each element (consuming).
+    @_lifetime(&self)
+    @inlinable
+    public mutating func callAsFunction(_ body: (consuming Element) -> Void) {
+        let count = unsafe base.pointee.count
+        guard count > .zero else { return }
+        (0..<count).forEach { i in
+            body(unsafe base.pointee.storage.move(at: i))
+        }
+        unsafe base.pointee.count = .zero
+    }
+}
+
+// ============================================================================
 // MARK: - Properties
+// ============================================================================
 
 extension Array.Static where Element: ~Copyable {
 
@@ -15,7 +338,9 @@ extension Array.Static where Element: ~Copyable {
     public var isFull: Bool { count.rawValue >= capacity }
 }
 
+// ============================================================================
 // MARK: - Core Operations
+// ============================================================================
 
 extension Array.Static where Element: ~Copyable {
     /// Appends an element to the array.
@@ -42,7 +367,9 @@ extension Array.Static where Element: ~Copyable {
     }
 }
 
+// ============================================================================
 // MARK: - Borrowed Element Access (for ~Copyable elements)
+// ============================================================================
 
 extension Array.Static where Element: ~Copyable {
     /// Accesses the element at the given index via closure (for ~Copyable elements).
@@ -59,7 +386,9 @@ extension Array.Static where Element: ~Copyable {
     }
 }
 
+// ============================================================================
 // MARK: - Bounded Index (Inline Arrays)
+// ============================================================================
 
 extension Array.Static where Element: ~Copyable {
     /// Accesses the element at the given bounded index.
@@ -103,7 +432,9 @@ extension Array.Static where Element: ~Copyable {
     }
 }
 
+// ============================================================================
 // MARK: - Typed Subscript (Array.Static)
+// ============================================================================
 
 extension Array.Static where Element: ~Copyable {
     /// Accesses the element at the given typed index (borrowing access for ~Copyable elements).
@@ -123,7 +454,9 @@ extension Array.Static where Element: ~Copyable {
     }
 }
 
+// ============================================================================
 // MARK: - Error Description
+// ============================================================================
 
 extension Array.Static.Error: CustomStringConvertible {
     public var description: String {
@@ -136,9 +469,9 @@ extension Array.Static.Error: CustomStringConvertible {
     }
 }
 
-
-
+// ============================================================================
 // MARK: - Buffer Access (Escape Hatch for C Interop)
+// ============================================================================
 
 @_spi(Unsafe)
 extension Array.Static where Element: ~Copyable {
@@ -175,7 +508,9 @@ extension Array.Static where Element: ~Copyable {
     }
 }
 
+// ============================================================================
 // MARK: - Span Access
+// ============================================================================
 
 extension Array.Static where Element: ~Copyable {
     /// Provides read-only span access to the array elements.
@@ -230,8 +565,9 @@ extension Array.Static where Element: ~Copyable {
     }
 }
 
-
+// ============================================================================
 // MARK: - Pointer Helpers
+// ============================================================================
 
 extension Array.Static where Element: ~Copyable {
 
@@ -250,7 +586,9 @@ extension Array.Static where Element: ~Copyable {
     }
 }
 
+// ============================================================================
 // MARK: - Operations Requiring Direct _storage Access
+// ============================================================================
 
 extension Array.Static where Element: ~Copyable {
     /// Removes all elements from the array.
@@ -261,4 +599,3 @@ extension Array.Static where Element: ~Copyable {
         count = .zero
     }
 }
-

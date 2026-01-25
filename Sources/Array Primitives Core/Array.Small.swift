@@ -9,12 +9,6 @@
 //
 // ===----------------------------------------------------------------------===//
 
-// Note: Array.Small is declared INSIDE the Array enum body (in Array.swift)
-// due to a Swift compiler bug where nested types with value generic parameters
-// declared in extensions do not properly inherit ~Copyable constraints from
-// the outer type. This file contains only the minimal extensions required
-// for the workaround. Public API is in Array Small Primitives module.
-
 public import Index_Primitives
 public import Array_Primitives_Core
 
@@ -44,7 +38,7 @@ extension Array where Element: ~Copyable {
         /// Contains both the storage reference and cached element pointer,
         /// ensuring they are always consistent by construction.
         @usableFromInline
-        package var heap: Heap?
+        package var heap: Array.Small<inlineCapacity>.Heap?
 
         /// Creates an empty small array.
         ///
@@ -87,4 +81,4 @@ extension Array where Element: ~Copyable {
     }
 }
 
-extension Array.Small: @unchecked Sendable where Element: Sendable {}
+

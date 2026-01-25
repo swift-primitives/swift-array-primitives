@@ -1,14 +1,214 @@
+// ===----------------------------------------------------------------------===//
 //
-//  File.swift
-//  swift-array-primitives
+// This source file is part of the swift-primitives open source project
 //
-//  Created by Coen ten Thije Boonkkamp on 24/01/2026.
+// Copyright (c) 2024-2026 Coen ten Thije Boonkkamp and the swift-primitives project authors
+// Licensed under Apache License v2.0
 //
+// See LICENSE for license information
+//
+// ===----------------------------------------------------------------------===//
 
 public import Array_Primitives_Core
+public import Collection_Primitives
 public import Index_Primitives
+public import Property_Primitives
+public import Range_Primitives
+public import Sequence_Primitives
 
+// ============================================================================
+// MARK: - Collection Protocol Conformances (~Copyable)
+// ============================================================================
+
+// MARK: - Collection.Indexed Conformance
+
+extension Array.Small: Collection.Indexed where Element: ~Copyable {
+    public typealias Index = Array<Element>.Index
+
+    @inlinable
+    public var startIndex: Index { .zero }
+
+    @inlinable
+    public var endIndex: Index { Index(count) }
+
+    @inlinable
+    public func index(after i: Index) -> Index { (i + 1)! }
+}
+
+// MARK: - Collection.Bidirectional Conformance
+
+extension Array.Small: Collection.Bidirectional where Element: ~Copyable {
+    @inlinable
+    public func index(before i: Index) -> Index { (i - 1)! }
+}
+
+// Note: Array.Small cannot conform to Swift.Collection because it is unconditionally
+// ~Copyable (has deinit for inline storage cleanup). Swift.Collection requires Self: Copyable.
+
+// ============================================================================
+// MARK: - ForEach Property View
+// ============================================================================
+
+extension Array.Small where Element: ~Copyable {
+    /// Property view for iteration operations.
+    ///
+    /// Provides iteration patterns for ALL element types including `~Copyable`:
+    /// - `.forEach { }` — Borrowing iteration via `callAsFunction`
+    /// - `.forEach.borrowing { }` — Explicit borrowing iteration
+    ///
+    /// For `Copyable` elements only:
+    /// - `.forEach.consuming { }` — Consuming iteration (clears array)
+    ///
+    /// ## Example
+    ///
+    /// ```swift
+    /// var array = try Array<Int>.Small<4>()
+    /// array.append(1)
+    /// array.append(2)
+    /// array.append(3)
+    ///
+    /// // Borrowing iteration (works for ALL elements)
+    /// array.forEach { print($0) }
+    ///
+    /// // Consuming iteration (Copyable elements only)
+    /// array.forEach.consuming { print($0) }
+    /// // array is now empty
+    /// ```
+    @inlinable
+    public var forEach: Property<Sequence.ForEach, Self>.View.Typed<Element>.Valued<inlineCapacity> {
+        mutating _read {
+            yield unsafe Property<Sequence.ForEach, Self>.View.Typed<Element>.Valued<inlineCapacity>(&self)
+        }
+        mutating _modify {
+            var view = unsafe Property<Sequence.ForEach, Self>.View.Typed<Element>.Valued<inlineCapacity>(&self)
+            yield &view
+        }
+    }
+}
+
+// MARK: - ForEach: Borrowing Operations (~Copyable)
+
+extension Property.View.Typed.Valued
+where Tag == Sequence.ForEach, Base == Array<Element>.Small<n>, Element: ~Copyable {
+    /// Borrowing iteration: `.forEach { }`
+    ///
+    /// Iterates over all elements without consuming them.
+    /// Works for ALL element types including `~Copyable`.
+    ///
+    /// - Parameter body: A closure called with each borrowed element.
+    @inlinable
+    public func callAsFunction(_ body: (borrowing Element) -> Void) {
+        let count = unsafe base.pointee.count
+        guard count > .zero else { return }
+
+        if let heapState = unsafe base.pointee.heap {
+            _ = unsafe heapState.storage.withUnsafeMutablePointerToElements { elements in
+                (0..<count).forEach { i in
+                    unsafe body(elements[i])
+                }
+            }
+        } else {
+            // Inline storage uses stride-based raw pointer arithmetic
+            let stride = MemoryLayout<Element>.stride
+            unsafe withUnsafePointer(to: base.pointee.inline) { storagePtr in
+                let basePtr = unsafe UnsafeRawPointer(storagePtr)
+                for i in 0..<count.rawValue {
+                    let elementPtr = unsafe (basePtr + i * stride)
+                        .assumingMemoryBound(to: Element.self)
+                    unsafe body(elementPtr.pointee)
+                }
+            }
+        }
+    }
+
+    /// Explicit borrowing iteration: `.forEach.borrowing { }`
+    ///
+    /// Same as `callAsFunction`, but with explicit naming for clarity.
+    /// Works for ALL element types including `~Copyable`.
+    ///
+    /// - Parameter body: A closure called with each borrowed element.
+    @inlinable
+    public func borrowing(_ body: (borrowing Element) -> Void) {
+        callAsFunction(body)
+    }
+}
+
+// ============================================================================
+// MARK: - Drain Property View
+// ============================================================================
+
+extension Array.Small where Element: ~Copyable {
+    /// Property view for draining operations.
+    ///
+    /// Provides `.drain { }` via `callAsFunction`, which removes all elements
+    /// from the array and passes each to the closure with ownership.
+    /// Works for ALL element types including `~Copyable`.
+    ///
+    /// After draining, the array is empty but still usable.
+    ///
+    /// ## Example
+    ///
+    /// ```swift
+    /// var array = try Array<Int>.Small<4>()
+    /// array.append(1)
+    /// array.append(2)
+    /// array.append(3)
+    ///
+    /// // Drain all elements (takes ownership)
+    /// array.drain { element in
+    ///     process(element)
+    /// }
+    /// // array is now empty but still usable
+    /// array.append(4)
+    /// ```
+    @inlinable
+    public var drain: Property<Sequence.Drain, Self>.View.Typed<Element>.Valued<inlineCapacity> {
+        mutating _read {
+            yield unsafe Property<Sequence.Drain, Self>.View.Typed<Element>.Valued<inlineCapacity>(&self)
+        }
+        mutating _modify {
+            var view = unsafe Property<Sequence.Drain, Self>.View.Typed<Element>.Valued<inlineCapacity>(&self)
+            yield &view
+        }
+    }
+}
+
+// MARK: - Drain: Operations (~Copyable)
+
+extension Property.View.Typed.Valued
+where Tag == Sequence.Drain, Base == Array<Element>.Small<n>, Element: ~Copyable {
+    /// Drain iteration: `.drain { }`
+    ///
+    /// Removes all elements from the array, passing each to the closure
+    /// with ownership. After this call, the array is empty but usable.
+    /// Works for ALL element types including `~Copyable`.
+    ///
+    /// - Parameter body: A closure called with each element (consuming).
+    @_lifetime(&self)
+    @inlinable
+    public mutating func callAsFunction(_ body: (consuming Element) -> Void) {
+        let count = unsafe base.pointee.count
+        guard count > .zero else { return }
+
+        if let heapState = unsafe base.pointee.heap {
+            _ = unsafe heapState.storage.withUnsafeMutablePointerToElements { elements in
+                (0..<count).forEach { i in
+                    unsafe body((elements + i).move())
+                }
+            }
+            unsafe base.pointee.heap!.storage.header = 0
+        } else {
+            (0..<count).forEach { i in
+                body(unsafe base.pointee.inline.move(at: i))
+            }
+        }
+        unsafe base.pointee.count = .zero
+    }
+}
+
+// ============================================================================
 // MARK: - Properties
+// ============================================================================
 
 extension Array.Small where Element: ~Copyable {
     /// Whether the array is empty.
@@ -29,7 +229,9 @@ extension Array.Small where Element: ~Copyable {
     public var isSpilled: Bool { heap != nil }
 }
 
+// ============================================================================
 // MARK: - Internal Operations
+// ============================================================================
 
 extension Array.Small where Element: ~Copyable {
     /// Spills inline storage to heap.
@@ -50,7 +252,9 @@ extension Array.Small where Element: ~Copyable {
     }
 }
 
+// ============================================================================
 // MARK: - Core Operations (Base - for ~Copyable elements)
+// ============================================================================
 
 extension Array.Small where Element: ~Copyable {
     /// Appends an element to the array.
@@ -125,7 +329,9 @@ extension Array.Small where Element: ~Copyable {
     }
 }
 
+// ============================================================================
 // MARK: - Borrowed Element Access (for ~Copyable elements)
+// ============================================================================
 
 extension Array.Small where Element: ~Copyable {
     /// Accesses the element at the given index via closure (for ~Copyable elements).
@@ -156,7 +362,9 @@ extension Array.Small where Element: ~Copyable {
 
 }
 
+// ============================================================================
 // MARK: - Span Access
+// ============================================================================
 
 extension Array.Small where Element: ~Copyable {
     /// Provides read-only span access to the array elements.
@@ -207,7 +415,9 @@ extension Array.Small where Element: ~Copyable {
     }
 }
 
+// ============================================================================
 // MARK: - Buffer Access (Escape Hatch for C Interop)
+// ============================================================================
 
 @_spi(Unsafe)
 extension Array.Small where Element: ~Copyable {
@@ -254,6 +464,10 @@ extension Array.Small where Element: ~Copyable {
         }
     }
 }
+
+// ============================================================================
+// MARK: - Typed Subscript (~Copyable)
+// ============================================================================
 
 extension Array.Small where Element: ~Copyable {
     /// Accesses the element at the given typed index (borrowing access for ~Copyable elements).
