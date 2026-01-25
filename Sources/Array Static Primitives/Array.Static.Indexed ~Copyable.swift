@@ -71,7 +71,7 @@ extension Array.Static where Element: ~Copyable {
 }
 
 // ============================================================================
-// MARK: - Passthrough Properties
+// MARK: - Properties
 // ============================================================================
 
 extension Array.Static.Indexed where Element: ~Copyable {

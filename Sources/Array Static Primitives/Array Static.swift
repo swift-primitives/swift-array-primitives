@@ -1,9 +1,13 @@
+// ===----------------------------------------------------------------------===//
 //
-//  Array Static.swift
-//  swift-array-primitives
+// This source file is part of the swift-primitives open source project
 //
-//  Created by Coen ten Thije Boonkkamp on 24/01/2026.
+// Copyright (c) 2024-2026 Coen ten Thije Boonkkamp and the swift-primitives project authors
+// Licensed under Apache License v2.0
 //
+// See LICENSE for license information
+//
+// ===----------------------------------------------------------------------===//
 
 public import Array_Primitives_Core
 public import Collection_Primitives
@@ -11,15 +15,15 @@ public import Index_Primitives
 public import Sequence_Primitives
 
 // ============================================================================
-// MARK: - Collection Protocol Conformances
+// MARK: - Protocol Conformances
 // ============================================================================
 
-// MARK: - Collection.Protocol Conformance
+// MARK: Collection.Protocol Conformance
 // Note: Index, startIndex, endIndex, index(after:) defined in Collection.Indexed conformance
 
 extension Array.Static: Collection.`Protocol` {}
 
-// MARK: - Collection.Access.Random Conformance
+// MARK: Collection.Access.Random Conformance
 // Note: Collection.Bidirectional conformance is provided in ~Copyable.swift
 // for ALL element types (including ~Copyable) via `where Element: ~Copyable`.
 
@@ -28,23 +32,23 @@ extension Array.Static: Collection.Access.Random {}
 // Note: Array.Static cannot conform to Swift.Collection because it is unconditionally
 // ~Copyable (has deinit for inline storage cleanup). Swift.Collection requires Self: Copyable.
 
-// MARK: - Collection.Remove.Last Conformance
+// MARK: Collection.Remove.Last Conformance
 // Provides `.remove.last()` fluent API via protocol extension.
-// Primitive: `removeLast()` defined in ~Copyable.swift Core Operations section.
+// Primitive: `removeLast()` defined in ~Copyable.swift Mutating Operations section.
 
 extension Array.Static: Collection.Remove.Last {}
 
-// MARK: - Collection.Clearable Conformance
+// MARK: Collection.Clearable Conformance
 // Provides `.remove.all()` fluent API via protocol extension.
-// Primitive: `removeAll()` defined in ~Copyable.swift Operations section.
+// Primitive: `removeAll()` defined in ~Copyable.swift Mutating Operations section.
 
 extension Array.Static: Collection.Clearable {}
 
 // ============================================================================
-// MARK: - Sequence Protocol Conformances
+// MARK: - Nested Types
 // ============================================================================
 
-// MARK: - Iterator
+// MARK: Iterator
 
 extension Array.Static {
     /// Pointer-based iterator for Array.Static.
@@ -87,7 +91,7 @@ extension Array.Static {
 
 extension Array.Static.Iterator: @unchecked Sendable where Element: Sendable {}
 
-// MARK: - Sequence.Protocol Conformance
+// MARK: Sequence.Protocol Conformance
 
 extension Array.Static: Sequence.`Protocol` {
     /// Returns a pointer-based iterator over the array elements.
@@ -112,9 +116,7 @@ extension Array.Static: Sequence.`Protocol` {
     }
 }
 
-// ============================================================================
-// MARK: - Error Description
-// ============================================================================
+// MARK: Error
 
 extension Array.Static.Error: CustomStringConvertible {
     public var description: String {
@@ -126,3 +128,10 @@ extension Array.Static.Error: CustomStringConvertible {
         }
     }
 }
+
+// ============================================================================
+// MARK: - Sendable Conformance
+// ============================================================================
+
+// Note: Array.Static Sendable conformance is defined in Array Primitives Core
+// because it requires access to the struct definition.

@@ -474,38 +474,39 @@ extension Array<Bit>.Vector: RandomAccessCollection {
     public typealias Element = Bool
 
     @inlinable
-    public var startIndex: Index { Bit.Index(__unchecked: (), position: 0) }
+    public var startIndex: Index { .zero }
 
     @inlinable
     public var endIndex: Index { Bit.Index(__unchecked: (), position: _count) }
 
     @inlinable
     public func index(after i: Index) -> Index {
-        Bit.Index(__unchecked: (), position: i.position.rawValue + 1)
+        (i + 1)!
     }
 
     @inlinable
     public func index(before i: Index) -> Index {
-        Bit.Index(__unchecked: (), position: i.position.rawValue - 1)
+        (i - 1)!
     }
 
     @inlinable
     public func distance(from start: Index, to end: Index) -> Int {
-        end.position.rawValue - start.position.rawValue
+        (end - start).rawValue
     }
 
     @inlinable
     public func index(_ i: Index, offsetBy distance: Int) -> Index {
-        Bit.Index(__unchecked: (), position: i.position.rawValue + distance)
+        (i + Index.Offset(distance))!
     }
 
     @inlinable
     public func index(_ i: Index, offsetBy distance: Int, limitedBy limit: Index) -> Index? {
-        let result = i.position.rawValue + distance
+        let offset = Index.Offset(distance)
+        guard let result = i + offset else { return nil }
         if distance >= 0 {
-            return result <= limit.position.rawValue ? Bit.Index(__unchecked: (), position: result) : nil
+            return result <= limit ? result : nil
         } else {
-            return result >= limit.position.rawValue ? Bit.Index(__unchecked: (), position: result) : nil
+            return result >= limit ? result : nil
         }
     }
 }
