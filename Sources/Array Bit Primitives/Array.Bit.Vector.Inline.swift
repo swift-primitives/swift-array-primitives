@@ -12,6 +12,7 @@
 public import Bit_Primitives
 public import Array_Primitives_Core
 public import Index_Primitives
+public import Property_Primitives
 
 // MARK: - Array<Bit>.Vector.Inline
 
@@ -82,10 +83,6 @@ extension Array<Bit>.Vector.Inline {
     @inlinable
     public var count: Bit.Index.Count { _count }
 
-    /// The maximum number of bits the array can hold.
-    @inlinable
-    public var capacity: Bit.Index.Count { Self._capacity }
-
     /// Whether the array is empty.
     @inlinable
     public var isEmpty: Bool { _count == .zero }
@@ -93,10 +90,6 @@ extension Array<Bit>.Vector.Inline {
     /// Whether the array is at full capacity.
     @inlinable
     public var isFull: Bool { _count >= Self._capacity }
-
-    /// The number of remaining slots.
-    @inlinable
-    public var remainingCapacity: Bit.Index.Count? { Self._capacity - _count }
 
     /// Population count (number of set bits).
     @inlinable
@@ -107,6 +100,97 @@ extension Array<Bit>.Vector.Inline {
             total += _storage[i].nonzeroBitCount
         }
         return Bit.Index.Count(__unchecked: total)
+    }
+}
+
+// MARK: - Tag Types
+
+extension Array<Bit>.Vector.Inline {
+    /// Tag type for `statistic.true`/`statistic.false` property accessors.
+    public enum Statistic: Sendable {}
+
+    /// Tag type for `all.true`/`all.false` property accessors.
+    public enum All: Sendable {}
+
+    /// Tag type for `capacity.remaining` property accessor.
+    public enum Capacity: Sendable {}
+}
+
+// MARK: - Property: statistic.true / statistic.false
+
+extension Array<Bit>.Vector.Inline {
+    /// Property accessor for count statistics.
+    @inlinable
+    public var statistic: Property<Statistic, Self>.View.Typed<Bit>.Valued<wordCount> {
+        mutating _read {
+            yield unsafe Property<Statistic, Self>.View.Typed<Bit>.Valued<wordCount>(&self)
+        }
+    }
+}
+
+extension Property.View.Typed.Valued
+where Tag == Array<Bit>.Vector.Inline<n>.Statistic, Base == Array<Bit>.Vector.Inline<n>, Element == Bit {
+    /// The number of `true` values in the array.
+    @inlinable
+    public var `true`: Bit.Index.Count { unsafe base.pointee.popcount }
+
+    /// The number of `false` values in the array.
+    @inlinable
+    public var `false`: Bit.Index.Count? { unsafe base.pointee._count - base.pointee.popcount }
+}
+
+// MARK: - Property: all.true / all.false
+
+extension Array<Bit>.Vector.Inline {
+    /// Property accessor for universality checks.
+    @inlinable
+    public var all: Property<All, Self>.View.Typed<Bit>.Valued<wordCount> {
+        mutating _read {
+            yield unsafe Property<All, Self>.View.Typed<Bit>.Valued<wordCount>(&self)
+        }
+    }
+}
+
+extension Property.View.Typed.Valued
+where Tag == Array<Bit>.Vector.Inline<n>.All, Base == Array<Bit>.Vector.Inline<n>, Element == Bit {
+    /// Whether all elements are `true`.
+    @inlinable
+    public var `true`: Bool {
+        let base = unsafe base.pointee
+        guard base._count > .zero else { return true }
+        return base.popcount == base._count
+    }
+
+    /// Whether all elements are `false`.
+    @inlinable
+    public var `false`: Bool {
+        unsafe base.pointee.popcount == .zero
+    }
+}
+
+// MARK: - Property: capacity.maximum / capacity.remaining
+
+extension Array<Bit>.Vector.Inline {
+    /// Property accessor for capacity information.
+    @inlinable
+    public var capacity: Property<Capacity, Self>.View.Typed<Bit>.Valued<wordCount> {
+        mutating _read {
+            yield unsafe Property<Capacity, Self>.View.Typed<Bit>.Valued<wordCount>(&self)
+        }
+    }
+}
+
+extension Property.View.Typed.Valued
+where Tag == Array<Bit>.Vector.Inline<n>.Capacity, Base == Array<Bit>.Vector.Inline<n>, Element == Bit {
+    /// The maximum number of bits the array can hold.
+    @inlinable
+    public var maximum: Bit.Index.Count { Array<Bit>.Vector.Inline<n>._capacity }
+
+    /// The number of remaining slots.
+    @inlinable
+    public var remaining: Bit.Index.Count? {
+        let count = unsafe base.pointee._count
+        return Array<Bit>.Vector.Inline<n>._capacity - count
     }
 }
 
@@ -269,21 +353,6 @@ extension Array<Bit>.Vector.Inline {
         let loc = Bit.Index.Location(count: lastCount, bitsPerWord: Self._bitsPerWord)
         return (_storage[loc.word] & loc.mask) != 0
     }
-
-    @inlinable
-    public var trueCount: Bit.Index.Count { popcount }
-
-    @inlinable
-    public var falseCount: Bit.Index.Count? { _count - popcount }
-
-    @inlinable
-    public var allTrue: Bool {
-        guard _count > .zero else { return true }
-        return popcount == _count
-    }
-
-    @inlinable
-    public var allFalse: Bool { popcount == .zero }
 }
 
 // MARK: - Initializers
@@ -301,15 +370,14 @@ extension Array<Bit>.Vector.Inline {
 
 // MARK: - Conversion
 
-extension Array<Bit>.Vector.Inline {
-    /// Converts to a dynamically-sized packed bit array.
+extension Array<Bit>.Vector {
+    /// Creates a packed bit array from an inline packed bit array.
     @inlinable
-    public func toPacked() -> Array<Bit>.Vector {
-        var result = Array<Bit>.Vector()
-        for bit in self {
-            result.append(bit)
+    public init<let wordCount: Int>(_ inline: Array<Bit>.Vector.Inline<wordCount>) {
+        self.init()
+        for bit in inline {
+            append(bit)
         }
-        return result
     }
 }
 

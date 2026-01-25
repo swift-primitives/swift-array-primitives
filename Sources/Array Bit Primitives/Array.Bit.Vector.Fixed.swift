@@ -12,6 +12,7 @@
 public import Bit_Primitives
 public import Array_Primitives_Core
 public import Index_Primitives
+public import Property_Primitives
 
 // MARK: - Array<Bit>.Vector.Fixed
 
@@ -79,10 +80,6 @@ extension Array<Bit>.Vector.Fixed {
     @inlinable
     public var count: Bit.Index.Count { _count }
 
-    /// The maximum number of bits the array can hold.
-    @inlinable
-    public var capacity: Bit.Index.Count { _capacity }
-
     /// Whether the array is empty.
     @inlinable
     public var isEmpty: Bool { _count == .zero }
@@ -90,10 +87,6 @@ extension Array<Bit>.Vector.Fixed {
     /// Whether the array is at full capacity.
     @inlinable
     public var isFull: Bool { _count >= _capacity }
-
-    /// The number of remaining slots.
-    @inlinable
-    public var remainingCapacity: Bit.Index.Count? { _capacity - _count }
 
     /// Population count (number of set bits).
     @inlinable
@@ -105,6 +98,84 @@ extension Array<Bit>.Vector.Fixed {
         }
         return Bit.Index.Count(__unchecked: total)
     }
+}
+
+// MARK: - Tag Types
+
+extension Array<Bit>.Vector.Fixed {
+    /// Tag type for `count.true`/`count.false` property accessors.
+    public enum Statistic: Sendable {}
+
+    /// Tag type for `all.true`/`all.false` property accessors.
+    public enum All: Sendable {}
+
+    /// Tag type for `capacity.remaining` property accessor.
+    public enum Capacity: Sendable {}
+}
+
+// MARK: - Property: statistic.true / statistic.false
+
+extension Array<Bit>.Vector.Fixed {
+    /// Property accessor for count statistics.
+    @inlinable
+    public var statistic: Property<Statistic, Self> {
+        Property(self)
+    }
+}
+
+extension Property where Tag == Array<Bit>.Vector.Fixed.Statistic, Base == Array<Bit>.Vector.Fixed {
+    /// The number of `true` values in the array.
+    @inlinable
+    public var `true`: Bit.Index.Count { base.popcount }
+
+    /// The number of `false` values in the array.
+    @inlinable
+    public var `false`: Bit.Index.Count? { base._count - base.popcount }
+}
+
+// MARK: - Property: all.true / all.false
+
+extension Array<Bit>.Vector.Fixed {
+    /// Property accessor for universality checks.
+    @inlinable
+    public var all: Property<All, Self> {
+        Property(self)
+    }
+}
+
+extension Property where Tag == Array<Bit>.Vector.Fixed.All, Base == Array<Bit>.Vector.Fixed {
+    /// Whether all elements are `true`.
+    @inlinable
+    public var `true`: Bool {
+        guard base._count > .zero else { return true }
+        return base.popcount == base._count
+    }
+
+    /// Whether all elements are `false`.
+    @inlinable
+    public var `false`: Bool {
+        base.popcount == .zero
+    }
+}
+
+// MARK: - Property: capacity.maximum / capacity.remaining
+
+extension Array<Bit>.Vector.Fixed {
+    /// Property accessor for capacity information.
+    @inlinable
+    public var capacity: Property<Capacity, Self> {
+        Property(self)
+    }
+}
+
+extension Property where Tag == Array<Bit>.Vector.Fixed.Capacity, Base == Array<Bit>.Vector.Fixed {
+    /// The maximum number of bits the array can hold.
+    @inlinable
+    public var maximum: Bit.Index.Count { base._capacity }
+
+    /// The number of remaining slots.
+    @inlinable
+    public var remaining: Bit.Index.Count? { base._capacity - base._count }
 }
 
 // MARK: - Subscript Access
@@ -267,21 +338,6 @@ extension Array<Bit>.Vector.Fixed {
         let loc = Bit.Index.Location(count: lastCount, bitsPerWord: Self._bitsPerWord)
         return (_storage[loc.word] & loc.mask) != 0
     }
-
-    @inlinable
-    public var trueCount: Bit.Index.Count { popcount }
-
-    @inlinable
-    public var falseCount: Bit.Index.Count? { _count - popcount }
-
-    @inlinable
-    public var allTrue: Bool {
-        guard _count > .zero else { return true }
-        return popcount == _count
-    }
-
-    @inlinable
-    public var allFalse: Bool { popcount == .zero }
 }
 
 // MARK: - Initializers
@@ -306,19 +362,6 @@ extension Array<Bit>.Vector.Fixed {
     }
 }
 
-// MARK: - Conversion
-
-extension Array<Bit>.Vector.Fixed {
-    /// Converts to a dynamically-sized packed bit array.
-    @inlinable
-    public func toPacked() -> Array<Bit>.Vector {
-        var result = Array<Bit>.Vector()
-        for bit in self {
-            result.append(bit)
-        }
-        return result
-    }
-}
 
 extension Array<Bit>.Vector {
     /// Creates a packed bit array from a bounded packed bit array.

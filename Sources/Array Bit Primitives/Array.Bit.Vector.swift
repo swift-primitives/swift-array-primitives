@@ -11,6 +11,7 @@
 
 public import Bit_Primitives
 public import Array_Primitives_Core
+public import Property_Primitives
 
 // MARK: - Array<Bit>.Vector
 
@@ -214,16 +215,51 @@ extension Array<Bit>.Vector {
     }
 }
 
-// MARK: - Iteration
+// MARK: - Tag: Ones (set bit indices)
 
 extension Array<Bit>.Vector {
+    /// Tag type for `ones.forEach { }` - iterating set bit indices.
+    public enum Ones: Sendable {}
+}
+
+// MARK: - Property: ones.forEach
+
+extension Array<Bit>.Vector {
+    /// Property view for iterating set (true) bit indices.
+    ///
+    /// Access `ones.forEach { }` for efficient iteration over set bit indices.
+    ///
+    /// ## Example
+    ///
+    /// ```swift
+    /// var bits = Array<Bit>.Vector([false, true, false, true])
+    /// bits.ones.forEach { index in
+    ///     print(index)  // prints 1, 3
+    /// }
+    /// ```
     @inlinable
-    public func forEachSetBit(_ body: (Bit.Index) -> Void) {
-        for (wordIndex, var word) in _storage.enumerated() {
+    public var ones: Property<Ones, Self>.View {
+        mutating _read {
+            yield unsafe Property<Ones, Self>.View(&self)
+        }
+    }
+}
+
+extension Property.View where Tag == Array<Bit>.Vector.Ones, Base == Array<Bit>.Vector {
+    /// Iterates over indices of set (true) bits.
+    ///
+    /// Uses efficient word-level bit manipulation for sparse iteration.
+    @inlinable
+    public func forEach(_ body: (Bit.Index) -> Void) {
+        let storage = unsafe base.pointee._storage
+        let count = unsafe base.pointee._count
+        let bitsPerWord = UInt.bitWidth
+
+        for (wordIndex, var word) in storage.enumerated() {
             while word != 0 {
                 let bitIndex = word.trailingZeroBitCount
-                let globalIndex = wordIndex * Self._bitsPerWord + bitIndex
-                if globalIndex < _count.rawValue {
+                let globalIndex = wordIndex * bitsPerWord + bitIndex
+                if globalIndex < count.rawValue {
                     body(Bit.Index(__unchecked: (), position: globalIndex))
                 }
                 word &= word - 1
@@ -249,26 +285,92 @@ extension Array<Bit>.Vector {
         let loc = Bit.Index.Location(count: lastCount, bitsPerWord: Self._bitsPerWord)
         return (_storage[loc.word] & loc.mask) != 0
     }
+}
 
-    /// Returns the number of `true` values in the array.
+// MARK: - Tag Types
+
+extension Array<Bit>.Vector {
+    /// Tag type for `count.true`/`count.false` property accessors.
+    public enum Statistic: Sendable {}
+
+    /// Tag type for `all.true`/`all.false` property accessors.
+    public enum All: Sendable {}
+
+    /// Tag type for `toggle.returning(_:)` operation.
+    public enum Toggle: Sendable {}
+
+    /// Tag type for `set.returning(_:)` operation.
+    public enum Set: Sendable {}
+
+    /// Tag type for `clear.returning(_:)` operation.
+    public enum Clear: Sendable {}
+
+    /// Tag type for `byte.set(_:at:order:)` operation.
+    public enum Byte: Sendable {}
+}
+
+// MARK: - Property: statistic.true / statistic.false
+
+extension Array<Bit>.Vector {
+    /// Property accessor for count statistics.
+    ///
+    /// Access `statistic.true` and `statistic.false` for filtered population counts.
+    ///
+    /// ## Example
+    ///
+    /// ```swift
+    /// let bits = Array<Bit>.Vector([true, false, true, false, true])
+    /// bits.statistic.true   // 3
+    /// bits.statistic.false  // 2
+    /// ```
     @inlinable
-    public var trueCount: Bit.Index.Count { popcount }
+    public var statistic: Property<Statistic, Self> {
+        Property(self)
+    }
+}
 
-    /// Returns the number of `false` values in the array.
+extension Property where Tag == Array<Bit>.Vector.Statistic, Base == Array<Bit>.Vector {
+    /// The number of `true` values in the array.
     @inlinable
-    public var falseCount: Bit.Index.Count? { _count - popcount }
+    public var `true`: Bit.Index.Count { base.popcount }
 
+    /// The number of `false` values in the array.
+    @inlinable
+    public var `false`: Bit.Index.Count? { base._count - base.popcount }
+}
+
+// MARK: - Property: all.true / all.false
+
+extension Array<Bit>.Vector {
+    /// Property accessor for universality checks.
+    ///
+    /// Access `all.true` and `all.false` for checking if all elements match.
+    ///
+    /// ## Example
+    ///
+    /// ```swift
+    /// let bits = Array<Bit>.Vector([true, true, true])
+    /// bits.all.true   // true
+    /// bits.all.false  // false
+    /// ```
+    @inlinable
+    public var all: Property<All, Self> {
+        Property(self)
+    }
+}
+
+extension Property where Tag == Array<Bit>.Vector.All, Base == Array<Bit>.Vector {
     /// Whether all elements are `true`.
     @inlinable
-    public var allTrue: Bool {
-        guard _count > .zero else { return true }
-        return popcount == _count
+    public var `true`: Bool {
+        guard base._count > .zero else { return true }
+        return base.popcount == base._count
     }
 
     /// Whether all elements are `false`.
     @inlinable
-    public var allFalse: Bool {
-        popcount == .zero
+    public var `false`: Bool {
+        base.popcount == .zero
     }
 }
 
@@ -561,6 +663,11 @@ extension Array<Bit>.Vector {
         }
     }
 
+}
+
+// MARK: - Property: byte / byte.set
+
+extension Array<Bit>.Vector {
     /// Extracts a byte at the given byte-aligned position with specified bit order.
     @inlinable
     public func byte(at byteIndex: Index_Primitives.Index<UInt8>, order: Bit.Order) -> UInt8 {
@@ -580,12 +687,36 @@ extension Array<Bit>.Vector {
         return result
     }
 
+    /// Property view for byte-level set operations.
+    ///
+    /// Access `byte.set(_:at:order:)` to write a byte at a position.
+    ///
+    /// ## Example
+    ///
+    /// ```swift
+    /// var bits = Array<Bit>.Vector(count: 16)
+    /// bits.byte.set(0xFF, at: 0, order: .lsb)
+    /// ```
+    @inlinable
+    public var byte: Property<Byte, Self>.View {
+        mutating _read {
+            yield unsafe Property<Byte, Self>.View(&self)
+        }
+        mutating _modify {
+            var view = unsafe Property<Byte, Self>.View(&self)
+            yield &view
+        }
+    }
+}
+
+extension Property.View where Tag == Array<Bit>.Vector.Byte, Base == Array<Bit>.Vector {
     /// Sets a byte at the given byte-aligned position with specified bit order.
     @inlinable
-    public mutating func setByte(_ byte: UInt8, at byteIndex: Index_Primitives.Index<UInt8>, order: Bit.Order) {
+    public func set(_ byte: UInt8, at byteIndex: Index_Primitives.Index<UInt8>, order: Bit.Order) {
+        let count = unsafe base.pointee._count
         for bitOffset in 0..<8 {
             let idx = Bit.Index(byteIndex, bitOffset: bitOffset)
-            guard idx < _count else { break }
+            guard idx < count else { break }
             let bitValue: Bool
             switch order {
             case .lsb:
@@ -593,7 +724,7 @@ extension Array<Bit>.Vector {
             case .msb:
                 bitValue = (byte & (1 << (7 - bitOffset))) != 0
             }
-            self[idx] = bitValue
+            unsafe base.pointee[idx] = bitValue
         }
     }
 }
@@ -614,30 +745,107 @@ extension Array<Bit>.Vector {
     }
 }
 
-// MARK: - Bit.Value Tagged Results
+// MARK: - Property: toggle.returning
 
 extension Array<Bit>.Vector {
+    /// Property view for toggle operations with return values.
+    ///
+    /// Access `toggle.returning(_:)` to toggle a bit and receive the new value.
+    ///
+    /// ## Example
+    ///
+    /// ```swift
+    /// var bits = Array<Bit>.Vector([true, false, true])
+    /// let result = try bits.toggle.returning(1)  // Bit.Value(.one, 1)
+    /// ```
+    @inlinable
+    public var toggle: Property<Toggle, Self>.View {
+        mutating _read {
+            yield unsafe Property<Toggle, Self>.View(&self)
+        }
+        mutating _modify {
+            var view = unsafe Property<Toggle, Self>.View(&self)
+            yield &view
+        }
+    }
+}
+
+extension Property.View where Tag == Array<Bit>.Vector.Toggle, Base == Array<Bit>.Vector {
     /// Toggles the bit at index and returns the new value with its index.
     @inlinable
-    public mutating func toggleReturning(_ index: Bit.Index) throws(Array<Bit>.Vector.Error) -> Bit.Value<Bit.Index> {
-        try toggle(index)
-        let newValue = Bit(try get(index))
+    public func returning(_ index: Bit.Index) throws(Array<Bit>.Vector.Error) -> Bit.Value<Bit.Index> {
+        try unsafe base.pointee.toggle(index)
+        let newValue = Bit(try unsafe base.pointee.get(index))
         return Bit.Value(newValue, index)
     }
+}
 
+// MARK: - Property: set.returning
+
+extension Array<Bit>.Vector {
+    /// Property view for set operations with return values.
+    ///
+    /// Access `set.returning(_:)` to set a bit and receive the previous value.
+    ///
+    /// ## Example
+    ///
+    /// ```swift
+    /// var bits = Array<Bit>.Vector([false, false, false])
+    /// let result = try bits.set.returning(1)  // Bit.Value(.zero, 1)
+    /// ```
+    @inlinable
+    public var `set`: Property<Set, Self>.View {
+        mutating _read {
+            yield unsafe Property<Set, Self>.View(&self)
+        }
+        mutating _modify {
+            var view = unsafe Property<Set, Self>.View(&self)
+            yield &view
+        }
+    }
+}
+
+extension Property.View where Tag == Array<Bit>.Vector.Set, Base == Array<Bit>.Vector {
     /// Sets the bit at index and returns the previous value with its index.
     @inlinable
-    public mutating func setReturning(_ index: Bit.Index) throws(Array<Bit>.Vector.Error) -> Bit.Value<Bit.Index> {
-        let previous = Bit(try get(index))
-        try set(index)
+    public func returning(_ index: Bit.Index) throws(Array<Bit>.Vector.Error) -> Bit.Value<Bit.Index> {
+        let previous = Bit(try unsafe base.pointee.get(index))
+        try unsafe base.pointee.set(index)
         return Bit.Value(previous, index)
     }
+}
 
+// MARK: - Property: clear.returning
+
+extension Array<Bit>.Vector {
+    /// Property view for clear operations with return values.
+    ///
+    /// Access `clear.returning(_:)` to clear a bit and receive the previous value.
+    ///
+    /// ## Example
+    ///
+    /// ```swift
+    /// var bits = Array<Bit>.Vector([true, true, true])
+    /// let result = try bits.clear.returning(1)  // Bit.Value(.one, 1)
+    /// ```
+    @inlinable
+    public var clear: Property<Clear, Self>.View {
+        mutating _read {
+            yield unsafe Property<Clear, Self>.View(&self)
+        }
+        mutating _modify {
+            var view = unsafe Property<Clear, Self>.View(&self)
+            yield &view
+        }
+    }
+}
+
+extension Property.View where Tag == Array<Bit>.Vector.Clear, Base == Array<Bit>.Vector {
     /// Clears the bit at index and returns the previous value with its index.
     @inlinable
-    public mutating func clearReturning(_ index: Bit.Index) throws(Array<Bit>.Vector.Error) -> Bit.Value<Bit.Index> {
-        let previous = Bit(try get(index))
-        try clear(index)
+    public func returning(_ index: Bit.Index) throws(Array<Bit>.Vector.Error) -> Bit.Value<Bit.Index> {
+        let previous = Bit(try unsafe base.pointee.get(index))
+        try unsafe base.pointee.clear(index)
         return Bit.Value(previous, index)
     }
 }

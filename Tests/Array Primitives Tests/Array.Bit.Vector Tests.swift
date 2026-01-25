@@ -133,7 +133,7 @@ extension ArrayBitVectorTests.Unit {
         let bits = Array<Bit>.Vector(repeating: true, count: 5)
 
         #expect(bits.count == 5)
-        #expect(bits.allTrue)
+        #expect(bits.all.true)
         for i in try! (0..<5).map(Bit.Index.init) {
             #expect(bits[i] == true)
         }
@@ -144,7 +144,7 @@ extension ArrayBitVectorTests.Unit {
         let bits = Array<Bit>.Vector(repeating: false, count: 5)
 
         #expect(bits.count == 5)
-        #expect(bits.allFalse)
+        #expect(bits.all.false)
         for i in try! (0..<5).map(Bit.Index.init) {
             #expect(bits[i] == false)
         }
@@ -196,28 +196,28 @@ extension ArrayBitVectorTests.Unit {
         #expect(bits[2] == false)
     }
 
-    @Test("trueCount and falseCount")
-    func trueAndFalseCount() {
+    @Test("statistic.true and statistic.false")
+    func statisticTrueAndFalse() {
         let bits = Array<Bit>.Vector([true, false, true, false, true])
 
-        #expect(bits.trueCount == 3)
-        #expect(bits.falseCount == 2)  // Optional comparison works with ExpressibleByIntegerLiteral
+        #expect(bits.statistic.true == 3)
+        #expect(bits.statistic.false == 2)  // Optional comparison works with ExpressibleByIntegerLiteral
     }
 
-    @Test("allTrue and allFalse")
+    @Test("all.true and all.false")
     func allTrueAndAllFalse() {
-        let allTrue = Array<Bit>.Vector([true, true, true])
-        let allFalse = Array<Bit>.Vector([false, false, false])
+        let allTrueVector = Array<Bit>.Vector([true, true, true])
+        let allFalseVector = Array<Bit>.Vector([false, false, false])
         let mixed = Array<Bit>.Vector([true, false, true])
 
-        #expect(allTrue.allTrue)
-        #expect(!allTrue.allFalse)
+        #expect(allTrueVector.all.true)
+        #expect(!allTrueVector.all.false)
 
-        #expect(!allFalse.allTrue)
-        #expect(allFalse.allFalse)
+        #expect(!allFalseVector.all.true)
+        #expect(allFalseVector.all.false)
 
-        #expect(!mixed.allTrue)
-        #expect(!mixed.allFalse)
+        #expect(!mixed.all.true)
+        #expect(!mixed.all.false)
     }
 
     @Test("Iteration")
@@ -324,8 +324,8 @@ extension ArrayBitVectorTests.EdgeCase {
         bits[999] = true
 
         #expect(bits.count == 1000)
-        #expect(bits.trueCount == 3)
-        #expect(bits.falseCount == 997)
+        #expect(bits.statistic.true == 3)
+        #expect(bits.statistic.false == 997)
     }
 }
 
