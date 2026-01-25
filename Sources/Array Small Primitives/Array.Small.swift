@@ -8,3 +8,4 @@
 import Array_Primitives_Core
 
 extension Array.Small: @unchecked Sendable where Element: Sendable {}
+

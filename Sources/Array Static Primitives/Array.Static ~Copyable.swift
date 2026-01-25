@@ -16,21 +16,6 @@ public import Property_Primitives
 public import Range_Primitives
 public import Sequence_Primitives
 
-// ============================================================================
-// MARK: - Collection Protocol Conformances
-// ============================================================================
-
-// MARK: - Collection.Protocol Conformance
-// Note: Index, startIndex, endIndex, index(after:) defined in Collection.Indexed conformance
-
-extension Array.Static: Collection.`Protocol` {}
-
-// MARK: - Collection.Access.Random Conformance
-// Note: Collection.Bidirectional conformance is provided below
-// for ALL element types (including ~Copyable) via `where Element: ~Copyable`.
-
-extension Array.Static: Collection.Access.Random {}
-
 // MARK: - Collection.Indexed Conformance
 
 extension Array.Static: Collection.Indexed where Element: ~Copyable {
@@ -51,81 +36,6 @@ extension Array.Static: Collection.Indexed where Element: ~Copyable {
 extension Array.Static: Collection.Bidirectional where Element: ~Copyable {
     @inlinable
     public func index(before i: Index) -> Index { (i - 1)! }
-}
-
-// Note: Array.Static cannot conform to Swift.Collection because it is unconditionally
-// ~Copyable (has deinit for inline storage cleanup). Swift.Collection requires Self: Copyable.
-
-// ============================================================================
-// MARK: - Sequence Protocol Conformances
-// ============================================================================
-
-// MARK: - Iterator
-
-extension Array.Static {
-    /// Pointer-based iterator for Array.Static.
-    ///
-    /// Zero-copy iteration using typed `Index<Element>` for position tracking.
-    /// The iterator holds a pointer to the inline storage.
-    ///
-    /// ## Safety
-    ///
-    /// The iterator is only valid while the source array exists and is not mutated.
-    /// Since Array.Static uses inline storage that moves with the struct, the
-    /// iterator must be used within the same scope where it was created.
-    @safe
-    public struct Iterator: IteratorProtocol {
-        @usableFromInline
-        let base: UnsafePointer<Element>
-
-        @usableFromInline
-        let end: Index.Count
-
-        @usableFromInline
-        var position: Index
-
-        @usableFromInline @unsafe
-        init(base: UnsafePointer<Element>, count: Index.Count) {
-            unsafe self.base = base
-            self.end = count
-            self.position = .zero
-        }
-
-        @inlinable
-        public mutating func next() -> Element? {
-            guard position < end else { return nil }
-            let result = unsafe base[position]
-            position = (position + 1)!
-            return result
-        }
-    }
-}
-
-extension Array.Static.Iterator: @unchecked Sendable where Element: Sendable {}
-
-// MARK: - Sequence.Protocol Conformance
-
-extension Array.Static: Sequence.`Protocol` {
-    /// Returns a pointer-based iterator over the array elements.
-    ///
-    /// Zero-copy iteration - no allocation, no element copying.
-    /// Uses typed `Index<Element>` for position tracking.
-    ///
-    /// ## Note
-    ///
-    /// Array.Static uses inline storage. The iterator captures a pointer to
-    /// element 0, which is valid for the duration of this borrow.
-    @inlinable
-    public borrowing func makeIterator() -> Iterator {
-        // Get pointer to first element (or a valid pointer if empty)
-        if count > 0 {
-            let basePtr = unsafe storage.read(at: .zero)
-            return unsafe Iterator(base: basePtr, count: count)
-        } else {
-            // Empty array - pointer is irrelevant, count is zero
-            return unsafe Iterator(base: UnsafePointer<Element>(bitPattern: 1)!, count: .zero)
-        }
-    }
 }
 
 // ============================================================================
@@ -214,28 +124,6 @@ where Tag == Sequence.ForEach, Base == Array<Element>.Static<n>, Element: ~Copya
         (0..<count).forEach { i in
             unsafe body(base.pointee.storage.read(at: i).pointee)
         }
-    }
-}
-
-// MARK: - ForEach: Consuming Operations (Copyable only)
-
-extension Property.View.Typed.Valued
-where Tag == Sequence.ForEach, Base == Array<Element>.Static<n>, Element: Copyable {
-    /// Consuming iteration: `.forEach.consuming { }`
-    ///
-    /// Iterates over all elements and then clears the array.
-    /// Only available for `Copyable` elements.
-    ///
-    /// - Parameter body: A closure called with each element.
-    @_lifetime(&self)
-    @inlinable
-    public mutating func consuming(_ body: (Element) -> Void) {
-        let count = unsafe base.pointee.count
-        (0..<count).forEach { i in
-            unsafe body(base.pointee.storage.read(at: i).pointee)
-        }
-        unsafe base.pointee.storage.deinitialize(count: count)
-        unsafe base.pointee.count = Index<Element>.Count(__unchecked: 0)
     }
 }
 
@@ -450,21 +338,6 @@ extension Array.Static where Element: ~Copyable {
         _modify {
             precondition(index < count, "Index out of bounds")
             yield &(unsafe storage.pointer(at: index).pointee)
-        }
-    }
-}
-
-// ============================================================================
-// MARK: - Error Description
-// ============================================================================
-
-extension Array.Static.Error: CustomStringConvertible {
-    public var description: String {
-        switch self {
-        case .overflow:
-            return "static array is full"
-        case .indexOutOfBounds(let index, let count):
-            return "index \(index) out of bounds for count \(count)"
         }
     }
 }

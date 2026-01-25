@@ -1,5 +1,5 @@
 //
-//  File.swift
+//  Array.Static Copyable.swift
 //  swift-array-primitives
 //
 //  Created by Coen ten Thije Boonkkamp on 24/01/2026.
@@ -7,9 +7,37 @@
 
 public import Array_Primitives_Core
 public import Index_Primitives
+public import Property_Primitives
+public import Range_Primitives
+public import Sequence_Primitives
 
+// ============================================================================
+// MARK: - ForEach: Consuming Operations (Copyable only)
+// ============================================================================
 
+extension Property.View.Typed.Valued
+where Tag == Sequence.ForEach, Base == Array<Element>.Static<n>, Element: Copyable {
+    /// Consuming iteration: `.forEach.consuming { }`
+    ///
+    /// Iterates over all elements and then clears the array.
+    /// Only available for `Copyable` elements.
+    ///
+    /// - Parameter body: A closure called with each element.
+    @_lifetime(&self)
+    @inlinable
+    public mutating func consuming(_ body: (Element) -> Void) {
+        let count = unsafe base.pointee.count
+        (0..<count).forEach { i in
+            unsafe body(base.pointee.storage.read(at: i).pointee)
+        }
+        unsafe base.pointee.storage.deinitialize(count: count)
+        unsafe base.pointee.count = Index<Element>.Count(__unchecked: 0)
+    }
+}
+
+// ============================================================================
 // MARK: - Safe Element Access (Copyable elements only)
+// ============================================================================
 
 extension Array.Static where Element: Copyable {
     /// Returns the element at the typed index, or nil if out of bounds.
@@ -40,6 +68,10 @@ extension Array.Static where Element: Copyable {
         return unsafe storage.read(at: newIndex).pointee
     }
 }
+
+// ============================================================================
+// MARK: - Typed Subscript (Copyable)
+// ============================================================================
 
 extension Array.Static where Element: Copyable {
     /// Accesses the element at the given typed index (copy semantics for Copyable elements).
