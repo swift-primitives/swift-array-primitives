@@ -103,7 +103,7 @@ extension Array<Bit>.Vector.Fixed {
 // MARK: - Tag Types
 
 extension Array<Bit>.Vector.Fixed {
-    /// Tag type for `count.true`/`count.false` property accessors.
+    /// Tag type for `statistic.true`/`statistic.false` property accessors.
     public enum Statistic: Sendable {}
 
     /// Tag type for `all.true`/`all.false` property accessors.

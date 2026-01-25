@@ -151,7 +151,7 @@ extension Array.Static where Element: ~Copyable {
     /// Appends an element to the array.
     ///
     /// - Parameter element: The element to append (consumed).
-    /// - Throws: ``Array/Inline/Error/overflow`` if the array is full.
+    /// - Throws: ``Array.Static.Error.overflow`` if the array is full.
     @inlinable
     public mutating func append(_ element: consuming Element) throws(Array.Static.Error) {
         guard count.rawValue < capacity else {

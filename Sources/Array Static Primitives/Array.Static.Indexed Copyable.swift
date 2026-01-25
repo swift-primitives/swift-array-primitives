@@ -9,7 +9,7 @@
 //
 // ===----------------------------------------------------------------------===//
 
-import Index_Primitives
+public import Index_Primitives
 public import Array_Primitives_Core
 
 // ============================================================================

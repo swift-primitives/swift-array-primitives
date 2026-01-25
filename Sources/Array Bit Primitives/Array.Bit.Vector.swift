@@ -46,9 +46,9 @@ extension Array where Element == Bit {
     ///
     /// ## Variants
     ///
-    /// - ``Array/Packed-swift.struct``: Dynamically-growing storage (this type)
-    /// - ``Array/Packed-swift.struct/Fixed``: Fixed-capacity, throws on overflow
-    /// - ``Array/Packed-swift.struct/Inline``: Zero-allocation inline storage with compile-time capacity
+    /// - ``Array<Bit>.Vector``: Dynamically-growing storage (this type)
+    /// - ``Array<Bit>.Vector.Fixed``: Fixed-capacity, throws on overflow
+    /// - ``Array<Bit>.Vector.Inline``: Zero-allocation inline storage with compile-time capacity
     public struct Vector: Sendable {
         @usableFromInline
         static var _bitsPerWord: Int { UInt.bitWidth }
@@ -183,7 +183,6 @@ extension Array<Bit>.Vector {
 extension Array<Bit>.Vector {
     @inlinable
     public mutating func resize(to newCount: Index.Count, fill: Bool = false) {
-        let oldStorage = Bit.Index.Storage(count: _count, bitsPerWord: Self._bitsPerWord)
         let newStorage = Bit.Index.Storage(count: newCount, bitsPerWord: Self._bitsPerWord)
         let oldWordCount = _storage.count
 
@@ -290,7 +289,7 @@ extension Array<Bit>.Vector {
 // MARK: - Tag Types
 
 extension Array<Bit>.Vector {
-    /// Tag type for `count.true`/`count.false` property accessors.
+    /// Tag type for `statistic.true`/`statistic.false` property accessors.
     public enum Statistic: Sendable {}
 
     /// Tag type for `all.true`/`all.false` property accessors.
@@ -662,7 +661,6 @@ extension Array<Bit>.Vector {
             }
         }
     }
-
 }
 
 // MARK: - Property: byte / byte.set

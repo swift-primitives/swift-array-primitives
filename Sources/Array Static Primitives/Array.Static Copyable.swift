@@ -91,6 +91,6 @@ where Tag == Sequence.ForEach, Base == Array<Element>.Static<n>, Element: Copyab
             unsafe body(base.pointee.storage.read(at: i).pointee)
         }
         unsafe base.pointee.storage.deinitialize(count: count)
-        unsafe base.pointee.count = Index<Element>.Count(__unchecked: 0)
+        unsafe base.pointee.count = .zero
     }
 }

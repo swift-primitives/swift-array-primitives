@@ -9,7 +9,7 @@
 //
 // ===----------------------------------------------------------------------===//
 
-import Index_Primitives
+public import Index_Primitives
 public import Array_Primitives_Core
 
 // MARK: - Array.Fixed.Indexed
@@ -92,7 +92,3 @@ extension Array.Fixed.Indexed {
     @inlinable
     public var isEmpty: Bool { _storage.isEmpty }
 }
-
-
-
-

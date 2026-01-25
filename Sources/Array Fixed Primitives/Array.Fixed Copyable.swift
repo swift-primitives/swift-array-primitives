@@ -1,9 +1,13 @@
+// ===----------------------------------------------------------------------===//
 //
-//  File.swift
-//  swift-array-primitives
+// This source file is part of the swift-primitives open source project
 //
-//  Created by Coen ten Thije Boonkkamp on 24/01/2026.
+// Copyright (c) 2024-2026 Coen ten Thije Boonkkamp and the swift-primitives project authors
+// Licensed under Apache License v2.0
 //
+// See LICENSE for license information
+//
+// ===----------------------------------------------------------------------===//
 
 public import Collection_Primitives
 public import Array_Primitives_Core
@@ -28,7 +32,6 @@ extension Array.Fixed: Swift.Sequence where Element: Copyable {
 extension Array.Fixed: Swift.Collection where Element: Copyable {}
 extension Array.Fixed: Swift.BidirectionalCollection where Element: Copyable {}
 extension Array.Fixed: Swift.RandomAccessCollection where Element: Copyable {}
-
 
 extension Array.Fixed where Element: Copyable {
     /// Accesses the element at the given typed index (copy semantics for Copyable elements).
