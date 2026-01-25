@@ -161,18 +161,18 @@ extension ArrayTests.Unit {
 
         // Mutate the copy
         copy.append(4)
-        copy[try Index<Int>(0)] = 100
+        copy[try Index<Int>.init(0)] = 100
 
         // Original should be unchanged
         #expect(original.count == 3)
-        #expect(original[try Index<Int>(0)] == 1)
-        #expect(original[try Index<Int>(1)] == 2)
-        #expect(original[try Index<Int>(2)] == 3)
+        #expect(original[try Index<Int>.init(0)] == 1)
+        #expect(original[try Index<Int>.init(1)] == 2)
+        #expect(original[try Index<Int>.init(2)] == 3)
 
         // Copy should have the mutations
         #expect(copy.count == 4)
-        #expect(copy[try Index<Int>(0)] == 100)
-        #expect(copy[try Index<Int>(3)] == 4)
+        #expect(copy[try Index<Int>.init(0)] == 100)
+        #expect(copy[try Index<Int>.init(3)] == 4)
     }
 
     @Test("CoW: Mutation of original does not affect copy")
@@ -182,17 +182,17 @@ extension ArrayTests.Unit {
         original.append(2)
         original.append(3)
 
-        var copy = original
+        let copy = original
 
         // Mutate the original
         original.append(4)
-        original[try Index<Int>(0)] = 100
+        original[try Index<Int>.init(0)] = 100
 
         // Copy should be unchanged
         #expect(copy.count == 3)
-        #expect(copy[try Index<Int>(0)] == 1)
-        #expect(copy[try Index<Int>(1)] == 2)
-        #expect(copy[try Index<Int>(2)] == 3)
+        #expect(copy[try Index<Int>.init(0)] == 1)
+        #expect(copy[try Index<Int>.init(1)] == 2)
+        #expect(copy[try Index<Int>.init(2)] == 3)
     }
 
     @Test("CoW: Multiple copies are independent")
@@ -208,9 +208,9 @@ extension ArrayTests.Unit {
         copy2.append(200)
         original.append(300)
 
-        #expect(original[try Index<Int>(2)] == 300)
-        #expect(copy1[try Index<Int>(2)] == 100)
-        #expect(copy2[try Index<Int>(2)] == 200)
+        #expect(original[try Index<Int>.init(2)] == 300)
+        #expect(copy1[try Index<Int>.init(2)] == 100)
+        #expect(copy2[try Index<Int>.init(2)] == 200)
     }
 
     // MARK: - Capacity Invariants
@@ -274,7 +274,7 @@ extension ArrayTests.Unit {
 
         let span = array.span
         for i in 0..<5 {
-            #expect(span[i] == array[try Index<Int>(i)])
+            #expect(span[i] == array[try Index<Int>.init(i)])
         }
     }
 }
@@ -289,7 +289,7 @@ extension ArrayTests.EdgeCase {
 
         array.append(42)
         #expect(array.count == 1)
-        #expect(array[try Index<Int>(0)] == 42)
+        #expect(array[try Index<Int>.init(0)] == 42)
 
         var elements: [Int] = []
         array.forEach { elements.append($0) }
@@ -313,7 +313,7 @@ extension ArrayTests.EdgeCase {
 
         // Verify all elements preserved through growth
         for i in 0..<1000 {
-            #expect(array[try Index<Int>(i)] == i * 2)
+            #expect(array[try Index<Int>.init(i)] == i * 2)
         }
 
         // Verify forEach still works
@@ -352,8 +352,8 @@ extension ArrayTests.EdgeCase {
         array.append(200)
 
         #expect(array.count == 2)
-        #expect(array[try Index<Int>(0)] == 100)
-        #expect(array[try Index<Int>(1)] == 200)
+        #expect(array[try Index<Int>.init(0)] == 100)
+        #expect(array[try Index<Int>.init(1)] == 200)
     }
 }
 
