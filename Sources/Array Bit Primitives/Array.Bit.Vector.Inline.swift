@@ -11,6 +11,7 @@
 
 public import Bit_Primitives
 public import Array_Primitives_Core
+public import Index_Primitives
 
 // MARK: - Array<Bit>.Vector.Inline
 
@@ -44,19 +45,19 @@ extension Array<Bit>.Vector {
 
         /// The maximum number of bits that can be stored.
         @inlinable
-        public static var capacity: Int { wordCount * _bitsPerWord }
+        public static var _capacity: Index.Count { Index.Count(__unchecked: wordCount * _bitsPerWord) }
 
         @usableFromInline
         var _storage: InlineArray<wordCount, UInt>
 
         @usableFromInline
-        var _count: Int
+        var _count: Index.Count
 
         /// Creates an empty inline packed bit array.
         @inlinable
         public init() {
             self._storage = InlineArray(repeating: 0)
-            self._count = 0
+            self._count = .zero
         }
 
         /// Creates an inline packed bit array with an initial count.
@@ -64,8 +65,8 @@ extension Array<Bit>.Vector {
         /// - Parameter count: The initial number of bits (all set to false).
         /// - Throws: `Error.overflow` if count exceeds capacity.
         @inlinable
-        public init(count: Int) throws(Error) {
-            guard count >= 0 && count <= Self.capacity else {
+        public init(count: Index.Count) throws(Error) {
+            guard count <= Self._capacity else {
                 throw .overflow
             }
             self._storage = InlineArray(repeating: 0)
@@ -79,29 +80,29 @@ extension Array<Bit>.Vector {
 extension Array<Bit>.Vector.Inline {
     /// The number of bits in the array.
     @inlinable
-    public var count: Int { _count }
+    public var count: Bit.Index.Count { _count }
 
     /// The maximum number of bits the array can hold.
     @inlinable
-    public var capacity: Int { Self.capacity }
+    public var capacity: Bit.Index.Count { Self._capacity }
 
     /// Whether the array is empty.
     @inlinable
-    public var isEmpty: Bool { _count == 0 }
+    public var isEmpty: Bool { _count == .zero }
 
     /// Whether the array is at full capacity.
     @inlinable
-    public var isFull: Bool { _count >= Self.capacity }
+    public var isFull: Bool { _count >= Self._capacity }
 
     /// The number of remaining slots.
     @inlinable
-    public var remainingCapacity: Int { Self.capacity - _count }
+    public var remainingCapacity: Bit.Index.Count? { Self._capacity - _count }
 
     /// Population count (number of set bits).
     @inlinable
     public var popcount: Int {
         var total = 0
-        let usedWords = (_count + Self._bitsPerWord - 1) / Self._bitsPerWord
+        let usedWords = (_count.rawValue + Self._bitsPerWord - 1) / Self._bitsPerWord
         for i in 0..<usedWords {
             total += _storage[i].nonzeroBitCount
         }
@@ -115,14 +116,12 @@ extension Array<Bit>.Vector.Inline {
     @inlinable
     public subscript(index: Bit.Index) -> Bool {
         get {
-            let i = index.position.rawValue
-            precondition(i >= 0 && i < _count, "Index out of bounds")
+            precondition(index < _count, "Index out of bounds")
             let loc = index.location(bitsPerWord: Self._bitsPerWord)
             return (_storage[loc.word] & loc.mask) != 0
         }
         set {
-            let i = index.position.rawValue
-            precondition(i >= 0 && i < _count, "Index out of bounds")
+            precondition(index < _count, "Index out of bounds")
             let loc = index.location(bitsPerWord: Self._bitsPerWord)
             if newValue {
                 _storage[loc.word] |= loc.mask
@@ -140,9 +139,8 @@ extension Array<Bit>.Vector.Inline {
 
     @inlinable
     public func get(_ index: Bit.Index) throws(Error) -> Bool {
-        let i = index.position.rawValue
-        guard i >= 0 && i < _count else {
-            throw .bounds(index: i, count: _count)
+        guard index < _count else {
+            throw .bounds(index: index.position.rawValue, count: _count.rawValue)
         }
         let loc = index.location(bitsPerWord: Self._bitsPerWord)
         return (_storage[loc.word] & loc.mask) != 0
@@ -154,9 +152,8 @@ extension Array<Bit>.Vector.Inline {
 extension Array<Bit>.Vector.Inline {
     @inlinable
     public mutating func set(_ index: Bit.Index) throws(Error) {
-        let i = index.position.rawValue
-        guard i >= 0 && i < _count else {
-            throw .bounds(index: i, count: _count)
+        guard index < _count else {
+            throw .bounds(index: index.position.rawValue, count: _count.rawValue)
         }
         let loc = index.location(bitsPerWord: Self._bitsPerWord)
         _storage[loc.word] |= loc.mask
@@ -164,9 +161,8 @@ extension Array<Bit>.Vector.Inline {
 
     @inlinable
     public mutating func clear(_ index: Bit.Index) throws(Error) {
-        let i = index.position.rawValue
-        guard i >= 0 && i < _count else {
-            throw .bounds(index: i, count: _count)
+        guard index < _count else {
+            throw .bounds(index: index.position.rawValue, count: _count.rawValue)
         }
         let loc = index.location(bitsPerWord: Self._bitsPerWord)
         _storage[loc.word] &= ~loc.mask
@@ -174,9 +170,8 @@ extension Array<Bit>.Vector.Inline {
 
     @inlinable
     public mutating func toggle(_ index: Bit.Index) throws(Error) {
-        let i = index.position.rawValue
-        guard i >= 0 && i < _count else {
-            throw .bounds(index: i, count: _count)
+        guard index < _count else {
+            throw .bounds(index: index.position.rawValue, count: _count.rawValue)
         }
         let loc = index.location(bitsPerWord: Self._bitsPerWord)
         _storage[loc.word] ^= loc.mask
@@ -191,12 +186,12 @@ extension Array<Bit>.Vector.Inline {
 
     @inlinable
     public mutating func setAll() {
-        let usedWords = (_count + Self._bitsPerWord - 1) / Self._bitsPerWord
+        let usedWords = (_count.rawValue + Self._bitsPerWord - 1) / Self._bitsPerWord
         for i in 0..<usedWords {
             _storage[i] = ~0
         }
         // Clear unused high bits
-        let unusedBits = usedWords * Self._bitsPerWord - _count
+        let unusedBits = usedWords * Self._bitsPerWord - _count.rawValue
         if unusedBits > 0 && usedWords > 0 {
             let lastWord = usedWords - 1
             let mask: UInt = ~0 >> unusedBits
@@ -214,18 +209,15 @@ extension Array<Bit>.Vector.Inline {
     /// - Throws: `Error.overflow` if the array is at capacity.
     @inlinable
     public mutating func append(_ value: Bool) throws(Error) {
-        guard _count < Self.capacity else {
+        guard _count < Self._capacity else {
             throw .overflow
         }
-        let newIndex = _count
-        let wordIndex = newIndex / Self._bitsPerWord
-        let bitIndex = newIndex % Self._bitsPerWord
+        let loc = Bit.Index.Location(count: _count, bitsPerWord: Self._bitsPerWord)
 
         if value {
-            let mask: UInt = 1 << bitIndex
-            _storage[wordIndex] |= mask
+            _storage[loc.word] |= loc.mask
         }
-        _count += 1
+        _count = Index.Count(__unchecked: _count.rawValue + 1)
     }
 
     /// Appends a `Bit` value to the array.
@@ -238,32 +230,28 @@ extension Array<Bit>.Vector.Inline {
     @discardableResult
     @inlinable
     public mutating func popLast() -> Bool? {
-        guard _count > 0 else { return nil }
-        _count -= 1
-        let wordIndex = _count / Self._bitsPerWord
-        let bitIndex = _count % Self._bitsPerWord
-        let mask: UInt = 1 << bitIndex
-        let value = (_storage[wordIndex] & mask) != 0
-        _storage[wordIndex] &= ~mask
+        guard let newCount = _count - .one else { return nil }
+        _count = newCount
+        let loc = Bit.Index.Location(count: _count, bitsPerWord: Self._bitsPerWord)
+        let value = (_storage[loc.word] & loc.mask) != 0
+        _storage[loc.word] &= ~loc.mask
         return value
     }
 
     /// Removes the last element.
     @inlinable
     public mutating func removeLast() {
-        precondition(_count > 0, "Cannot remove from empty array")
-        _count -= 1
-        let wordIndex = _count / Self._bitsPerWord
-        let bitIndex = _count % Self._bitsPerWord
-        let mask: UInt = 1 << bitIndex
-        _storage[wordIndex] &= ~mask
+        precondition(_count > .zero, "Cannot remove from empty array")
+        _count = Index.Count(__unchecked: _count.rawValue - 1)
+        let loc = Bit.Index.Location(count: _count, bitsPerWord: Self._bitsPerWord)
+        _storage[loc.word] &= ~loc.mask
     }
 
     /// Removes all elements.
     @inlinable
     public mutating func removeAll() {
         clearAll()
-        _count = 0
+        _count = .zero
     }
 }
 
@@ -272,30 +260,27 @@ extension Array<Bit>.Vector.Inline {
 extension Array<Bit>.Vector.Inline {
     @inlinable
     public var first: Bool? {
-        guard _count > 0 else { return nil }
+        guard _count > .zero else { return nil }
         return (_storage[0] & 1) != 0
     }
 
     @inlinable
     public var last: Bool? {
-        guard _count > 0 else { return nil }
-        let lastIndex = _count - 1
-        let wordIndex = lastIndex / Self._bitsPerWord
-        let bitIndex = lastIndex % Self._bitsPerWord
-        let mask: UInt = 1 << bitIndex
-        return (_storage[wordIndex] & mask) != 0
+        guard let lastCount = _count - .one else { return nil }
+        let loc = Bit.Index.Location(count: lastCount, bitsPerWord: Self._bitsPerWord)
+        return (_storage[loc.word] & loc.mask) != 0
     }
 
     @inlinable
     public var trueCount: Int { popcount }
 
     @inlinable
-    public var falseCount: Int { _count - popcount }
+    public var falseCount: Int { _count.rawValue - popcount }
 
     @inlinable
     public var allTrue: Bool {
-        guard _count > 0 else { return true }
-        return popcount == _count
+        guard _count > .zero else { return true }
+        return popcount == _count.rawValue
     }
 
     @inlinable
@@ -307,7 +292,7 @@ extension Array<Bit>.Vector.Inline {
 extension Array<Bit>.Vector.Inline {
     /// Creates an inline packed bit array with a repeated value.
     @inlinable
-    public init(repeating value: Bool, count: Int) throws(Error) {
+    public init(repeating value: Bool, count: Bit.Index.Count) throws(Error) {
         try self.init(count: count)
         if value {
             setAll()
@@ -322,7 +307,7 @@ extension Array<Bit>.Vector.Inline {
     @inlinable
     public func toPacked() -> Array<Bit>.Vector {
         var result = Array<Bit>.Vector()
-        for i in 0..<_count {
+        for i in 0..<_count.rawValue {
             result.append(self[i])
         }
         return result
@@ -357,7 +342,7 @@ extension Array<Bit>.Vector.Inline: Swift.Sequence {
 
     @inlinable
     public func makeIterator() -> Iterator {
-        Iterator(storage: _storage, count: _count)
+        Iterator(storage: _storage, count: _count.rawValue)
     }
 }
 
@@ -367,7 +352,7 @@ extension Array<Bit>.Vector.Inline: Equatable {
     @inlinable
     public static func == (lhs: Self, rhs: Self) -> Bool {
         guard lhs._count == rhs._count else { return false }
-        let usedWords = (lhs._count + _bitsPerWord - 1) / _bitsPerWord
+        let usedWords = (lhs._count.rawValue + _bitsPerWord - 1) / _bitsPerWord
         for i in 0..<usedWords {
             if lhs._storage[i] != rhs._storage[i] { return false }
         }
@@ -381,7 +366,7 @@ extension Array<Bit>.Vector.Inline: Hashable {
     @inlinable
     public func hash(into hasher: inout Hasher) {
         hasher.combine(_count)
-        let usedWords = (_count + Self._bitsPerWord - 1) / Self._bitsPerWord
+        let usedWords = (_count.rawValue + Self._bitsPerWord - 1) / Self._bitsPerWord
         for i in 0..<usedWords {
             hasher.combine(_storage[i])
         }
@@ -393,7 +378,7 @@ extension Array<Bit>.Vector.Inline: Hashable {
 extension Array<Bit>.Vector.Inline: CustomStringConvertible {
     public var description: String {
         let bits = prefix(64).map { $0 ? "1" : "0" }.joined()
-        let suffix = _count > 64 ? "..." : ""
+        let suffix = _count.rawValue > 64 ? "..." : ""
         return "Array<Bit>.Vector.Inline<\(wordCount)>(\(bits)\(suffix))"
     }
 }
