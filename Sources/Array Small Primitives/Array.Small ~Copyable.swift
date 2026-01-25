@@ -17,10 +17,10 @@ public import Range_Primitives
 public import Sequence_Primitives
 
 // ============================================================================
-// MARK: - Collection Protocol Conformances (~Copyable)
+// MARK: - Collection Conformances
 // ============================================================================
 
-// MARK: - Collection.Indexed Conformance
+// MARK: Collection.Indexed
 
 extension Array.Small: Collection.Indexed where Element: ~Copyable {
     public typealias Index = Array<Element>.Index
@@ -35,7 +35,7 @@ extension Array.Small: Collection.Indexed where Element: ~Copyable {
     public func index(after i: Index) -> Index { (i + 1)! }
 }
 
-// MARK: - Collection.Bidirectional Conformance
+// MARK: Collection.Bidirectional
 
 extension Array.Small: Collection.Bidirectional where Element: ~Copyable {
     @inlinable
@@ -44,167 +44,6 @@ extension Array.Small: Collection.Bidirectional where Element: ~Copyable {
 
 // Note: Array.Small cannot conform to Swift.Collection because it is unconditionally
 // ~Copyable (has deinit for inline storage cleanup). Swift.Collection requires Self: Copyable.
-
-// ============================================================================
-// MARK: - ForEach Property View
-// ============================================================================
-
-extension Array.Small where Element: ~Copyable {
-    /// Property view for iteration operations.
-    ///
-    /// Provides iteration patterns for ALL element types including `~Copyable`:
-    /// - `.forEach { }` — Borrowing iteration via `callAsFunction`
-    /// - `.forEach.borrowing { }` — Explicit borrowing iteration
-    ///
-    /// For `Copyable` elements only:
-    /// - `.forEach.consuming { }` — Consuming iteration (clears array)
-    ///
-    /// ## Example
-    ///
-    /// ```swift
-    /// var array = try Array<Int>.Small<4>()
-    /// array.append(1)
-    /// array.append(2)
-    /// array.append(3)
-    ///
-    /// // Borrowing iteration (works for ALL elements)
-    /// array.forEach { print($0) }
-    ///
-    /// // Consuming iteration (Copyable elements only)
-    /// array.forEach.consuming { print($0) }
-    /// // array is now empty
-    /// ```
-    @inlinable
-    public var forEach: Property<Sequence.ForEach, Self>.View.Typed<Element>.Valued<inlineCapacity> {
-        mutating _read {
-            yield unsafe Property<Sequence.ForEach, Self>.View.Typed<Element>.Valued<inlineCapacity>(&self)
-        }
-        mutating _modify {
-            var view = unsafe Property<Sequence.ForEach, Self>.View.Typed<Element>.Valued<inlineCapacity>(&self)
-            yield &view
-        }
-    }
-}
-
-// MARK: - ForEach: Borrowing Operations (~Copyable)
-
-extension Property.View.Typed.Valued
-where Tag == Sequence.ForEach, Base == Array<Element>.Small<n>, Element: ~Copyable {
-    /// Borrowing iteration: `.forEach { }`
-    ///
-    /// Iterates over all elements without consuming them.
-    /// Works for ALL element types including `~Copyable`.
-    ///
-    /// - Parameter body: A closure called with each borrowed element.
-    @inlinable
-    public func callAsFunction(_ body: (borrowing Element) -> Void) {
-        let count = unsafe base.pointee.count
-        guard count > .zero else { return }
-
-        if let heapState = unsafe base.pointee.heap {
-            _ = unsafe heapState.storage.withUnsafeMutablePointerToElements { elements in
-                (0..<count).forEach { i in
-                    unsafe body(elements[i])
-                }
-            }
-        } else {
-            // Inline storage uses stride-based raw pointer arithmetic
-            let stride = MemoryLayout<Element>.stride
-            unsafe withUnsafePointer(to: base.pointee.inline) { storagePtr in
-                let basePtr = unsafe UnsafeRawPointer(storagePtr)
-                for i in 0..<count.rawValue {
-                    let elementPtr = unsafe (basePtr + i * stride)
-                        .assumingMemoryBound(to: Element.self)
-                    unsafe body(elementPtr.pointee)
-                }
-            }
-        }
-    }
-
-    /// Explicit borrowing iteration: `.forEach.borrowing { }`
-    ///
-    /// Same as `callAsFunction`, but with explicit naming for clarity.
-    /// Works for ALL element types including `~Copyable`.
-    ///
-    /// - Parameter body: A closure called with each borrowed element.
-    @inlinable
-    public func borrowing(_ body: (borrowing Element) -> Void) {
-        callAsFunction(body)
-    }
-}
-
-// ============================================================================
-// MARK: - Drain Property View
-// ============================================================================
-
-extension Array.Small where Element: ~Copyable {
-    /// Property view for draining operations.
-    ///
-    /// Provides `.drain { }` via `callAsFunction`, which removes all elements
-    /// from the array and passes each to the closure with ownership.
-    /// Works for ALL element types including `~Copyable`.
-    ///
-    /// After draining, the array is empty but still usable.
-    ///
-    /// ## Example
-    ///
-    /// ```swift
-    /// var array = try Array<Int>.Small<4>()
-    /// array.append(1)
-    /// array.append(2)
-    /// array.append(3)
-    ///
-    /// // Drain all elements (takes ownership)
-    /// array.drain { element in
-    ///     process(element)
-    /// }
-    /// // array is now empty but still usable
-    /// array.append(4)
-    /// ```
-    @inlinable
-    public var drain: Property<Sequence.Drain, Self>.View.Typed<Element>.Valued<inlineCapacity> {
-        mutating _read {
-            yield unsafe Property<Sequence.Drain, Self>.View.Typed<Element>.Valued<inlineCapacity>(&self)
-        }
-        mutating _modify {
-            var view = unsafe Property<Sequence.Drain, Self>.View.Typed<Element>.Valued<inlineCapacity>(&self)
-            yield &view
-        }
-    }
-}
-
-// MARK: - Drain: Operations (~Copyable)
-
-extension Property.View.Typed.Valued
-where Tag == Sequence.Drain, Base == Array<Element>.Small<n>, Element: ~Copyable {
-    /// Drain iteration: `.drain { }`
-    ///
-    /// Removes all elements from the array, passing each to the closure
-    /// with ownership. After this call, the array is empty but usable.
-    /// Works for ALL element types including `~Copyable`.
-    ///
-    /// - Parameter body: A closure called with each element (consuming).
-    @_lifetime(&self)
-    @inlinable
-    public mutating func callAsFunction(_ body: (consuming Element) -> Void) {
-        let count = unsafe base.pointee.count
-        guard count > .zero else { return }
-
-        if let heapState = unsafe base.pointee.heap {
-            _ = unsafe heapState.storage.withUnsafeMutablePointerToElements { elements in
-                (0..<count).forEach { i in
-                    unsafe body((elements + i).move())
-                }
-            }
-            unsafe base.pointee.heap!.storage.header = 0
-        } else {
-            (0..<count).forEach { i in
-                body(unsafe base.pointee.inline.move(at: i))
-            }
-        }
-        unsafe base.pointee.count = .zero
-    }
-}
 
 // ============================================================================
 // MARK: - Properties
@@ -230,7 +69,76 @@ extension Array.Small where Element: ~Copyable {
 }
 
 // ============================================================================
-// MARK: - Internal Operations
+// MARK: - Subscripts
+// ============================================================================
+
+// MARK: Index Subscript
+
+extension Array.Small where Element: ~Copyable {
+    /// Accesses the element at the given typed index (borrowing access for ~Copyable elements).
+    ///
+    /// - Parameter index: The typed index of the element to access.
+    /// - Precondition: `index` must be in bounds.
+    @inlinable
+    public subscript(index: Index) -> Element {
+        // Note: _read must be mutating because inline storage access requires &self
+        // to obtain a pointer. This is a fundamental limitation - see Non-Mutating-Accessor-Problem.md
+        mutating _read {
+            precondition(index < count, "Index out of bounds")
+            if let heap {
+                yield unsafe heap.pointer[index]
+            } else {
+                yield unsafe inline.read(at: index).pointee
+            }
+        }
+        _modify {
+            precondition(index < count, "Index out of bounds")
+            if let heap {
+                // Note: Using `var` is required for custom subscript with unsafeMutableAddress
+                // to work through optional binding. See: Experiments/pointer-subscript-modify
+                var ptr = unsafe heap.pointer
+                yield &(unsafe ptr[index])
+            } else {
+                yield &(unsafe inline.pointer(at: index).pointee)
+            }
+        }
+    }
+}
+
+// ============================================================================
+// MARK: - Element Access
+// ============================================================================
+
+extension Array.Small where Element: ~Copyable {
+    /// Accesses the element at the given index via closure (for ~Copyable elements).
+    ///
+    /// - Parameters:
+    ///   - index: The index of the element.
+    ///   - body: A closure that receives a borrowed reference to the element.
+    /// - Returns: The result of the closure.
+    /// - Precondition: The index must be in bounds.
+    @inlinable
+    public func withElement<R>(at index: Index, _ body: (borrowing Element) -> R) -> R {
+        precondition(index < count, "Index out of bounds")
+        if let heap {
+            return unsafe heap.storage.withUnsafeMutablePointerToElements { elements in
+                body(unsafe (elements + index).pointee)
+            }
+        } else {
+            // Use withUnsafePointer directly - inline accessor requires mutating context
+            let stride = MemoryLayout<Element>.stride
+            return unsafe withUnsafePointer(to: inline) { storagePtr in
+                let basePtr = unsafe UnsafeRawPointer(storagePtr)
+                let elementPtr = unsafe (basePtr + index.position.rawValue * stride)
+                    .assumingMemoryBound(to: Element.self)
+                return unsafe body(elementPtr.pointee)
+            }
+        }
+    }
+}
+
+// ============================================================================
+// MARK: - Mutating Operations
 // ============================================================================
 
 extension Array.Small where Element: ~Copyable {
@@ -246,17 +154,11 @@ extension Array.Small where Element: ~Copyable {
         precondition(heap == nil, "Already spilled")
 
         let newStorage = Heap.create(minimumCapacity: minimumCapacity)
-        inline.move(to: newStorage, count: count.rawValue)
+        inline.move(to: newStorage, count: count)
         newStorage.header = count.rawValue
         heap = Heap(newStorage)
     }
-}
 
-// ============================================================================
-// MARK: - Core Operations (Base - for ~Copyable elements)
-// ============================================================================
-
-extension Array.Small where Element: ~Copyable {
     /// Appends an element to the array.
     ///
     /// If the array is in inline mode and full, it spills to heap storage first.
@@ -330,39 +232,6 @@ extension Array.Small where Element: ~Copyable {
 }
 
 // ============================================================================
-// MARK: - Borrowed Element Access (for ~Copyable elements)
-// ============================================================================
-
-extension Array.Small where Element: ~Copyable {
-    /// Accesses the element at the given index via closure (for ~Copyable elements).
-    ///
-    /// - Parameters:
-    ///   - index: The index of the element.
-    ///   - body: A closure that receives a borrowed reference to the element.
-    /// - Returns: The result of the closure.
-    /// - Precondition: The index must be in bounds.
-    @inlinable
-    public func withElement<R>(at index: Index, _ body: (borrowing Element) -> R) -> R {
-        precondition(index < count, "Index out of bounds")
-        if let heap {
-            return unsafe heap.storage.withUnsafeMutablePointerToElements { elements in
-                body(unsafe (elements + index).pointee)
-            }
-        } else {
-            // Use withUnsafePointer directly - inline accessor requires mutating context
-            let stride = MemoryLayout<Element>.stride
-            return unsafe withUnsafePointer(to: inline) { storagePtr in
-                let basePtr = unsafe UnsafeRawPointer(storagePtr)
-                let elementPtr = unsafe (basePtr + index.position.rawValue * stride)
-                    .assumingMemoryBound(to: Element.self)
-                return unsafe body(elementPtr.pointee)
-            }
-        }
-    }
-
-}
-
-// ============================================================================
 // MARK: - Span Access
 // ============================================================================
 
@@ -416,7 +285,7 @@ extension Array.Small where Element: ~Copyable {
 }
 
 // ============================================================================
-// MARK: - Buffer Access (Escape Hatch for C Interop)
+// MARK: - Buffer Access
 // ============================================================================
 
 @_spi(Unsafe)
@@ -466,36 +335,162 @@ extension Array.Small where Element: ~Copyable {
 }
 
 // ============================================================================
-// MARK: - Typed Subscript (~Copyable)
+// MARK: - Property Views
 // ============================================================================
 
+// MARK: ForEach Property View
+
 extension Array.Small where Element: ~Copyable {
-    /// Accesses the element at the given typed index (borrowing access for ~Copyable elements).
+    /// Property view for iteration operations.
     ///
-    /// - Parameter index: The typed index of the element to access.
-    /// - Precondition: `index` must be in bounds.
+    /// Provides iteration patterns for ALL element types including `~Copyable`:
+    /// - `.forEach { }` — Borrowing iteration via `callAsFunction`
+    /// - `.forEach.borrowing { }` — Explicit borrowing iteration
+    ///
+    /// For `Copyable` elements only:
+    /// - `.forEach.consuming { }` — Consuming iteration (clears array)
+    ///
+    /// ## Example
+    ///
+    /// ```swift
+    /// var array = try Array<Int>.Small<4>()
+    /// array.append(1)
+    /// array.append(2)
+    /// array.append(3)
+    ///
+    /// // Borrowing iteration (works for ALL elements)
+    /// array.forEach { print($0) }
+    ///
+    /// // Consuming iteration (Copyable elements only)
+    /// array.forEach.consuming { print($0) }
+    /// // array is now empty
+    /// ```
     @inlinable
-    public subscript(index: Index) -> Element {
-        // Note: _read must be mutating because inline storage access requires &self
-        // to obtain a pointer. This is a fundamental limitation - see Non-Mutating-Accessor-Problem.md
+    public var forEach: Property<Sequence.ForEach, Self>.View.Typed<Element>.Valued<inlineCapacity> {
         mutating _read {
-            precondition(index < count, "Index out of bounds")
-            if let heap {
-                yield unsafe heap.pointer[index]
-            } else {
-                yield unsafe inline.read(at: index).pointee
+            yield unsafe Property<Sequence.ForEach, Self>.View.Typed<Element>.Valued<inlineCapacity>(&self)
+        }
+        mutating _modify {
+            var view = unsafe Property<Sequence.ForEach, Self>.View.Typed<Element>.Valued<inlineCapacity>(&self)
+            yield &view
+        }
+    }
+}
+
+// MARK: ForEach: Borrowing Operations (~Copyable)
+
+extension Property.View.Typed.Valued
+where Tag == Sequence.ForEach, Base == Array<Element>.Small<n>, Element: ~Copyable {
+    /// Borrowing iteration: `.forEach { }`
+    ///
+    /// Iterates over all elements without consuming them.
+    /// Works for ALL element types including `~Copyable`.
+    ///
+    /// - Parameter body: A closure called with each borrowed element.
+    @inlinable
+    public func callAsFunction(_ body: (borrowing Element) -> Void) {
+        let count = unsafe base.pointee.count
+        guard count > .zero else { return }
+
+        if let heapState = unsafe base.pointee.heap {
+            _ = unsafe heapState.storage.withUnsafeMutablePointerToElements { elements in
+                (0..<count).forEach { i in
+                    unsafe body(elements[i])
+                }
+            }
+        } else {
+            // Inline storage uses stride-based raw pointer arithmetic
+            let stride = MemoryLayout<Element>.stride
+            unsafe withUnsafePointer(to: base.pointee.inline) { storagePtr in
+                let basePtr = unsafe UnsafeRawPointer(storagePtr)
+                for i in 0..<count.rawValue {
+                    let elementPtr = unsafe (basePtr + i * stride)
+                        .assumingMemoryBound(to: Element.self)
+                    unsafe body(elementPtr.pointee)
+                }
             }
         }
-        _modify {
-            precondition(index < count, "Index out of bounds")
-            if let heap {
-                // Note: Using `var` is required for custom subscript with unsafeMutableAddress
-                // to work through optional binding. See: Experiments/pointer-subscript-modify
-                var ptr = unsafe heap.pointer
-                yield &(unsafe ptr[index])
-            } else {
-                yield &(unsafe inline.pointer(at: index).pointee)
+    }
+
+    /// Explicit borrowing iteration: `.forEach.borrowing { }`
+    ///
+    /// Same as `callAsFunction`, but with explicit naming for clarity.
+    /// Works for ALL element types including `~Copyable`.
+    ///
+    /// - Parameter body: A closure called with each borrowed element.
+    @inlinable
+    public func borrowing(_ body: (borrowing Element) -> Void) {
+        callAsFunction(body)
+    }
+}
+
+// MARK: Drain Property View
+
+extension Array.Small where Element: ~Copyable {
+    /// Property view for draining operations.
+    ///
+    /// Provides `.drain { }` via `callAsFunction`, which removes all elements
+    /// from the array and passes each to the closure with ownership.
+    /// Works for ALL element types including `~Copyable`.
+    ///
+    /// After draining, the array is empty but still usable.
+    ///
+    /// ## Example
+    ///
+    /// ```swift
+    /// var array = try Array<Int>.Small<4>()
+    /// array.append(1)
+    /// array.append(2)
+    /// array.append(3)
+    ///
+    /// // Drain all elements (takes ownership)
+    /// array.drain { element in
+    ///     process(element)
+    /// }
+    /// // array is now empty but still usable
+    /// array.append(4)
+    /// ```
+    @inlinable
+    public var drain: Property<Sequence.Drain, Self>.View.Typed<Element>.Valued<inlineCapacity> {
+        mutating _read {
+            yield unsafe Property<Sequence.Drain, Self>.View.Typed<Element>.Valued<inlineCapacity>(&self)
+        }
+        mutating _modify {
+            var view = unsafe Property<Sequence.Drain, Self>.View.Typed<Element>.Valued<inlineCapacity>(&self)
+            yield &view
+        }
+    }
+}
+
+// MARK: Drain: Operations (~Copyable)
+
+extension Property.View.Typed.Valued
+where Tag == Sequence.Drain, Base == Array<Element>.Small<n>, Element: ~Copyable {
+    /// Drain iteration: `.drain { }`
+    ///
+    /// Removes all elements from the array, passing each to the closure
+    /// with ownership. After this call, the array is empty but usable.
+    /// Works for ALL element types including `~Copyable`.
+    ///
+    /// - Parameter body: A closure called with each element (consuming).
+    @_lifetime(&self)
+    @inlinable
+    public mutating func callAsFunction(_ body: (consuming Element) -> Void) {
+        let count = unsafe base.pointee.count
+        guard count > .zero else { return }
+
+        if let heapState = unsafe base.pointee.heap {
+            _ = unsafe heapState.storage.withUnsafeMutablePointerToElements { elements in
+                (0..<count).forEach { i in
+                    unsafe body((elements + i).move())
+                }
+            }
+            unsafe base.pointee.heap!.storage.header = 0
+        } else {
+            (0..<count).forEach { i in
+                body(unsafe base.pointee.inline.move(at: i))
             }
         }
+        unsafe base.pointee.count = .zero
     }
 }

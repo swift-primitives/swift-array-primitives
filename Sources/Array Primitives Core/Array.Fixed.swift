@@ -27,7 +27,7 @@ extension Array.Fixed {
     @inlinable
     public init(
         count: Array.Index.Count,
-        initializingWith initializer: (Int) -> Element
+        initializingWith initializer: (Array.Index) -> Element
     ) throws(Error) {
         guard count >= 0 else {
             throw .invalidCount(count)
@@ -62,7 +62,7 @@ extension Array.Fixed {
     public init(
         __unchecked: Void,
         count: Array.Index.Count,
-        initializingWith initializer: (Int) -> Element
+        initializingWith initializer: (Array.Index) -> Element
     ) {
         precondition(count >= 0, "Count must be non-negative")
 

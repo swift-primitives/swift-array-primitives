@@ -43,6 +43,7 @@ let package = Package(
                 .product(name: "Bit Primitives", package: "swift-bit-primitives"),
                 .product(name: "Index Primitives", package: "swift-index-primitives"),
                 .product(name: "Property Primitives", package: "swift-property-primitives"),
+                .product(name: "Range Primitives", package: "swift-range-primitives"),
             ]
         ),
         // Per-variant modules: Swift.Sequence/Collection conformances (Element: Copyable)

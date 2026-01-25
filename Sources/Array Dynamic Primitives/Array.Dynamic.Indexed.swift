@@ -100,15 +100,13 @@ extension Array.Indexed {
     public subscript(index: Index) -> Element {
         get {
             precondition(index.position.rawValue < _storage.count.rawValue, "Index out of bounds")
-            return unsafe _storage.storage.read(at: index.position.rawValue).pointee
+            return unsafe _storage.storage.read(at: index.retag(Element.self)).pointee
         }
         set {
             precondition(index.position.rawValue < _storage.count.rawValue, "Index out of bounds")
             _storage.makeUnique()
-            // Convert Index<Tag> position to Index<Element> for storage access
-            let storageIndex = Array<Element>.Index(__unchecked: (), position: index.position.rawValue)
-            _ = _storage.storage.move(at: storageIndex)
-            _storage.storage.initialize(to: newValue, at: storageIndex)
+            _ = _storage.storage.move(at: index.retag(Element.self))
+            _storage.storage.initialize(to: newValue, at: index.retag(Element.self))
         }
     }
 }

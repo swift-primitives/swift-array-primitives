@@ -9,6 +9,8 @@
 //
 // ===----------------------------------------------------------------------===//
 
+public import Range_Primitives
+
 extension Array.Storage where Element: ~Copyable {
 
     /// Inline (stack-allocated) storage for small-buffer optimization.
@@ -129,12 +131,12 @@ extension Array.Storage.Inline where Element: ~Copyable {
     /// - Postcondition: All slots in range are deinitialized.
     /// - Note: Non-mutating to allow use from deinit contexts.
     @usableFromInline
-    package func deinitialize(in range: Range<Int>) {
+    package func deinitialize(in range: Range.Lazy<Array.Index>) {
         let stride = MemoryLayout<Element>.stride
         unsafe Swift.withUnsafePointer(to: raw) { rawPointer in
             let base = unsafe UnsafeMutableRawPointer(mutating: UnsafeRawPointer(rawPointer))
-            for i in range {
-                unsafe (base + i * stride)
+            range.forEach { index in
+                unsafe (base + index.position.rawValue * stride)
                     .assumingMemoryBound(to: Element.self)
                     .deinitialize(count: 1)
             }
@@ -149,8 +151,8 @@ extension Array.Storage.Inline where Element: ~Copyable {
     /// - Note: Non-mutating to allow use from deinit contexts.
     @usableFromInline
     package func deinitialize(count: Array.Index.Count) {
-        guard count > 0 else { return }
-        deinitialize(in: 0..<count.rawValue)
+        guard count > .zero else { return }
+        deinitialize(in: 0..<count)
     }
 
     /// Moves all elements to heap storage.
@@ -164,15 +166,15 @@ extension Array.Storage.Inline where Element: ~Copyable {
     /// - Precondition: Heap storage must have sufficient capacity.
     /// - Postcondition: Elements are moved to heap, inline slots are deinitialized.
     @usableFromInline
-    package mutating func move(to heapStorage: Array<Element>.Storage, count: Int) {
-        guard count > 0 else { return }
+    package mutating func move(to heapStorage: Array<Element>.Storage, count: Array.Index.Count) {
+        guard count > .zero else { return }
         let stride = MemoryLayout<Element>.stride
         unsafe Swift.withUnsafePointer(to: raw) { rawPointer in
             unsafe heapStorage.withUnsafeMutablePointerToElements { dst in
                 let base = unsafe UnsafeMutableRawPointer(mutating: UnsafeRawPointer(rawPointer))
-                for i in 0..<count {
-                    let src = unsafe (base + i * stride).assumingMemoryBound(to: Element.self)
-                    unsafe (dst + i).initialize(to: src.move())
+                (0..<count).forEach { index in
+                    let src = unsafe (base + index.position.rawValue * stride).assumingMemoryBound(to: Element.self)
+                    unsafe (dst + index).initialize(to: src.move())
                 }
             }
         }
@@ -190,15 +192,15 @@ extension Array.Storage.Inline where Element: Copyable {
     /// - Precondition: Elements at indices 0..<count must be initialized.
     /// - Precondition: Heap storage must have sufficient capacity.
     @usableFromInline
-    package func copy(to heapStorage: Array<Element>.Storage, count: Int) {
-        guard count > 0 else { return }
+    package func copy(to heapStorage: Array<Element>.Storage, count: Array.Index.Count) {
+        guard count > .zero else { return }
         let stride = MemoryLayout<Element>.stride
         unsafe Swift.withUnsafePointer(to: raw) { rawPointer in
             unsafe heapStorage.withUnsafeMutablePointerToElements { dst in
                 let base = unsafe UnsafeRawPointer(rawPointer)
-                for i in 0..<count {
-                    let src = unsafe (base + i * stride).assumingMemoryBound(to: Element.self)
-                    unsafe (dst + i).initialize(to: src.pointee)
+                (0..<count).forEach { index in
+                    let src = unsafe (base + index.position.rawValue * stride).assumingMemoryBound(to: Element.self)
+                    unsafe (dst + index).initialize(to: src.pointee)
                 }
             }
         }

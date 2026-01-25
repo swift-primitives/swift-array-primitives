@@ -9,10 +9,12 @@
 //
 // ===----------------------------------------------------------------------===//
 
-import Index_Primitives
 public import Array_Primitives_Core
+import Index_Primitives
 
-// MARK: - Array.Small.Indexed
+// ============================================================================
+// MARK: - Array.Small.Indexed Definition
+// ============================================================================
 
 extension Array.Small where Element: Copyable {
     /// A wrapper providing phantom-typed index access to small array storage.
@@ -54,62 +56,25 @@ extension Array.Small where Element: Copyable {
         public init(_ storage: consuming Array<Element>.Small<inlineCapacity>) {
             self._storage = storage
         }
-
-        /// The phantom-typed count for bounds checking.
-        ///
-        /// Use with `Index<Tag>` for typed bounds checks:
-        /// ```swift
-        /// guard node < indexed.count else { return }
-        /// ```
-        @inlinable
-        public var count: Index.Count {
-            Index.Count(__unchecked: _storage.count.rawValue)
-        }
-
-        /// Accesses the element at the given phantom-typed index.
-        ///
-        /// - Parameter index: The typed index of the element to access.
-        /// - Precondition: `index` must be within bounds.
-        ///
-        /// ## Implementation Note
-        ///
-        /// The getter uses `withUnsafePointer` directly on the stored property
-        /// instead of the `inline` accessor because subscript getters are non-mutating,
-        /// but the `inline` accessor requires `&self` (mutating context).
-        @inlinable
-        public subscript(index: Index) -> Element {
-            get {
-                precondition(index.position.rawValue < _storage.count.rawValue, "Index out of bounds")
-                if let heapState = _storage.heap {
-                    return unsafe heapState.storage.read(at: index.position.rawValue).pointee
-                } else {
-                    // Direct access to inline storage - cannot use `inline` accessor
-                    // because it requires mutating context (needs &self for pointer)
-                    let idx = index.position.rawValue
-                    let stride = MemoryLayout<Element>.stride
-                    return unsafe withUnsafePointer(to: _storage.inline) { storagePtr in
-                        let basePtr = unsafe UnsafeRawPointer(storagePtr)
-                        let elementPtr = unsafe (basePtr + idx * stride).assumingMemoryBound(to: Element.self)
-                        return unsafe elementPtr.pointee
-                    }
-                }
-            }
-            set {
-                precondition(index.position.rawValue < _storage.count.rawValue, "Index out of bounds")
-                if _storage.heap != nil {
-                    _ = _storage.heap!.storage.move(at: index)
-                    _storage.heap!.storage.initialize(to: newValue, at: index)
-                } else {
-                    unsafe _storage.inline.pointer(at: index).pointee = newValue
-                }
-            }
-        }
     }
 }
 
-// MARK: - Passthrough Properties
+// ============================================================================
+// MARK: - Properties
+// ============================================================================
 
 extension Array.Small.Indexed where Element: Copyable {
+    /// The phantom-typed count for bounds checking.
+    ///
+    /// Use with `Index<Tag>` for typed bounds checks:
+    /// ```swift
+    /// guard node < indexed.count else { return }
+    /// ```
+    @inlinable
+    public var count: Array.Small<inlineCapacity>.Index.Count {
+        _storage.count
+    }
+
     /// Whether the array is empty.
     @inlinable
     public var isEmpty: Bool { _storage.isEmpty }
@@ -119,7 +84,54 @@ extension Array.Small.Indexed where Element: Copyable {
     public var capacity: Int { _storage.capacity }
 }
 
+// ============================================================================
+// MARK: - Subscripts
+// ============================================================================
+
+extension Array.Small.Indexed where Element: Copyable {
+    /// Accesses the element at the given phantom-typed index.
+    ///
+    /// - Parameter index: The typed index of the element to access.
+    /// - Precondition: `index` must be within bounds.
+    ///
+    /// ## Implementation Note
+    ///
+    /// The getter uses `withUnsafePointer` directly on the stored property
+    /// instead of the `inline` accessor because subscript getters are non-mutating,
+    /// but the `inline` accessor requires `&self` (mutating context).
+    @inlinable
+    public subscript(index: Array.Small<inlineCapacity>.Index.Bounded<inlineCapacity>) -> Element {
+        get {
+            let storageIndex = index.unbounded.retag(Element.self)
+            if let heapState = _storage.heap {
+                return unsafe heapState.storage.read(at: storageIndex).pointee
+            } else {
+                // Direct access to inline storage - cannot use `inline` accessor
+                // because it requires mutating context (needs &self for pointer)
+                let idx = storageIndex.position.rawValue
+                let stride = MemoryLayout<Element>.stride
+                return unsafe withUnsafePointer(to: _storage.inline) { storagePtr in
+                    let basePtr = unsafe UnsafeRawPointer(storagePtr)
+                    let elementPtr = unsafe (basePtr + idx * stride).assumingMemoryBound(to: Element.self)
+                    return unsafe elementPtr.pointee
+                }
+            }
+        }
+        set {
+            let storageIndex = index.unbounded.retag(Element.self)
+            if _storage.heap != nil {
+                _ = _storage.heap!.storage.move(at: storageIndex)
+                _storage.heap!.storage.initialize(to: newValue, at: storageIndex)
+            } else {
+                unsafe _storage.inline.pointer(at: storageIndex).pointee = newValue
+            }
+        }
+    }
+}
+
+// ============================================================================
 // MARK: - Mutating Operations
+// ============================================================================
 
 extension Array.Small.Indexed where Element: Copyable {
     /// Appends an element to the array.
@@ -149,6 +161,8 @@ extension Array.Small.Indexed where Element: Copyable {
     }
 }
 
-// MARK: - Sendable
+// ============================================================================
+// MARK: - Sendable Conformance
+// ============================================================================
 
 extension Array.Small.Indexed: @unchecked Sendable where Element: Sendable, Tag: ~Copyable {}

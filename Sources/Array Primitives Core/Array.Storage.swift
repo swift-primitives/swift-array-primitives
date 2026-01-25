@@ -9,7 +9,11 @@
 //
 // ===----------------------------------------------------------------------===//
 
+public import Range_Primitives
+
+// ============================================================================
 // MARK: - Creation
+// ============================================================================
 
 extension Array.Storage where Element: ~Copyable {
     /// Creates empty storage with the specified minimum capacity.
@@ -27,18 +31,17 @@ extension Array.Storage where Element: ~Copyable {
     @usableFromInline
     static func create(
         capacity: Array.Index.Count,
-        initializingWith initializer: (Int) -> Element
+        initializingWith initializer: (Array.Index) -> Element
     ) -> Array.Storage {
-        let capacity = capacity.rawValue
-        let storage = Array.Storage.create(minimumCapacity: capacity) { _ in 0 }
+        let storage = Array.Storage.create(minimumCapacity: capacity.rawValue) { _ in 0 }
         let typed = unsafe unsafeDowncast(storage, to: Array.Storage.self)
 
         _ = unsafe typed.withUnsafeMutablePointerToElements { elements in
-            for i in 0..<capacity {
-                unsafe (elements + i).initialize(to: initializer(i))
+            (0..<capacity).forEach { index in
+                unsafe (elements + index).initialize(to: initializer(index))
             }
         }
-        typed.header = capacity
+        typed.header = capacity.rawValue
 
         return typed
     }
@@ -51,7 +54,9 @@ extension Array.Storage where Element: ~Copyable {
     }
 }
 
+// ============================================================================
 // MARK: - Element Access (Mutable)
+// ============================================================================
 
 extension Array.Storage where Element: ~Copyable {
     /// Returns mutable pointer to element at index.
@@ -62,7 +67,7 @@ extension Array.Storage where Element: ~Copyable {
     @usableFromInline
     @unsafe
     package func pointer(at index: Array.Index) -> UnsafeMutablePointer<Element> {
-        unsafe withUnsafeMutablePointerToElements { unsafe $0 + index.position.rawValue }
+        unsafe withUnsafeMutablePointerToElements { unsafe $0 + index }
     }
 
     /// Initializes element at the given index.
@@ -89,7 +94,9 @@ extension Array.Storage where Element: ~Copyable {
     }
 }
 
+// ============================================================================
 // MARK: - Element Access (Read-Only)
+// ============================================================================
 
 extension Array.Storage where Element: ~Copyable {
     /// Returns read-only pointer to element at index.
@@ -99,12 +106,14 @@ extension Array.Storage where Element: ~Copyable {
     /// - Precondition: Index must be in bounds (caller's responsibility).
     @usableFromInline
     @unsafe
-    package func read(at index: Int) -> UnsafePointer<Element> {
+    package func read(at index: Array.Index) -> UnsafePointer<Element> {
         unsafe withUnsafeMutablePointerToElements { unsafe UnsafePointer($0 + index) }
     }
 }
 
+// ============================================================================
 // MARK: - Bulk Operations
+// ============================================================================
 
 extension Array.Storage where Element: ~Copyable {
     /// Deinitializes elements in the given range.
@@ -113,10 +122,10 @@ extension Array.Storage where Element: ~Copyable {
     /// - Precondition: All slots in range must be initialized.
     /// - Postcondition: All slots in range are deinitialized.
     @usableFromInline
-    func deinitialize(in range: Range<Int>) {
+    func deinitialize(in range: Range.Lazy<Array.Index>) {
         _ = unsafe withUnsafeMutablePointerToElements { elements in
-            for i in range {
-                unsafe (elements + i).deinitialize(count: 1)
+            range.forEach { index in
+                unsafe (elements + index).deinitialize(count: 1)
             }
         }
     }
@@ -127,11 +136,11 @@ extension Array.Storage where Element: ~Copyable {
     /// - Postcondition: All elements are deinitialized, header is 0.
     @usableFromInline
     package func deinitialize() {
-        let count = header
-        guard count > 0 else { return }
+        let count = self.count
+        guard count > .zero else { return }
         _ = unsafe withUnsafeMutablePointerToElements { elements in
-            for i in 0..<count {
-                unsafe (elements + i).deinitialize(count: 1)
+            (0..<count).forEach { index in
+                unsafe (elements + index).deinitialize(count: 1)
             }
         }
         header = 0
@@ -145,19 +154,21 @@ extension Array.Storage where Element: ~Copyable {
     /// - Postcondition: Elements are moved to destination, source slots are deinitialized.
     @usableFromInline
     package func move(to newStorage: Array<Element>.Storage) {
-        let count = header
-        guard count > 0 else { return }
+        let count = self.count
+        guard count > .zero else { return }
         _ = unsafe withUnsafeMutablePointerToElements { src in
             unsafe newStorage.withUnsafeMutablePointerToElements { dst in
-                for i in 0..<count {
-                    unsafe (dst + i).initialize(to: (src + i).move())
+                (0..<count).forEach { index in
+                    unsafe (dst + index).initialize(to: (src + index).move())
                 }
             }
         }
     }
 }
 
+// ============================================================================
 // MARK: - Copy-on-Write (Copyable elements only)
+// ============================================================================
 
 extension Array.Storage where Element: Copyable {
     /// Creates a copy of this storage.
@@ -165,18 +176,18 @@ extension Array.Storage where Element: Copyable {
     /// - Returns: A new storage instance with copied elements.
     @usableFromInline
     package func copy() -> Array<Element>.Storage {
-        let count = header
-        guard count > 0 else {
-            return Array<Element>.Storage.create(minimumCapacity: 0)
+        let count = self.count
+        guard count > .zero else {
+            return Array<Element>.Storage.create(minimumCapacity: .zero)
         }
 
-        let new = Array<Element>.Storage.create(minimumCapacity: Array.Index.Count(__unchecked: count))
-        new.header = count
+        let new = Array<Element>.Storage.create(minimumCapacity: count)
+        new.header = count.rawValue
 
         _ = unsafe withUnsafeMutablePointerToElements { src in
             unsafe new.withUnsafeMutablePointerToElements { dst in
-                for i in 0..<count {
-                    unsafe (dst + i).initialize(to: src[i])
+                (0..<count).forEach { index in
+                    unsafe (dst + index).initialize(to: src[index])
                 }
             }
         }
@@ -191,12 +202,12 @@ extension Array.Storage where Element: Copyable {
     /// - Precondition: Destination storage must have sufficient capacity.
     @usableFromInline
     package func copy(to newStorage: Array<Element>.Storage) {
-        let count = header
-        guard count > 0 else { return }
+        let count = self.count
+        guard count > .zero else { return }
         _ = unsafe withUnsafeMutablePointerToElements { src in
             unsafe newStorage.withUnsafeMutablePointerToElements { dst in
-                for i in 0..<count {
-                    unsafe (dst + i).initialize(to: src[i])
+                (0..<count).forEach { index in
+                    unsafe (dst + index).initialize(to: src[index])
                 }
             }
         }
