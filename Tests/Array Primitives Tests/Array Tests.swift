@@ -35,7 +35,7 @@ extension ArrayTests.Unit {
     @Test("Empty array has count zero")
     func emptyArrayHasCountZero() {
         let array = Array<Int>()
-        #expect(array.count.rawValue == 0)
+        #expect(array.count == 0)
         #expect(array.isEmpty == true)
     }
 
@@ -44,13 +44,13 @@ extension ArrayTests.Unit {
         var array = Array<Int>()
 
         array.append(1)
-        #expect(array.count.rawValue == 1)
+        #expect(array.count == 1)
 
         array.append(2)
-        #expect(array.count.rawValue == 2)
+        #expect(array.count == 2)
 
         array.append(3)
-        #expect(array.count.rawValue == 3)
+        #expect(array.count == 3)
     }
 
     @Test("RemoveLast decrements count")
@@ -61,20 +61,20 @@ extension ArrayTests.Unit {
         array.append(3)
 
         _ = array.removeLast()
-        #expect(array.count.rawValue == 2)
+        #expect(array.count == 2)
 
         _ = array.removeLast()
-        #expect(array.count.rawValue == 1)
+        #expect(array.count == 1)
 
         _ = array.removeLast()
-        #expect(array.count.rawValue == 0)
+        #expect(array.count == 0)
     }
 
     @Test("RemoveLast on empty returns nil")
     func removeLastOnEmptyReturnsNil() {
         var array = Array<Int>()
         #expect(array.removeLast() == nil)
-        #expect(array.count.rawValue == 0)
+        #expect(array.count == 0)
     }
 
     // MARK: - forEach Invariants
@@ -164,13 +164,13 @@ extension ArrayTests.Unit {
         copy[try Index<Int>(0)] = 100
 
         // Original should be unchanged
-        #expect(original.count.rawValue == 3)
+        #expect(original.count == 3)
         #expect(original[try Index<Int>(0)] == 1)
         #expect(original[try Index<Int>(1)] == 2)
         #expect(original[try Index<Int>(2)] == 3)
 
         // Copy should have the mutations
-        #expect(copy.count.rawValue == 4)
+        #expect(copy.count == 4)
         #expect(copy[try Index<Int>(0)] == 100)
         #expect(copy[try Index<Int>(3)] == 4)
     }
@@ -189,7 +189,7 @@ extension ArrayTests.Unit {
         original[try Index<Int>(0)] = 100
 
         // Copy should be unchanged
-        #expect(copy.count.rawValue == 3)
+        #expect(copy.count == 3)
         #expect(copy[try Index<Int>(0)] == 1)
         #expect(copy[try Index<Int>(1)] == 2)
         #expect(copy[try Index<Int>(2)] == 3)
@@ -225,7 +225,7 @@ extension ArrayTests.Unit {
         }
 
         #expect(array.capacity >= 100)
-        #expect(array.count.rawValue == 100)
+        #expect(array.count == 100)
 
         // Verify all elements are accessible
         for i in 0..<100 {
@@ -288,7 +288,7 @@ extension ArrayTests.EdgeCase {
         var array = Array<Int>()
 
         array.append(42)
-        #expect(array.count.rawValue == 1)
+        #expect(array.count == 1)
         #expect(array[try Index<Int>(0)] == 42)
 
         var elements: [Int] = []
@@ -297,7 +297,7 @@ extension ArrayTests.EdgeCase {
 
         let removed = array.removeLast()
         #expect(removed == 42)
-        #expect(array.count.rawValue == 0)
+        #expect(array.count == 0)
     }
 
     @Test("Growth beyond initial capacity preserves elements")
@@ -309,7 +309,7 @@ extension ArrayTests.EdgeCase {
             array.append(i * 2)
         }
 
-        #expect(array.count.rawValue == 1000)
+        #expect(array.count == 1000)
 
         // Verify all elements preserved through growth
         for i in 0..<1000 {
@@ -332,7 +332,7 @@ extension ArrayTests.EdgeCase {
 
         array.removeAll()
 
-        #expect(array.count.rawValue == 0)
+        #expect(array.count == 0)
         #expect(array.isEmpty == true)
 
         var iterCount = 0
@@ -351,7 +351,7 @@ extension ArrayTests.EdgeCase {
         array.append(100)
         array.append(200)
 
-        #expect(array.count.rawValue == 2)
+        #expect(array.count == 2)
         #expect(array[try Index<Int>(0)] == 100)
         #expect(array[try Index<Int>(1)] == 200)
     }

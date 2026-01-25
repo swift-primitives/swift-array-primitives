@@ -88,7 +88,7 @@ extension ArraySmallTests.Unit {
     @Test("Empty array has count zero")
     func emptyArrayHasCountZero() {
         let array = try! Array<Int>.Small<4>()
-        #expect(array.count.rawValue == 0)
+        #expect(array.count == 0)
         #expect(array.isEmpty == true)
     }
 
@@ -97,10 +97,10 @@ extension ArraySmallTests.Unit {
         var array = try! Array<Int>.Small<4>()
 
         array.append(1)
-        #expect(array.count.rawValue == 1)
+        #expect(array.count == 1)
 
         array.append(2)
-        #expect(array.count.rawValue == 2)
+        #expect(array.count == 2)
     }
 
     @Test("Append increments count (heap mode)")
@@ -110,10 +110,10 @@ extension ArraySmallTests.Unit {
         array.append(2)
         array.append(3)  // Spill
 
-        #expect(array.count.rawValue == 3)
+        #expect(array.count == 3)
 
         array.append(4)
-        #expect(array.count.rawValue == 4)
+        #expect(array.count == 4)
     }
 
     @Test("RemoveLast decrements count (inline mode)")
@@ -123,7 +123,7 @@ extension ArraySmallTests.Unit {
         array.append(2)
 
         _ = array.removeLast()
-        #expect(array.count.rawValue == 1)
+        #expect(array.count == 1)
     }
 
     @Test("RemoveLast decrements count (heap mode)")
@@ -135,7 +135,7 @@ extension ArraySmallTests.Unit {
         array.append(4)
 
         _ = array.removeLast()
-        #expect(array.count.rawValue == 3)
+        #expect(array.count == 3)
     }
 
     // MARK: - forEach Invariants
@@ -244,7 +244,7 @@ extension ArraySmallTests.Unit {
         }
 
         // Counts should match
-        #expect(inlineArray.count.rawValue == spilledArray.count.rawValue)
+        #expect(inlineArray.count == spilledArray.count)
 
         // Subscript access should match
         for i in 0..<10 {
@@ -340,7 +340,7 @@ extension ArraySmallTests.EdgeCase {
         array.append(6)
 
         // Verify all elements preserved
-        #expect(array.count.rawValue == 6)
+        #expect(array.count == 6)
         #expect(array[try Index<Int>(0)] == 1)
         #expect(array[try Index<Int>(1)] == 2)
         #expect(array[try Index<Int>(2)] == 3)
@@ -358,7 +358,7 @@ extension ArraySmallTests.EdgeCase {
             array.append(i * 2)
         }
 
-        #expect(array.count.rawValue == 1000)
+        #expect(array.count == 1000)
 
         // Verify all elements
         for i in 0..<1000 {
@@ -402,7 +402,7 @@ extension ArraySmallTests.EdgeCase {
         inlineArray.append(1)
         inlineArray.append(2)
         inlineArray.removeAll()
-        #expect(inlineArray.count.rawValue == 0)
+        #expect(inlineArray.count == 0)
 
         var iterCount = 0
         inlineArray.forEach { _ in iterCount += 1 }
@@ -414,7 +414,7 @@ extension ArraySmallTests.EdgeCase {
         heapArray.append(2)
         heapArray.append(3)
         heapArray.removeAll()
-        #expect(heapArray.count.rawValue == 0)
+        #expect(heapArray.count == 0)
 
         iterCount = 0
         heapArray.forEach { _ in iterCount += 1 }
@@ -426,7 +426,7 @@ extension ArraySmallTests.EdgeCase {
         var array = try! Array<Int>.Small<1>()
 
         array.append(42)
-        #expect(array.count.rawValue == 1)
+        #expect(array.count == 1)
         #expect(array[try Index<Int>(0)] == 42)
 
         var elements: [Int] = []
@@ -435,7 +435,7 @@ extension ArraySmallTests.EdgeCase {
 
         // Spill with second element
         array.append(99)
-        #expect(array.count.rawValue == 2)
+        #expect(array.count == 2)
         #expect(array[try Index<Int>(0)] == 42)
         #expect(array[try Index<Int>(1)] == 99)
 

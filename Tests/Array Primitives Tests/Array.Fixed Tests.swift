@@ -35,13 +35,13 @@ extension ArrayFixedTests.Unit {
     @Test("Init establishes count invariant")
     func initEstablishesCountInvariant() throws {
         let array = try Array<Int>.Fixed(count: 5) { $0 }
-        #expect(array.count.rawValue == 5)
+        #expect(array.count == 5)
     }
 
     @Test("Init with zero count creates empty array")
     func initWithZeroCount() throws {
         let array = try Array<Int>.Fixed(count: 0) { $0 }
-        #expect(array.count.rawValue == 0)
+        #expect(array.count == 0)
         #expect(array.isEmpty == true)
     }
 
@@ -182,7 +182,7 @@ extension ArrayFixedTests.EdgeCase {
     func singleElementArray() throws {
         var array = try Array<Int>.Fixed(count: 1) { _ in 42 }
 
-        #expect(array.count.rawValue == 1)
+        #expect(array.count == 1)
         #expect(array[try Index<Int>(0)] == 42)
 
         var iteratedElements: [Int] = []
@@ -195,7 +195,7 @@ extension ArrayFixedTests.EdgeCase {
         let size = 10_000
         var array = try Array<Int>.Fixed(count: .init(__unchecked: size)) { $0 }
 
-        #expect(array.count.rawValue == size)
+        #expect(array.count == size)
 
         // Check first, middle, last
         #expect(array[try Index<Int>(0)] == 0)

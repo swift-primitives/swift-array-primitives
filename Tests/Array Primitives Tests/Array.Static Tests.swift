@@ -45,7 +45,7 @@ extension ArrayStaticTests.Unit {
         }
 
         // Count should still be 3
-        #expect(array.count.rawValue == 3)
+        #expect(array.count == 3)
     }
 
     @Test("isFull returns true at capacity")
@@ -73,7 +73,7 @@ extension ArrayStaticTests.Unit {
     @Test("Empty array has count zero")
     func emptyArrayHasCountZero() {
         let array = Array<Int>.Static<8>()
-        #expect(array.count.rawValue == 0)
+        #expect(array.count == 0)
         #expect(array.isEmpty == true)
     }
 
@@ -82,10 +82,10 @@ extension ArrayStaticTests.Unit {
         var array = Array<Int>.Static<8>()
 
         try array.append(1)
-        #expect(array.count.rawValue == 1)
+        #expect(array.count == 1)
 
         try array.append(2)
-        #expect(array.count.rawValue == 2)
+        #expect(array.count == 2)
     }
 
     @Test("RemoveLast decrements count")
@@ -95,10 +95,10 @@ extension ArrayStaticTests.Unit {
         try array.append(2)
 
         _ = array.removeLast()
-        #expect(array.count.rawValue == 1)
+        #expect(array.count == 1)
 
         _ = array.removeLast()
-        #expect(array.count.rawValue == 0)
+        #expect(array.count == 0)
     }
 
     @Test("RemoveLast on empty returns nil")
@@ -198,7 +198,7 @@ extension ArrayStaticTests.EdgeCase {
         var array = Array<Int>.Static<1>()
 
         try array.append(42)
-        #expect(array.count.rawValue == 1)
+        #expect(array.count == 1)
         #expect(array.isFull == true)
         #expect(array[try Index<Int>(0)] == 42)
 
@@ -223,7 +223,7 @@ extension ArrayStaticTests.EdgeCase {
 
         // Empty
         array.removeAll()
-        #expect(array.count.rawValue == 0)
+        #expect(array.count == 0)
         #expect(array.isFull == false)
 
         // Second fill with different values
@@ -264,7 +264,7 @@ extension ArrayStaticTests.EdgeCase {
 
         array.removeAll()
 
-        #expect(array.count.rawValue == 0)
+        #expect(array.count == 0)
         #expect(array.isEmpty == true)
         #expect(array.isFull == false)
 
@@ -281,7 +281,7 @@ extension ArrayStaticTests.EdgeCase {
             try array.append(i * 3)
         }
 
-        #expect(array.count.rawValue == 100)
+        #expect(array.count == 100)
         #expect(array.isFull == true)
 
         // Verify all elements via forEach

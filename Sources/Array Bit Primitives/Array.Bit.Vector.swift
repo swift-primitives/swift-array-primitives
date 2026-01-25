@@ -56,20 +56,17 @@ extension Array where Element == Bit {
         var _storage: ContiguousArray<UInt>
 
         @usableFromInline
-        var _count: Int
+        var _count: Index.Count
 
         @inlinable
         public init() {
             self._storage = []
-            self._count = 0
+            self._count = .zero
         }
 
         @inlinable
-        public init(count: Int) throws(Array<Bit>.Vector.Error) {
-            guard count >= 0 else {
-                throw .invalidCount
-            }
-            let wordCount = (count + Self._bitsPerWord - 1) / Self._bitsPerWord
+        public init(count: Index.Count) {
+            let wordCount = (count.rawValue + Self._bitsPerWord - 1) / Self._bitsPerWord
             self._storage = ContiguousArray(repeating: 0, count: wordCount)
             self._count = count
         }
@@ -80,10 +77,10 @@ extension Array where Element == Bit {
 
 extension Array<Bit>.Vector {
     @inlinable
-    public var count: Int { _count }
+    public var count: Index.Count { _count }
 
     @inlinable
-    public var isEmpty: Bool { _count == 0 }
+    public var isEmpty: Bool { _count == .zero }
 
     @inlinable
     public var popcount: Int {
@@ -104,14 +101,12 @@ extension Array<Bit>.Vector {
     @inlinable
     public subscript(index: Bit.Index) -> Bool {
         get {
-            let i = index.position.rawValue
-            precondition(i >= 0 && i < _count, "Index out of bounds")
+            precondition(index < _count, "Index out of bounds")
             let loc = index.location(bitsPerWord: Self._bitsPerWord)
             return (_storage[loc.word] & loc.mask) != 0
         }
         set {
-            let i = index.position.rawValue
-            precondition(i >= 0 && i < _count, "Index out of bounds")
+            precondition(index < _count, "Index out of bounds")
             let loc = index.location(bitsPerWord: Self._bitsPerWord)
             if newValue {
                 _storage[loc.word] |= loc.mask
@@ -123,9 +118,8 @@ extension Array<Bit>.Vector {
 
     @inlinable
     public func get(_ index: Bit.Index) throws(Array<Bit>.Vector.Error) -> Bool {
-        let i = index.position.rawValue
-        guard i >= 0 && i < _count else {
-            throw .bounds(index: i, count: _count)
+        guard index < _count else {
+            throw .bounds(index: index.position.rawValue, count: _count.rawValue)
         }
         let loc = index.location(bitsPerWord: Self._bitsPerWord)
         return (_storage[loc.word] & loc.mask) != 0
@@ -137,9 +131,8 @@ extension Array<Bit>.Vector {
 extension Array<Bit>.Vector {
     @inlinable
     public mutating func set(_ index: Bit.Index) throws(Array<Bit>.Vector.Error) {
-        let i = index.position.rawValue
-        guard i >= 0 && i < _count else {
-            throw .bounds(index: i, count: _count)
+        guard index < _count else {
+            throw .bounds(index: index.position.rawValue, count: _count.rawValue)
         }
         let loc = index.location(bitsPerWord: Self._bitsPerWord)
         _storage[loc.word] |= loc.mask
@@ -147,9 +140,8 @@ extension Array<Bit>.Vector {
 
     @inlinable
     public mutating func clear(_ index: Bit.Index) throws(Array<Bit>.Vector.Error) {
-        let i = index.position.rawValue
-        guard i >= 0 && i < _count else {
-            throw .bounds(index: i, count: _count)
+        guard index < _count else {
+            throw .bounds(index: index.position.rawValue, count: _count.rawValue)
         }
         let loc = index.location(bitsPerWord: Self._bitsPerWord)
         _storage[loc.word] &= ~loc.mask
@@ -157,9 +149,8 @@ extension Array<Bit>.Vector {
 
     @inlinable
     public mutating func toggle(_ index: Bit.Index) throws(Array<Bit>.Vector.Error) {
-        let i = index.position.rawValue
-        guard i >= 0 && i < _count else {
-            throw .bounds(index: i, count: _count)
+        guard index < _count else {
+            throw .bounds(index: index.position.rawValue, count: _count.rawValue)
         }
         let loc = index.location(bitsPerWord: Self._bitsPerWord)
         _storage[loc.word] ^= loc.mask
@@ -177,7 +168,7 @@ extension Array<Bit>.Vector {
         for i in 0..<_storage.count {
             _storage[i] = ~0
         }
-        let unusedBits = _storage.count * Self._bitsPerWord - _count
+        let unusedBits = _storage.count * Self._bitsPerWord - _count.rawValue
         if unusedBits > 0 && !_storage.isEmpty {
             let lastWord = _storage.count - 1
             let mask: UInt = ~0 >> unusedBits
@@ -190,14 +181,11 @@ extension Array<Bit>.Vector {
 
 extension Array<Bit>.Vector {
     @inlinable
-    public mutating func resize(to newCount: Int, fill: Bool = false) throws(Array<Bit>.Vector.Error) {
-        guard newCount >= 0 else {
-            throw .invalidCount
-        }
-
-        let oldCount = _count
+    public mutating func resize(to newCount: Index.Count, fill: Bool = false) {
+        let oldCount = _count.rawValue
+        let newCountRaw = newCount.rawValue
         let oldWordCount = _storage.count
-        let newWordCount = (newCount + Self._bitsPerWord - 1) / Self._bitsPerWord
+        let newWordCount = (newCountRaw + Self._bitsPerWord - 1) / Self._bitsPerWord
 
         if newWordCount > oldWordCount {
             let fillValue: UInt = fill ? ~0 : 0
@@ -209,7 +197,7 @@ extension Array<Bit>.Vector {
             _storage.removeLast(oldWordCount - newWordCount)
         }
 
-        if fill && newCount > oldCount && oldWordCount > 0 {
+        if fill && newCountRaw > oldCount && oldWordCount > 0 {
             let oldBitInWord = oldCount % Self._bitsPerWord
             if oldBitInWord > 0 {
                 let firstWordIndex = oldCount / Self._bitsPerWord
@@ -223,7 +211,7 @@ extension Array<Bit>.Vector {
         _count = newCount
 
         if newWordCount > 0 {
-            let unusedBits = newWordCount * Self._bitsPerWord - newCount
+            let unusedBits = newWordCount * Self._bitsPerWord - newCountRaw
             if unusedBits > 0 {
                 let lastWord = newWordCount - 1
                 let mask: UInt = ~0 >> unusedBits
@@ -242,7 +230,7 @@ extension Array<Bit>.Vector {
             while word != 0 {
                 let bitIndex = word.trailingZeroBitCount
                 let globalIndex = wordIndex * Self._bitsPerWord + bitIndex
-                if globalIndex < _count {
+                if globalIndex < _count.rawValue {
                     body(Bit.Index(__unchecked: (), position: globalIndex))
                 }
                 word &= word - 1
@@ -257,16 +245,15 @@ extension Array<Bit>.Vector {
     /// Returns the first element, or `nil` if empty.
     @inlinable
     public var first: Bool? {
-        guard _count > 0 else { return nil }
+        guard _count > .zero else { return nil }
         return (_storage[0] & 1) != 0
     }
 
     /// Returns the last element, or `nil` if empty.
     @inlinable
     public var last: Bool? {
-        guard _count > 0 else { return nil }
-        let loc = Bit.Index.Location(word: (_count - 1) / Self._bitsPerWord,
-                                     bit: (_count - 1) % Self._bitsPerWord)
+        guard let lastCount = _count - .one else { return nil }
+        let loc = Bit.Index.Location(count: lastCount, bitsPerWord: Self._bitsPerWord)
         return (_storage[loc.word] & loc.mask) != 0
     }
 
@@ -276,13 +263,13 @@ extension Array<Bit>.Vector {
 
     /// Returns the number of `false` values in the array.
     @inlinable
-    public var falseCount: Int { _count - popcount }
+    public var falseCount: Int { _count.rawValue - popcount }
 
     /// Whether all elements are `true`.
     @inlinable
     public var allTrue: Bool {
-        guard _count > 0 else { return true }
-        return popcount == _count
+        guard _count > .zero else { return true }
+        return popcount == _count.rawValue
     }
 
     /// Whether all elements are `false`.
@@ -298,8 +285,7 @@ extension Array<Bit>.Vector {
     /// Appends a boolean value to the array.
     @inlinable
     public mutating func append(_ value: Bool) {
-        let loc = Bit.Index.Location(word: _count / Self._bitsPerWord,
-                                     bit: _count % Self._bitsPerWord)
+        let loc = Bit.Index.Location(count: _count, bitsPerWord: Self._bitsPerWord)
 
         if loc.word >= _storage.count {
             _storage.append(0)
@@ -309,7 +295,7 @@ extension Array<Bit>.Vector {
             _storage[loc.word] |= loc.mask
         }
 
-        _count += 1
+        _count = Index.Count(__unchecked: _count.rawValue + 1)
     }
 
     /// Appends a `Bit` value to the array.
@@ -322,10 +308,9 @@ extension Array<Bit>.Vector {
     @discardableResult
     @inlinable
     public mutating func popLast() -> Bool? {
-        guard _count > 0 else { return nil }
-        _count -= 1
-        let loc = Bit.Index.Location(word: _count / Self._bitsPerWord,
-                                     bit: _count % Self._bitsPerWord)
+        guard let newCount = _count - .one else { return nil }
+        _count = newCount
+        let loc = Bit.Index.Location(count: _count, bitsPerWord: Self._bitsPerWord)
         let value = (_storage[loc.word] & loc.mask) != 0
         _storage[loc.word] &= ~loc.mask
         return value
@@ -334,10 +319,9 @@ extension Array<Bit>.Vector {
     /// Removes the last element.
     @inlinable
     public mutating func removeLast() {
-        precondition(_count > 0, "Cannot remove from empty array")
-        _count -= 1
-        let loc = Bit.Index.Location(word: _count / Self._bitsPerWord,
-                                     bit: _count % Self._bitsPerWord)
+        precondition(_count > .zero, "Cannot remove from empty array")
+        _count = Index.Count(__unchecked: _count.rawValue - 1)
+        let loc = Bit.Index.Location(count: _count, bitsPerWord: Self._bitsPerWord)
         _storage[loc.word] &= ~loc.mask
     }
 
@@ -351,7 +335,7 @@ extension Array<Bit>.Vector {
         } else {
             _storage.removeAll()
         }
-        _count = 0
+        _count = .zero
     }
 }
 
@@ -388,14 +372,14 @@ extension Array<Bit>.Vector {
 
     /// Creates a packed bit array with a repeated value.
     @inlinable
-    public init(repeating value: Bool, count: Int) {
-        precondition(count >= 0, "Count must be non-negative")
-        let wordCount = (count + Self._bitsPerWord - 1) / Self._bitsPerWord
+    public init(repeating value: Bool, count: Index.Count) {
+        let countRaw = count.rawValue
+        let wordCount = (countRaw + Self._bitsPerWord - 1) / Self._bitsPerWord
         self._storage = ContiguousArray(repeating: value ? ~0 : 0, count: wordCount)
         self._count = count
 
-        if value && count > 0 {
-            let unusedBits = wordCount * Self._bitsPerWord - count
+        if value && count > .zero {
+            let unusedBits = wordCount * Self._bitsPerWord - countRaw
             if unusedBits > 0 {
                 let lastWord = wordCount - 1
                 let mask: UInt = ~0 >> unusedBits
@@ -406,7 +390,7 @@ extension Array<Bit>.Vector {
 
     /// Creates a packed bit array with a repeated `Bit` value.
     @inlinable
-    public init(repeating bit: Bit, count: Int) {
+    public init(repeating bit: Bit, count: Index.Count) {
         self.init(repeating: bit.boolValue, count: count)
     }
 }
@@ -418,8 +402,8 @@ extension Swift.Array where Element == Bit {
     @inlinable
     public init(_ packed: Array_Primitives_Core.Array<Bit>.Vector) {
         self.init()
-        self.reserveCapacity(packed.count)
-        for i in 0..<packed._count {
+        self.reserveCapacity(packed.count.rawValue)
+        for i in 0..<packed._count.rawValue {
             let wordIndex = i / Array_Primitives_Core.Array<Bit>.Vector._bitsPerWord
             let bitIndex = i % Array_Primitives_Core.Array<Bit>.Vector._bitsPerWord
             let mask: UInt = 1 << bitIndex
@@ -463,7 +447,7 @@ extension Array<Bit>.Vector: Swift.Sequence {
 
     @inlinable
     public func makeIterator() -> Iterator {
-        Iterator(storage: _storage, count: _count)
+        Iterator(storage: _storage, count: _count.rawValue)
     }
 }
 
@@ -477,7 +461,7 @@ extension Array<Bit>.Vector: RandomAccessCollection {
     public var startIndex: Index { .zero }
 
     @inlinable
-    public var endIndex: Index { Bit.Index(__unchecked: (), position: _count) }
+    public var endIndex: Index { Index(_count) }
 
     @inlinable
     public func index(after i: Index) -> Index {
@@ -547,7 +531,7 @@ extension Array<Bit>.Vector: Hashable {
 extension Array<Bit>.Vector: CustomStringConvertible {
     public var description: String {
         let bits = prefix(64).map { $0 ? "1" : "0" }.joined()
-        let suffix = _count > 64 ? "..." : ""
+        let suffix = _count.rawValue > 64 ? "..." : ""
         return "Array<Bit>.Vector(\(bits)\(suffix))"
     }
 }
@@ -563,7 +547,7 @@ extension Array<Bit>.Vector {
             case .lsb:
                 return self[index]
             case .msb:
-                let msbPosition = _count - 1 - index.position.rawValue
+                let msbPosition = _count.rawValue - 1 - index.position.rawValue
                 guard msbPosition >= 0 else { return false }
                 let msbIndex = Bit.Index(__unchecked: (), position: msbPosition)
                 return self[msbIndex]
@@ -574,7 +558,7 @@ extension Array<Bit>.Vector {
             case .lsb:
                 self[index] = newValue
             case .msb:
-                let msbPosition = _count - 1 - index.position.rawValue
+                let msbPosition = _count.rawValue - 1 - index.position.rawValue
                 guard msbPosition >= 0 else { return }
                 let msbIndex = Bit.Index(__unchecked: (), position: msbPosition)
                 self[msbIndex] = newValue
@@ -589,7 +573,7 @@ extension Array<Bit>.Vector {
         let baseIndex = byteIndex * 8
         for i in 0..<8 {
             let bitIndex = baseIndex + i
-            guard bitIndex < _count else { break }
+            guard bitIndex < _count.rawValue else { break }
             let idx = Bit.Index(__unchecked: (), position: bitIndex)
             if self[idx] {
                 switch order {
@@ -609,7 +593,7 @@ extension Array<Bit>.Vector {
         let baseIndex = byteIndex * 8
         for i in 0..<8 {
             let bitIndex = baseIndex + i
-            guard bitIndex < _count else { break }
+            guard bitIndex < _count.rawValue else { break }
             let idx = Bit.Index(__unchecked: (), position: bitIndex)
             let bitValue: Bool
             switch order {

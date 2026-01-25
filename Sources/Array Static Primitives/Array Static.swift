@@ -128,10 +128,3 @@ extension Array.Static.Error: CustomStringConvertible {
         }
     }
 }
-
-// ============================================================================
-// MARK: - Sendable Conformance
-// ============================================================================
-
-// Note: Array.Static Sendable conformance is defined in Array Primitives Core
-// because it requires access to the struct definition.
