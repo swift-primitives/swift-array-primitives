@@ -474,17 +474,27 @@ extension Array<Bit>.Vector: RandomAccessCollection {
     }
 
     @inlinable
-    public func distance(from start: Index, to end: Index) -> Int {
+    public func distance(
+        from start: Index,
+        to end: Index
+    ) -> Int {
         (end - start).rawValue
     }
 
     @inlinable
-    public func index(_ i: Index, offsetBy distance: Int) -> Index {
+    public func index(
+        _ i: Index,
+        offsetBy distance: Int
+    ) -> Index {
         (i + Index.Offset(distance))!
     }
 
     @inlinable
-    public func index(_ i: Index, offsetBy distance: Int, limitedBy limit: Index) -> Index? {
+    public func index(
+        _ i: Index,
+        offsetBy distance: Int,
+        limitedBy limit: Index
+    ) -> Index? {
         let offset = Index.Offset(distance)
         guard let result = i + offset else { return nil }
         if distance >= 0 {
@@ -568,19 +578,17 @@ extension Array<Bit>.Vector {
 
     /// Extracts a byte at the given byte-aligned position with specified bit order.
     @inlinable
-    public func byte(at byteIndex: Int, order: Bit.Order) -> UInt8 {
+    public func byte(at byteIndex: Index_Primitives.Index<UInt8>, order: Bit.Order) -> UInt8 {
         var result: UInt8 = 0
-        let baseIndex = byteIndex * 8
-        for i in 0..<8 {
-            let bitIndex = baseIndex + i
-            guard bitIndex < _count.rawValue else { break }
-            let idx = Bit.Index(__unchecked: (), position: bitIndex)
+        for bitOffset in 0..<8 {
+            let idx = Bit.Index(byteIndex, bitOffset: bitOffset)
+            guard idx < _count else { break }
             if self[idx] {
                 switch order {
                 case .lsb:
-                    result |= 1 << i
+                    result |= 1 << bitOffset
                 case .msb:
-                    result |= 1 << (7 - i)
+                    result |= 1 << (7 - bitOffset)
                 }
             }
         }
@@ -589,18 +597,16 @@ extension Array<Bit>.Vector {
 
     /// Sets a byte at the given byte-aligned position with specified bit order.
     @inlinable
-    public mutating func setByte(_ byte: UInt8, at byteIndex: Int, order: Bit.Order) {
-        let baseIndex = byteIndex * 8
-        for i in 0..<8 {
-            let bitIndex = baseIndex + i
-            guard bitIndex < _count.rawValue else { break }
-            let idx = Bit.Index(__unchecked: (), position: bitIndex)
+    public mutating func setByte(_ byte: UInt8, at byteIndex: Index_Primitives.Index<UInt8>, order: Bit.Order) {
+        for bitOffset in 0..<8 {
+            let idx = Bit.Index(byteIndex, bitOffset: bitOffset)
+            guard idx < _count else { break }
             let bitValue: Bool
             switch order {
             case .lsb:
-                bitValue = (byte & (1 << i)) != 0
+                bitValue = (byte & (1 << bitOffset)) != 0
             case .msb:
-                bitValue = (byte & (1 << (7 - i))) != 0
+                bitValue = (byte & (1 << (7 - bitOffset))) != 0
             }
             self[idx] = bitValue
         }
@@ -614,12 +620,6 @@ extension Array<Bit>.Vector {
     @inlinable
     public func bit(at index: Bit.Index) throws(Array<Bit>.Vector.Error) -> Bit {
         Bit(try get(index))
-    }
-
-    /// Returns the bit value at the given integer index as a `Bit`.
-    @inlinable
-    public func bit(at index: Int) throws(Array<Bit>.Vector.Error) -> Bit {
-        try bit(at: Bit.Index(__unchecked: (), position: index))
     }
 
     /// Returns the bit value at the given index as a `Bit` (unchecked).
