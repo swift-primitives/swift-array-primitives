@@ -137,7 +137,7 @@ extension Array<Bit>.Vector.Fixed {
     @inlinable
     public func get(_ index: Bit.Index) throws(Error) -> Bool {
         guard index < _count else {
-            throw .bounds(index: index.position.rawValue, count: _count.rawValue)
+            throw .bounds(index: index, count: _count)
         }
         let loc = index.location(bitsPerWord: Self._bitsPerWord)
         return (_storage[loc.word] & loc.mask) != 0
@@ -150,7 +150,7 @@ extension Array<Bit>.Vector.Fixed {
     @inlinable
     public mutating func set(_ index: Bit.Index) throws(Error) {
         guard index < _count else {
-            throw .bounds(index: index.position.rawValue, count: _count.rawValue)
+            throw .bounds(index: index, count: _count)
         }
         let loc = index.location(bitsPerWord: Self._bitsPerWord)
         _storage[loc.word] |= loc.mask
@@ -159,7 +159,7 @@ extension Array<Bit>.Vector.Fixed {
     @inlinable
     public mutating func clear(_ index: Bit.Index) throws(Error) {
         guard index < _count else {
-            throw .bounds(index: index.position.rawValue, count: _count.rawValue)
+            throw .bounds(index: index, count: _count)
         }
         let loc = index.location(bitsPerWord: Self._bitsPerWord)
         _storage[loc.word] &= ~loc.mask
@@ -168,7 +168,7 @@ extension Array<Bit>.Vector.Fixed {
     @inlinable
     public mutating func toggle(_ index: Bit.Index) throws(Error) {
         guard index < _count else {
-            throw .bounds(index: index.position.rawValue, count: _count.rawValue)
+            throw .bounds(index: index, count: _count)
         }
         let loc = index.location(bitsPerWord: Self._bitsPerWord)
         _storage[loc.word] ^= loc.mask
@@ -215,7 +215,7 @@ extension Array<Bit>.Vector.Fixed {
         if value {
             _storage[loc.word] |= loc.mask
         }
-        _count = Index.Count(__unchecked: _count.rawValue + 1)
+        _count = _count + .one
     }
 
     /// Appends a `Bit` value to the array.
@@ -240,7 +240,7 @@ extension Array<Bit>.Vector.Fixed {
     @inlinable
     public mutating func removeLast() {
         precondition(_count > .zero, "Cannot remove from empty array")
-        _count = Index.Count(__unchecked: _count.rawValue - 1)
+        _count = (_count - .one)!
         let loc = Bit.Index.Location(count: _count, bitsPerWord: Self._bitsPerWord)
         _storage[loc.word] &= ~loc.mask
     }
@@ -314,8 +314,8 @@ extension Array<Bit>.Vector.Fixed {
     @inlinable
     public func toPacked() -> Array<Bit>.Vector {
         var result = Array<Bit>.Vector()
-        for i in 0..<_count.rawValue {
-            result.append(self[i])
+        for bit in self {
+            result.append(bit)
         }
         return result
     }
@@ -326,8 +326,8 @@ extension Array<Bit>.Vector {
     @inlinable
     public init(_ bounded: Array<Bit>.Vector.Fixed) {
         self.init()
-        for i in 0..<bounded._count.rawValue {
-            append(bounded[i])
+        for bit in bounded {
+            append(bit)
         }
     }
 }

@@ -19,20 +19,20 @@ public import Array_Primitives_Core
 
 /// Errors that can occur during `Array<Bit>.Vector` operations.
 public enum __ArrayBitVectorError: Swift.Error, Sendable, Equatable {
-    case bounds(index: Int, count: Int)
+    case bounds(index: Bit.Index, count: Bit.Index.Count)
     case invalidCount
 }
 
 /// Errors that can occur during `Array<Bit>.Vector.Fixed` operations.
 public enum __ArrayBitVectorFixedError: Swift.Error, Sendable, Equatable {
-    case bounds(index: Int, count: Int)
+    case bounds(index: Bit.Index, count: Bit.Index.Count)
     case invalidCount
     case overflow
 }
 
 /// Errors that can occur during `Array<Bit>.Vector.Inline` operations.
 public enum __ArrayBitVectorInlineError: Swift.Error, Sendable, Equatable {
-    case bounds(index: Int, count: Int)
+    case bounds(index: Bit.Index, count: Bit.Index.Count)
     case overflow
 }
 
