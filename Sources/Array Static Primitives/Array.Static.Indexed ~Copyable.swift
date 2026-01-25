@@ -47,14 +47,14 @@ extension Array.Static where Element: ~Copyable {
     /// `Array.Static` is `~Copyable` unconditionally, so `Indexed` is also `~Copyable`.
     public struct Indexed<Tag: ~Copyable>: ~Copyable {
         @usableFromInline
-        var _storage: Array<Element>.Static<capacity>
+        var storage: Array<Element>.Static<capacity>
 
         /// Creates an indexed wrapper around the given storage.
         ///
         /// - Parameter storage: The static array to wrap.
         @inlinable
         public init(_ storage: consuming Array<Element>.Static<capacity>) {
-            self._storage = storage
+            self.storage = storage
         }
 
         /// The phantom-typed count for bounds checking.
@@ -65,19 +65,7 @@ extension Array.Static where Element: ~Copyable {
         /// ```
         @inlinable
         public var count: Index_Primitives.Index<Tag>.Count {
-            Index_Primitives.Index<Tag>.Count(__unchecked: _storage.count.rawValue)
-        }
-
-        /// Converts a phantom-typed index to an element-typed index for storage access.
-        @inlinable
-        internal func _toElementIndex(_ index: Index_Primitives.Index<Tag>) -> Array<Element>.Index {
-            Array<Element>.Index(__unchecked: (), position: index.position.rawValue)
-        }
-
-        /// Converts a phantom-typed bounded index to an element-typed index for storage access.
-        @inlinable
-        internal func _toElementIndex(_ index: Index_Primitives.Index<Tag>.Bounded<capacity>) -> Array<Element>.Index {
-            Array<Element>.Index(__unchecked: (), position: index.unbounded.position.rawValue)
+            Index_Primitives.Index<Tag>.Count(__unchecked: storage.count.rawValue)
         }
     }
 }
@@ -89,11 +77,11 @@ extension Array.Static where Element: ~Copyable {
 extension Array.Static.Indexed where Element: ~Copyable {
     /// Whether the array is empty.
     @inlinable
-    public var isEmpty: Bool { _storage.isEmpty }
+    public var isEmpty: Bool { storage.isEmpty }
 
     /// Whether the array is at full capacity.
     @inlinable
-    public var isFull: Bool { _storage.isFull }
+    public var isFull: Bool { storage.isFull }
 }
 
 // ============================================================================
@@ -108,12 +96,10 @@ extension Array.Static.Indexed where Element: ~Copyable {
     @inlinable
     public subscript(index: Index_Primitives.Index<Tag>) -> Element {
         _read {
-            precondition(index.position.rawValue < _storage.count.rawValue, "Index out of bounds")
-            yield unsafe _storage._readPointerToElement(at: _toElementIndex(index)).pointee
+            yield storage[index.retag(Element.self)]
         }
         _modify {
-            precondition(index.position.rawValue < _storage.count.rawValue, "Index out of bounds")
-            yield &(unsafe _storage._pointerToElement(at: _toElementIndex(index)).pointee)
+            yield &storage[index.retag(Element.self)]
         }
     }
 
@@ -137,12 +123,10 @@ extension Array.Static.Indexed where Element: ~Copyable {
     @inlinable
     public subscript(_ index: Index_Primitives.Index<Tag>.Bounded<capacity>) -> Element {
         _read {
-            // Type proves: 0 <= index < capacity
-            // For full arrays: count == capacity, so 0 <= index < count ✓
-            yield unsafe _storage._readPointerToElement(at: _toElementIndex(index)).pointee
+            yield storage[index.unbounded.retag(Element.self)]
         }
         _modify {
-            yield &(unsafe _storage._pointerToElement(at: _toElementIndex(index)).pointee)
+            yield &storage[index.unbounded.retag(Element.self)]
         }
     }
 }
@@ -161,8 +145,7 @@ extension Array.Static.Indexed where Element: ~Copyable {
     /// - Precondition: The index must be in bounds.
     @inlinable
     public func withElement<R>(at index: Index_Primitives.Index<Tag>, _ body: (borrowing Element) -> R) -> R {
-        precondition(index.position.rawValue < _storage.count.rawValue, "Index out of bounds")
-        return unsafe body(_storage._readPointerToElement(at: _toElementIndex(index)).pointee)
+        storage.withElement(at: index.retag(Element.self), body)
     }
 }
 
@@ -177,7 +160,7 @@ extension Array.Static.Indexed where Element: ~Copyable {
     /// - Throws: `Array.Static.Error.overflow` if the array is full.
     @inlinable
     public mutating func append(_ element: consuming Element) throws(Array.Static.Error) {
-        try _storage.append(element)
+        try storage.append(element)
     }
 
     /// Removes and returns the last element, or nil if empty.
@@ -185,12 +168,12 @@ extension Array.Static.Indexed where Element: ~Copyable {
     /// - Returns: The removed element, or `nil` if the array is empty.
     @inlinable
     public mutating func removeLast() -> Element? {
-        _storage.removeLast()
+        storage.removeLast()
     }
 
     /// Removes all elements from the array.
     @inlinable
     public mutating func removeAll() {
-        _storage.removeAll()
+        storage.removeAll()
     }
 }

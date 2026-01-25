@@ -24,12 +24,10 @@ extension Array.Static.Indexed where Element: Copyable {
     @inlinable
     public subscript(index: Index_Primitives.Index<Tag>) -> Element {
         get {
-            precondition(index.position.rawValue < _storage.count.rawValue, "Index out of bounds")
-            return unsafe _storage._readPointerToElement(at: _toElementIndex(index)).pointee
+            storage[index.retag(Element.self)]
         }
         set {
-            precondition(index.position.rawValue < _storage.count.rawValue, "Index out of bounds")
-            unsafe _storage._pointerToElement(at: _toElementIndex(index)).pointee = newValue
+            storage[index.retag(Element.self)] = newValue
         }
     }
 
@@ -42,11 +40,10 @@ extension Array.Static.Indexed where Element: Copyable {
     @inlinable
     public subscript(_ index: Index_Primitives.Index<Tag>.Bounded<capacity>) -> Element {
         get {
-            // Type proves: 0 <= index < capacity
-            unsafe _storage._readPointerToElement(at: _toElementIndex(index)).pointee
+            storage[index.unbounded.retag(Element.self)]
         }
         set {
-            unsafe _storage._pointerToElement(at: _toElementIndex(index)).pointee = newValue
+            storage[index.unbounded.retag(Element.self)] = newValue
         }
     }
 }
@@ -62,7 +59,6 @@ extension Array.Static.Indexed where Element: Copyable {
     /// - Returns: The element at the index, or `nil` if out of bounds.
     @inlinable
     public func element(at index: Index_Primitives.Index<Tag>) -> Element? {
-        guard index.position.rawValue < _storage.count.rawValue else { return nil }
-        return unsafe _storage._readPointerToElement(at: _toElementIndex(index)).pointee
+        storage.element(at: index.retag(Element.self))
     }
 }

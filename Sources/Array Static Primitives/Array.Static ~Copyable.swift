@@ -439,28 +439,7 @@ extension Array.Static where Element: ~Copyable {
 }
 
 // ============================================================================
-// MARK: - Pointer Helpers
-// ============================================================================
-
-extension Array.Static where Element: ~Copyable {
-
-    /// Returns a mutable pointer to the element at the given index.
-    @usableFromInline
-    @unsafe
-    package mutating func _pointerToElement(at index: Index) -> UnsafeMutablePointer<Element> {
-        unsafe storage.pointer(at: index)
-    }
-
-    /// Returns a read-only pointer to the element at the given index.
-    @usableFromInline
-    @unsafe
-    package func _readPointerToElement(at index: Index) -> UnsafePointer<Element> {
-        unsafe storage.read(at: index)
-    }
-}
-
-// ============================================================================
-// MARK: - Operations Requiring Direct _storage Access
+// MARK: - Removal
 // ============================================================================
 
 extension Array.Static where Element: ~Copyable {
