@@ -51,7 +51,7 @@ extension Array.Small where Element: Copyable {
     @safe
     public struct Iterator: IteratorProtocol {
         @usableFromInline
-        let base: UnsafePointer<Element>
+        let base: Pointer<Element>
 
         @usableFromInline
         let end: Index.Count
@@ -60,7 +60,7 @@ extension Array.Small where Element: Copyable {
         var position: Index
 
         @usableFromInline @unsafe
-        init(base: UnsafePointer<Element>, count: Index.Count) {
+        init(base: Pointer<Element>, count: Index.Count) {
             unsafe self.base = base
             self.end = count
             self.position = .zero
@@ -100,12 +100,12 @@ extension Array.Small: Sequence.`Protocol` where Element: Copyable {
     public borrowing func makeIterator() -> Iterator {
         guard count.rawValue > 0 else {
             // Empty array - pointer is irrelevant, count is zero
-            return unsafe Iterator(base: UnsafePointer<Element>(bitPattern: 1)!, count: .zero)
+            return unsafe Iterator(base: Pointer(UnsafePointer<Element>(bitPattern: 1)!), count: .zero)
         }
 
         if let heapState = heap {
-            // Heap storage - use cached pointer
-            return unsafe Iterator(base: UnsafePointer(heapState.pointer), count: .init(__unchecked: count.rawValue))
+            // Heap storage - use cached pointer (convert mutable to immutable)
+            return unsafe Iterator(base: Pointer(UnsafePointer(heapState.pointer.base)), count: .init(__unchecked: count.rawValue))
         } else {
             // Inline storage - get pointer to first element via withUnsafePointer
             // Note: We use withUnsafePointer directly on the stored property because
@@ -114,7 +114,7 @@ extension Array.Small: Sequence.`Protocol` where Element: Copyable {
             return unsafe withUnsafePointer(to: inline) { storagePtr in
                 let basePtr = unsafe UnsafeRawPointer(storagePtr)
                 let elementPtr = unsafe basePtr.assumingMemoryBound(to: Element.self)
-                return unsafe Iterator(base: elementPtr, count: .init(__unchecked: count.rawValue))
+                return unsafe Iterator(base: Pointer(elementPtr), count: .init(__unchecked: count.rawValue))
             }
         }
     }

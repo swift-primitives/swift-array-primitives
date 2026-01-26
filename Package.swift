@@ -33,6 +33,7 @@ let package = Package(
         .package(path: "../swift-property-primitives"),
         .package(path: "../swift-sequence-primitives"),
         .package(path: "../swift-range-primitives"),
+        .package(path: "../swift-storage-primitives"),
     ],
     targets: [
         // Core types with ~Copyable support (Array, Fixed, Static, Small structs)
@@ -44,6 +45,7 @@ let package = Package(
                 .product(name: "Index Primitives", package: "swift-index-primitives"),
                 .product(name: "Property Primitives", package: "swift-property-primitives"),
                 .product(name: "Range Primitives", package: "swift-range-primitives"),
+                .product(name: "Storage Primitives", package: "swift-storage-primitives"),
             ]
         ),
         // Per-variant modules: Swift.Sequence/Collection conformances (Element: Copyable)

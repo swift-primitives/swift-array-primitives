@@ -11,6 +11,7 @@
 
 import Index_Primitives
 public import Array_Primitives_Core
+import Pointer_Primitives
 
 extension Array.Small where Element: ~Copyable {
     /// Combined heap storage reference and cached element pointer.
@@ -30,13 +31,13 @@ extension Array.Small where Element: ~Copyable {
 
         /// Cached pointer to heap elements for fast access.
         @usableFromInline
-        package var pointer: UnsafeMutablePointer<Element>
+        package var pointer: Pointer<Element>.Mutable
 
         /// Creates heap state from storage, caching the element pointer.
         @usableFromInline
         package init(_ storage: Array<Element>.Storage) {
             self.storage = storage
-            unsafe self.pointer = storage.pointer(at: .zero)
+            self.pointer = unsafe storage.pointer(at: .zero)
         }
 
         /// Creates new heap storage with specified capacity.
@@ -61,7 +62,7 @@ extension Array.Small where Element: ~Copyable {
             newStorage.header = currentCount
 
             self.storage = newStorage
-            unsafe self.pointer = newStorage.pointer(at: .zero)
+            self.pointer = unsafe newStorage.pointer(at: .zero)
         }
     }
 }

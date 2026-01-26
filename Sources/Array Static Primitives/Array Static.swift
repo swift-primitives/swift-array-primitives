@@ -64,7 +64,7 @@ extension Array.Static {
     @safe
     public struct Iterator: IteratorProtocol {
         @usableFromInline
-        let base: UnsafePointer<Element>
+        let base: Pointer<Element>
 
         @usableFromInline
         let end: Index.Count
@@ -73,7 +73,7 @@ extension Array.Static {
         var position: Index
 
         @usableFromInline @unsafe
-        init(base: UnsafePointer<Element>, count: Index.Count) {
+        init(base: Pointer<Element>, count: Index.Count) {
             unsafe self.base = base
             self.end = count
             self.position = .zero
@@ -111,7 +111,7 @@ extension Array.Static: Sequence.`Protocol` {
             return unsafe Iterator(base: basePtr, count: count)
         } else {
             // Empty array - pointer is irrelevant, count is zero
-            return unsafe Iterator(base: UnsafePointer<Element>(bitPattern: 1)!, count: .zero)
+            return unsafe Iterator(base: Pointer(UnsafePointer<Element>(bitPattern: 1)!), count: .zero)
         }
     }
 }

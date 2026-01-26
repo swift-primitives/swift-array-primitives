@@ -31,7 +31,7 @@ extension Array where Element: ~Copyable {
         
         /// Inline storage for elements.
         @usableFromInline
-        package var inline: Array<Element>.Storage.Inline<inlineCapacity>
+        package var inline: Storage_Primitives.Storage<Element>.Inline<inlineCapacity>
 
         /// Heap storage state when spilled. Nil when using inline storage.
         ///

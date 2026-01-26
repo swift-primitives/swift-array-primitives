@@ -10,6 +10,7 @@
 // ===----------------------------------------------------------------------===//
 
 public import Index_Primitives
+public import Storage_Primitives
 import Standard_Library_Extensions
 
 // MARK: - Array (Growable, Heap-Allocated)
@@ -47,10 +48,21 @@ import Standard_Library_Extensions
 @safe
 public struct Array<Element: ~Copyable>: ~Copyable {
 
+    // MARK: - Unified Storage
+
+    /// Unified heap storage for array variants.
+    ///
+    /// Typealias to `Storage_Primitives.Storage<Element>`. Uses the canonical
+    /// storage implementation from storage-primitives.
+    ///
+    /// Used by: `Array`, `Array.Fixed`, `Array.Small` (heap mode).
+    @usableFromInline
+    package typealias Storage = Storage_Primitives.Storage<Element>
+
     // MARK: - Storage
 
     @usableFromInline
-    package var storage: Array.Storage
+    package var storage: Storage
 
     // Cached pointer to element storage for single-dereference subscript access.
     // If this lived in Storage (ManagedBuffer), every subscript would require:
@@ -60,7 +72,7 @@ public struct Array<Element: ~Copyable>: ~Copyable {
     // By caching the pointer in the struct, subscript is a single pointer dereference.
     // CRITICAL: Must be updated whenever storage is replaced (reallocation, CoW copy).
     @usableFromInline
-    package var _cachedPtr: UnsafeMutablePointer<Element>
+    package var _cachedPtr: Pointer<Element>.Mutable
 
     // MARK: - Initialization
     /// Creates an empty array with initial capacity hint.
@@ -68,41 +80,8 @@ public struct Array<Element: ~Copyable>: ~Copyable {
     /// - Parameter initialCapacity: The initial capacity to allocate.
     @inlinable
     public init(initialCapacity: Array.Index.Count = .zero) {
-        self.storage = Array.Storage.create(minimumCapacity: initialCapacity)
+        self.storage = Storage.create(minimumCapacity: initialCapacity)
         unsafe (self._cachedPtr = storage.pointer(at: .zero))
-    }
-    
-    // MARK: - Unified Storage (nested to inherit Element's ~Copyable context)
-
-    /// Unified storage class for array variants using ManagedBuffer.
-    ///
-    /// Declared as a nested class inside `Array` so that the `Element` generic
-    /// inherits the `~Copyable` suppression from the outer type. This enables
-    /// conditional Copyable conformance for `Fixed` and the base `Array`.
-    ///
-    /// Used by: `Array`, `Array.Fixed`, `Array.Small` (heap mode).
-    @usableFromInline
-    package final class Storage: ManagedBuffer<Int, Element> {
-        @usableFromInline
-        package var count: Index.Count {
-            get {
-                .init(__unchecked: self.header)
-            }
-            
-            set {
-                header = newValue.rawValue
-            }
-        }
-        
-        deinit {
-            let count = header
-            guard count > 0 else { return }
-            _ = unsafe withUnsafeMutablePointerToElements { elements in
-                for i in 0..<count {
-                    unsafe (elements + i).deinitialize(count: 1)
-                }
-            }
-        }
     }
 
     // MARK: - Fixed (Fixed-Count, Heap-Allocated)
@@ -138,14 +117,14 @@ public struct Array<Element: ~Copyable>: ~Copyable {
     @safe
     public struct Fixed {
         @usableFromInline
-        var storage: Array.Storage
+        var storage: Storage
 
         /// The number of elements in the array.
         public let count: Index.Count
 
         /// Cached pointer for Span access.
         @usableFromInline
-        package var _cachedPtr: UnsafeMutablePointer<Element>
+        package var _cachedPtr: Pointer<Element>.Mutable
 
 
         // Note: No deinit needed - Storage handles cleanup
@@ -176,11 +155,11 @@ public struct Array<Element: ~Copyable>: ~Copyable {
     public struct Static<let capacity: Int>: ~Copyable {
         /// Inline storage for elements.
         ///
-        /// Uses `Array.Storage.Inline` for consistency with `Array.Small`.
-        /// This provides a uniform API: `pointer(at:)`, `read(at:)`, `move(at:)`,
-        /// `initialize(to:at:)`, `deinitialize(count:)`.
+        /// Uses `Storage<Element>.Inline` from storage-primitives for consistency
+        /// with `Array.Small`. This provides a uniform API: `pointer(at:)`,
+        /// `mutablePointer(at:)`, `move(at:)`, `initialize(to:at:)`, `deinitialize(count:)`.
         @usableFromInline
-        package var storage: Array<Element>.Storage.Inline<capacity>
+        package var storage: Storage_Primitives.Storage<Element>.Inline<capacity>
 
         /// Current element count.
         @usableFromInline
@@ -196,7 +175,7 @@ public struct Array<Element: ~Copyable>: ~Copyable {
         /// Creates an empty inline array.
         @inlinable
         public init() {
-            self.storage = Storage.Inline<capacity>()
+            self.storage = Storage_Primitives.Storage<Element>.Inline<capacity>()
             self.count = .zero
         }
 

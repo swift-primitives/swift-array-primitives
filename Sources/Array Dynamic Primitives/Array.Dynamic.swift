@@ -61,7 +61,7 @@ extension Array where Element: Copyable {
     @safe
     public struct Iterator: IteratorProtocol {
         @usableFromInline
-        let base: UnsafePointer<Element>
+        let base: Pointer<Element>
 
         @usableFromInline
         let end: Index.Count
@@ -70,7 +70,7 @@ extension Array where Element: Copyable {
         var position: Index
 
         @usableFromInline @unsafe
-        init(base: UnsafePointer<Element>, count: Index.Count) {
+        init(base: Pointer<Element>, count: Index.Count) {
             unsafe self.base = base
             self.end = count
             self.position = .zero
@@ -97,7 +97,11 @@ extension Array: Sequence.`Protocol` where Element: Copyable {
     /// Uses typed `Index<Element>` for position tracking.
     @inlinable
     public borrowing func makeIterator() -> Iterator {
-        unsafe Iterator(base: UnsafePointer(_cachedPtr), count: .init(__unchecked: count.rawValue))
+        guard count.rawValue > 0 else {
+            // Empty array - pointer is irrelevant, count is zero
+            return unsafe Iterator(base: Pointer(UnsafePointer<Element>(bitPattern: 1)!), count: .zero)
+        }
+        return unsafe Iterator(base: _cachedPtr.immutable, count: .init(__unchecked: count.rawValue))
     }
 }
 

@@ -32,7 +32,7 @@ extension Array.Static where Element: Copyable {
         }
         set {
             precondition(index < count, "Index out of bounds")
-            unsafe storage.pointer(at: index).pointee = newValue
+            storage.pointer(at: index).pointee = newValue
         }
     }
 }

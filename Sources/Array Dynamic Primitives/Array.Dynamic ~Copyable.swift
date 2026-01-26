@@ -181,7 +181,7 @@ extension Array where Element: ~Copyable {
         borrowing get {
             let count = storage.header
             // _cachedPtr from ManagedBuffer is always valid; pointer irrelevant when count == 0
-            return unsafe Swift.Span(_unsafeStart: _cachedPtr, count: count)
+            return unsafe Swift.Span(_unsafeStart: _cachedPtr.base, count: count)
         }
     }
 
@@ -201,7 +201,7 @@ extension Array where Element: ~Copyable {
         mutating get {
             let count = storage.header
             // _cachedPtr from ManagedBuffer is always valid; pointer irrelevant when count == 0
-            return unsafe MutableSpan(_unsafeStart: _cachedPtr, count: count)
+            return unsafe MutableSpan(_unsafeStart: _cachedPtr.base, count: count)
         }
     }
 }
@@ -223,7 +223,7 @@ extension Array where Element: ~Copyable {
     ) throws(E) -> R {
         let count = storage.header
         if count > 0 {
-            return try unsafe body(UnsafeBufferPointer(start: _cachedPtr, count: count))
+            return try unsafe body(UnsafeBufferPointer(start: _cachedPtr.base, count: count))
         } else {
             return try unsafe body(UnsafeBufferPointer(start: nil, count: 0))
         }
@@ -240,7 +240,7 @@ extension Array where Element: ~Copyable {
     ) throws(E) -> R {
         let count = storage.header
         if count > 0 {
-            return try unsafe body(UnsafeMutableBufferPointer(start: _cachedPtr, count: count))
+            return try unsafe body(UnsafeMutableBufferPointer(start: _cachedPtr.base, count: count))
         } else {
             return try unsafe body(UnsafeMutableBufferPointer(start: nil, count: 0))
         }

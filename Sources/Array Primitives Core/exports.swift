@@ -3,3 +3,4 @@
 @_exported public import Bit_Primitives
 @_exported public import Index_Primitives
 @_exported public import Collection_Primitives
+@_exported public import Storage_Primitives

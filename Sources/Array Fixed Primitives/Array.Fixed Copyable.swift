@@ -63,7 +63,7 @@ extension Array.Fixed where Element: Copyable {
         @_lifetime(&self)
         mutating get {
             makeUnique()
-            return unsafe MutableSpan(_unsafeStart: _cachedPtr, count: count.rawValue)
+            return unsafe MutableSpan(_unsafeStart: _cachedPtr.base, count: count.rawValue)
         }
     }
 }
