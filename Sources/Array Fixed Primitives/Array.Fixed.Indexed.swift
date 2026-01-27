@@ -64,7 +64,7 @@ extension Array.Fixed {
         /// ```
         @inlinable
         public var count: Index.Count {
-            Index.Count(__unchecked: _storage.count.rawValue)
+            _storage.count.retag(Tag.self)
         }
 
         /// Accesses the element at the given phantom-typed index.

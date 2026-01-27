@@ -65,7 +65,7 @@ extension Array.Static where Element: ~Copyable {
         /// ```
         @inlinable
         public var count: Index_Primitives.Index<Tag>.Count {
-            Index_Primitives.Index<Tag>.Count(__unchecked: storage.count.rawValue)
+            storage.count.retag(Tag.self)
         }
     }
 }
