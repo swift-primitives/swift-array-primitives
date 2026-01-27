@@ -64,9 +64,9 @@ extension Array.Fixed {
         count: Array.Index.Count,
         initializingWith initializer: (Array.Index) -> Element
     ) {
-        precondition(count >= 0, "Count must be non-negative")
+        // Count is unsigned, always non-negative by construction
 
-        if count == 0 {
+        if count == .zero {
             self.storage = Storage.create(minimumCapacity: .zero)
             unsafe self._cachedPtr = storage.pointer(at: .zero)
             self.count = .zero

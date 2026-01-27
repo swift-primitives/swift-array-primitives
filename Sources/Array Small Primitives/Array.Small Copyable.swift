@@ -32,10 +32,10 @@ extension Array.Small where Element: Copyable {
                 return unsafe heap.pointer[index]
             } else {
                 // Use withUnsafePointer directly - inline accessor requires mutating context
-                let stride = MemoryLayout<Element>.stride
+                let stride = Affine.Discrete.Ratio<Element, UInt8>(MemoryLayout<Element>.stride)
                 return unsafe withUnsafePointer(to: inline) { storagePtr in
                     let basePtr = unsafe UnsafeRawPointer(storagePtr)
-                    let elementPtr = unsafe (basePtr + index.position.rawValue * stride)
+                    let elementPtr = unsafe (basePtr + (Index<Element>.Offset(index) * stride).vector.rawValue)
                         .assumingMemoryBound(to: Element.self)
                     return unsafe elementPtr.pointee
                 }
@@ -69,10 +69,10 @@ extension Array.Small where Element: Copyable {
             return unsafe heap.pointer[index]
         } else {
             // Use withUnsafePointer directly - inline accessor requires mutating context
-            let stride = MemoryLayout<Element>.stride
+            let stride = Affine.Discrete.Ratio<Element, UInt8>(MemoryLayout<Element>.stride)
             return unsafe withUnsafePointer(to: inline) { storagePtr in
                 let basePtr = unsafe UnsafeRawPointer(storagePtr)
-                let elementPtr = unsafe (basePtr + index.position.rawValue * stride)
+                let elementPtr = unsafe (basePtr + (Index<Element>.Offset(index) * stride).vector.rawValue)
                     .assumingMemoryBound(to: Element.self)
                 return unsafe elementPtr.pointee
             }
@@ -96,10 +96,10 @@ extension Array.Small where Element: Copyable {
             return unsafe heap.pointer[newIndex]
         } else {
             // Use withUnsafePointer directly - inline accessor requires mutating context
-            let stride = MemoryLayout<Element>.stride
+            let stride = Affine.Discrete.Ratio<Element, UInt8>(MemoryLayout<Element>.stride)
             return unsafe withUnsafePointer(to: inline) { storagePtr in
                 let basePtr = unsafe UnsafeRawPointer(storagePtr)
-                let elementPtr = unsafe (basePtr + newIndex.position.rawValue * stride)
+                let elementPtr = unsafe (basePtr + (Index<Element>.Offset(newIndex) * stride).vector.rawValue)
                     .assumingMemoryBound(to: Element.self)
                 return unsafe elementPtr.pointee
             }
