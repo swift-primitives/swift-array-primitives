@@ -76,6 +76,60 @@ package var storage: UnsafeMutablePointer<Element>
 
 ---
 
+## The Pointer Acquisition Problem
+
+**Date**: 2026-01-23
+
+**Context**: Investigating why `Array.Small.makeIterator()` cannot use the `inline` accessor pattern, leading to a deep analysis of Swift's ownership model.
+
+### The Root Discovery
+
+Swift's ownership model conflates two conceptually distinct operations: *obtaining an address* and *having permission to write to that address*. The `&self` syntax creates an `inout` reference, which grants both address and write permission simultaneously. There is no mechanism to request "just the address, read-only."
+
+This conflation appears reasonable until you need a pointer-based accessor in a non-mutating context. The `Sequence.makeIterator()` protocol requirement is non-mutating, but obtaining a pointer to inline storage requires `&self`. The language provides no way to say "I need self's address but promise not to write."
+
+### Rust Contrast
+
+Rust handles this differently: `&self as *const Self` is legal. An immutable reference can be cast to a raw pointer without requiring mutable access. The pointer creation is safe; only pointer *use* is unsafe. Swift's design prevents even *creating* the pointer in immutable contexts.
+
+This isn't a bug—it's a design choice with deep roots in how Swift models ownership. But it creates a fundamental limitation for pointer-based accessor patterns on `~Copyable` types.
+
+### The ~Escapable Misconception
+
+Initial intuition suggested that `~Escapable` might solve the problem: if a type cannot escape its scope, perhaps Swift would allow creating pointers to borrowed values since the pointer cannot outlive the borrow. This intuition was wrong.
+
+`~Escapable` controls the *output*—what can be stored, returned, or captured. It prevents a value from outliving its creation scope. But it provides no mechanism for *input*—how to obtain a pointer in the first place.
+
+Swift has sophisticated mechanisms for controlling where values go (`~Escapable`, `@_lifetime`, `consuming`/`borrowing`), but no mechanism exists for: "How do I obtain a stable address from a borrowed value?"
+
+### Workaround Analysis
+
+Six workarounds were evaluated:
+
+| Workaround | Trade-off |
+|------------|-----------|
+| Duplicated logic | Violates DRY |
+| Static methods | Breaks path-like composition |
+| Cached pointers | Pointer invalidates on value type move |
+| withUnsafePointer closure | Cannot return pointer |
+| Builtin.addressOfBorrow | Not public API |
+| Reference wrapper | Defeats inline optimization |
+
+**Selected solution**: Static methods (`Inline.read(at:in:)` accepts `borrowing`).
+
+The cost—API asymmetry between read (static) and write (instance)—is acceptable. The asymmetry reflects a real underlying asymmetry in what Swift permits.
+
+### Implications for Property Primitives
+
+The `Property.View` pattern in swift-property-primitives stores `UnsafeMutablePointer<Base>`. Construction requires `&base`, forcing `mutating _read` accessors. This pattern cannot be used for non-mutating access contexts like protocol conformances. The limitation is inherent to Swift, not to the Property design.
+
+**Applies to**: Any type needing pointer-based access in non-mutating contexts.
+
+**Related documentation**:
+- SE-Pitch opportunity: borrowing pointer projection
+
+---
+
 ## Topics
 
 ### Related Documents
