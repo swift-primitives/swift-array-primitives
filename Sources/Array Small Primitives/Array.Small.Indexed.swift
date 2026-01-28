@@ -108,7 +108,7 @@ extension Array.Small.Indexed where Element: Copyable {
             } else {
                 // Direct access to inline storage - cannot use `inline` accessor
                 // because it requires mutating context (needs &self for pointer)
-                let idx = storageIndex.position.rawValue
+                let idx = storageIndex.position
                 let stride = MemoryLayout<Element>.stride
                 return unsafe withUnsafePointer(to: _storage.inline) { storagePtr in
                     let basePtr = unsafe UnsafeRawPointer(storagePtr)

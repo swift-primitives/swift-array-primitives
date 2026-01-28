@@ -492,7 +492,7 @@ extension Swift.Array where Element == Bit {
     @inlinable
     public init(_ packed: Array_Primitives_Core.Array<Bit>.Vector) {
         self.init()
-        self.reserveCapacity(packed.count.rawValue)
+        self.reserveCapacity(packed.count)
         for bit in packed {
             self.append(Bit(bit))
         }
@@ -643,7 +643,7 @@ extension Array<Bit>.Vector {
             case .lsb:
                 return self[index]
             case .msb:
-                let msbPosition = _count.rawValue - 1 - index.position.rawValue
+                let msbPosition = _count.rawValue - 1 - index.position
                 guard msbPosition >= 0 else { return false }
                 let msbIndex = Bit.Index(__unchecked: (), position: msbPosition)
                 return self[msbIndex]
@@ -654,7 +654,7 @@ extension Array<Bit>.Vector {
             case .lsb:
                 self[index] = newValue
             case .msb:
-                let msbPosition = _count.rawValue - 1 - index.position.rawValue
+                let msbPosition = _count.rawValue - 1 - index.position
                 guard msbPosition >= 0 else { return }
                 let msbIndex = Bit.Index(__unchecked: (), position: msbPosition)
                 self[msbIndex] = newValue

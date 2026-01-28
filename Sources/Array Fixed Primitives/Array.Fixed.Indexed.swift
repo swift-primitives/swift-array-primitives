@@ -74,12 +74,12 @@ extension Array.Fixed {
         @inlinable
         public subscript(index: Index) -> Element {
             _read {
-                precondition(index.position.rawValue < _storage.count.rawValue, "Index out of bounds")
-                yield unsafe _storage._cachedPtr[index.position.rawValue]
+                precondition(index.position < _storage.count, "Index out of bounds")
+                yield unsafe _storage._cachedPtr[index.position]
             }
             _modify {
-                precondition(index.position.rawValue < _storage.count.rawValue, "Index out of bounds")
-                yield &(unsafe _storage._cachedPtr[index.position.rawValue])
+                precondition(index.position < _storage.count, "Index out of bounds")
+                yield &(unsafe _storage._cachedPtr[index.position])
             }
         }
     }
