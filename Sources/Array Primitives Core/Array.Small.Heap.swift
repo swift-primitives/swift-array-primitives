@@ -44,7 +44,10 @@ extension Array.Small where Element: ~Copyable {
         @usableFromInline
         package static func create(minimumCapacity: Array.Index.Count) -> Array<Element>.Storage {
             Array<Element>.Storage.create(
-                minimumCapacity: max(minimumCapacity, inlineCapacity * 2, 8)
+                minimumCapacity: Tagged.max(
+                    minimumCapacity,
+                    Tagged.max(.init(UInt(inlineCapacity * 2)), .init(UInt(8)))
+                )
             )
         }
 
@@ -54,7 +57,11 @@ extension Array.Small where Element: ~Copyable {
             let storageCapacity: Array<Element>.Index.Count = .init(__unchecked: (), .init(UInt(storage.capacity)))
             guard storageCapacity < minimumCapacity else { return }
             
-            let newCapacity: Array.Index.Count = max(minimumCapacity, storageCapacity * 2, 8)
+            let newCapacity: Array.Index.Count = .init(UInt(Swift.max(
+                Int(bitPattern: minimumCapacity),
+                Int(bitPattern: storageCapacity) * 2,
+                8
+            )))
             let newStorage = Array<Element>.Storage.create(minimumCapacity: newCapacity)
             let currentCount = storage.header
 
