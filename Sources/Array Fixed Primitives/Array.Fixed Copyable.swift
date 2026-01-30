@@ -22,7 +22,7 @@ public import Index_Primitives
 extension Array.Fixed: Swift.Sequence where Element: Copyable {
     /// Returns the count as the underestimated count since we know the exact size.
     @inlinable
-    public var underestimatedCount: Int { count.rawValue }
+    public var underestimatedCount: Int { Int(bitPattern: count) }
 }
 
 // MARK: - Swift.Collection Conformance
@@ -63,7 +63,7 @@ extension Array.Fixed where Element: Copyable {
         @_lifetime(&self)
         mutating get {
             makeUnique()
-            return unsafe MutableSpan(_unsafeStart: _cachedPtr.base, count: count.rawValue)
+            return unsafe MutableSpan(_unsafeStart: _cachedPtr.base, count: Int(bitPattern: count))
         }
     }
 }
@@ -80,7 +80,7 @@ extension Array.Fixed where Element: Copyable {
         at base: Index,
         offsetBy offset: Index.Offset
     ) -> Element? {
-        guard let newIndex = base + offset else { return nil }
+        guard let newIndex = try? (base + offset) else { return nil }
         guard newIndex < count else { return nil }
         return unsafe _cachedPtr[newIndex]
     }

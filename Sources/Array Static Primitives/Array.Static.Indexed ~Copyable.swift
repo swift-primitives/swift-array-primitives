@@ -103,32 +103,7 @@ extension Array.Static.Indexed where Element: ~Copyable {
         }
     }
 
-    /// Accesses the element at the given bounded index.
-    ///
-    /// The type `Index<Tag>.Bounded<capacity>` proves `0 <= index < capacity`.
-    /// **No runtime bounds check is performed.**
-    ///
-    /// ## Type-Based Safety
-    ///
-    /// The TYPE encodes the bounds proof:
-    /// - `Index<Tag>` subscript → has runtime bounds check
-    /// - `Index<Tag>.Bounded<capacity>` subscript → NO bounds check (type proves it)
-    ///
-    /// ## Contract
-    ///
-    /// For full arrays (`count == capacity`), this subscript is completely safe.
-    /// For partial arrays (`count < capacity`), caller must ensure `index < count`.
-    ///
-    /// - Parameter index: A bounded index where the type proves `0 <= index < capacity`.
-    @inlinable
-    public subscript(_ index: Index_Primitives.Index<Tag>.Bounded<capacity>) -> Element {
-        _read {
-            yield storage[index.unbounded.retag(Element.self)]
-        }
-        _modify {
-            yield &storage[index.unbounded.retag(Element.self)]
-        }
-    }
+    // Note: Index.Bounded<N> subscript removed - type not yet implemented in index-primitives
 }
 
 // ============================================================================

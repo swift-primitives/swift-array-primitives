@@ -92,41 +92,7 @@ extension Array.Small.Indexed where Element: Copyable {
     /// Accesses the element at the given phantom-typed index.
     ///
     /// - Parameter index: The typed index of the element to access.
-    /// - Precondition: `index` must be within bounds.
-    ///
-    /// ## Implementation Note
-    ///
-    /// The getter uses `withUnsafePointer` directly on the stored property
-    /// instead of the `inline` accessor because subscript getters are non-mutating,
-    /// but the `inline` accessor requires `&self` (mutating context).
-    @inlinable
-    public subscript(index: Array.Small<inlineCapacity>.Index.Bounded<inlineCapacity>) -> Element {
-        get {
-            let storageIndex = index.unbounded.retag(Element.self)
-            if let heapState = _storage.heap {
-                return unsafe heapState.storage.read(at: storageIndex).pointee
-            } else {
-                // Direct access to inline storage - cannot use `inline` accessor
-                // because it requires mutating context (needs &self for pointer)
-                let idx = storageIndex.position
-                let stride = MemoryLayout<Element>.stride
-                return unsafe withUnsafePointer(to: _storage.inline) { storagePtr in
-                    let basePtr = unsafe UnsafeRawPointer(storagePtr)
-                    let elementPtr = unsafe (basePtr + idx * stride).assumingMemoryBound(to: Element.self)
-                    return unsafe elementPtr.pointee
-                }
-            }
-        }
-        set {
-            let storageIndex = index.unbounded.retag(Element.self)
-            if _storage.heap != nil {
-                _ = _storage.heap!.storage.move(at: storageIndex)
-                _storage.heap!.storage.initialize(to: newValue, at: storageIndex)
-            } else {
-                unsafe _storage.inline.pointer(at: storageIndex).pointee = newValue
-            }
-        }
-    }
+    // Note: Index.Bounded<N> subscript removed - type not yet implemented in index-primitives
 }
 
 // ============================================================================

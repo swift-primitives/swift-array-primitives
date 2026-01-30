@@ -99,14 +99,16 @@ extension Array.Indexed {
     @inlinable
     public subscript(index: Index) -> Element {
         get {
-            precondition(index < _storage.count, "Index out of bounds")
-            return unsafe _storage.storage.read(at: index.retag(Element.self)).pointee
+            let elementIndex = index.retag(Element.self)
+            precondition(elementIndex < _storage.count, "Index out of bounds")
+            return unsafe _storage.storage.pointer(at: elementIndex).pointee
         }
         set {
-            precondition(index < _storage.count, "Index out of bounds")
+            let elementIndex = index.retag(Element.self)
+            precondition(elementIndex < _storage.count, "Index out of bounds")
             _storage.makeUnique()
-            _ = _storage.storage.move(at: index.retag(Element.self))
-            _storage.storage.initialize(to: newValue, at: index.retag(Element.self))
+            _ = _storage.storage.move(at: elementIndex)
+            _storage.storage.initialize(to: newValue, at: elementIndex)
         }
     }
 }

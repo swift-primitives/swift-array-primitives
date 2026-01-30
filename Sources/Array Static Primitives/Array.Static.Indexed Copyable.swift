@@ -31,21 +31,7 @@ extension Array.Static.Indexed where Element: Copyable {
         }
     }
 
-    /// Accesses the element at the given bounded index (copy semantics).
-    ///
-    /// The type `Index<Tag>.Bounded<capacity>` proves `0 <= index < capacity`.
-    /// **No runtime bounds check is performed.**
-    ///
-    /// - Parameter index: A bounded index where the type proves `0 <= index < capacity`.
-    @inlinable
-    public subscript(_ index: Index_Primitives.Index<Tag>.Bounded<capacity>) -> Element {
-        get {
-            storage[index.unbounded.retag(Element.self)]
-        }
-        set {
-            storage[index.unbounded.retag(Element.self)] = newValue
-        }
-    }
+    // Note: Index.Bounded<N> subscript removed - type not yet implemented in index-primitives
 }
 
 // ============================================================================

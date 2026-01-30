@@ -63,7 +63,7 @@ extension Array.Fixed {
         /// guard node < indexed.count else { return }
         /// ```
         @inlinable
-        public var count: Index.Count {
+        public var count: Index_Primitives.Index<Tag>.Count {
             _storage.count.retag(Tag.self)
         }
 
@@ -72,14 +72,16 @@ extension Array.Fixed {
         /// - Parameter index: The typed index of the element to access.
         /// - Precondition: `index` must be within bounds.
         @inlinable
-        public subscript(index: Index) -> Element {
+        public subscript(index: Index_Primitives.Index<Tag>) -> Element {
             _read {
-                precondition(index.position < _storage.count, "Index out of bounds")
-                yield unsafe _storage._cachedPtr[index.position]
+                let elementIndex = index.retag(Element.self)
+                precondition(elementIndex < _storage.count, "Index out of bounds")
+                yield unsafe _storage._cachedPtr[elementIndex]
             }
             _modify {
-                precondition(index.position < _storage.count, "Index out of bounds")
-                yield &(unsafe _storage._cachedPtr[index.position])
+                let elementIndex = index.retag(Element.self)
+                precondition(elementIndex < _storage.count, "Index out of bounds")
+                yield &(unsafe _storage._cachedPtr[elementIndex])
             }
         }
     }

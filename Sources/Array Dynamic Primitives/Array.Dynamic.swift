@@ -29,7 +29,7 @@ extension Array: Collection.Access.Random where Element: Copyable {}
 extension Array: Swift.Sequence where Element: Copyable {
     /// Returns the count as the underestimated count since we know the exact size.
     @inlinable
-    public var underestimatedCount: Int { count.rawValue }
+    public var underestimatedCount: Int { Int(bitPattern: count) }
 }
 
 extension Array: Swift.Collection where Element: Copyable {}
@@ -80,7 +80,7 @@ extension Array where Element: Copyable {
         public mutating func next() -> Element? {
             guard position < end else { return nil }
             let result = unsafe base[position]
-            position = (position + 1)!
+            position = position + Index.Count.one
             return result
         }
     }
@@ -101,7 +101,7 @@ extension Array: Sequence.`Protocol` where Element: Copyable {
             // Empty array - pointer is irrelevant, count is zero
             return unsafe Iterator(base: Pointer(UnsafePointer<Element>(bitPattern: 1)!), count: .zero)
         }
-        return unsafe Iterator(base: _cachedPtr.immutable, count: .init(__unchecked: count.rawValue))
+        return unsafe Iterator(base: _cachedPtr.immutable, count: .init(count.rawValue))
     }
 }
 

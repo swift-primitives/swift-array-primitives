@@ -83,7 +83,7 @@ extension Array.Static {
         public mutating func next() -> Element? {
             guard position < end else { return nil }
             let result = unsafe base[position]
-            position = (position + 1)!
+            position = position + Index.Count.one
             return result
         }
     }
@@ -106,12 +106,15 @@ extension Array.Static: Sequence.`Protocol` {
     @inlinable
     public borrowing func makeIterator() -> Iterator {
         // Get pointer to first element (or a valid pointer if empty)
-        if count > 0 {
-            let basePtr = unsafe storage.read(at: .zero)
-            return unsafe Iterator(base: basePtr, count: count)
-        } else {
+        guard count > .zero else {
             // Empty array - pointer is irrelevant, count is zero
             return unsafe Iterator(base: Pointer(UnsafePointer<Element>(bitPattern: 1)!), count: .zero)
+        }
+        // Use withUnsafePointer because storage.pointer(at:) is mutating
+        return unsafe withUnsafePointer(to: storage._storage) { storagePtr in
+            let basePtr = unsafe UnsafeRawPointer(storagePtr)
+            let elementPtr = unsafe basePtr.assumingMemoryBound(to: Element.self)
+            return unsafe Iterator(base: Pointer(elementPtr), count: count)
         }
     }
 }

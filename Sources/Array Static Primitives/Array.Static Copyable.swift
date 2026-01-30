@@ -28,7 +28,7 @@ extension Array.Static where Element: Copyable {
     public subscript(index: Index) -> Element {
         get {
             precondition(index < count, "Index out of bounds")
-            return unsafe storage.read(at: index).pointee
+            return storage.withElement(at: index) { $0 }
         }
         set {
             precondition(index < count, "Index out of bounds")
@@ -49,7 +49,7 @@ extension Array.Static where Element: Copyable {
     @inlinable
     public func element(at index: Index) -> Element? {
         guard index < count else { return nil }
-        return unsafe storage.read(at: index).pointee
+        return storage.withElement(at: index) { $0 }
     }
 }
 
@@ -65,9 +65,9 @@ extension Array.Static where Element: Copyable {
         at base: Index,
         offsetBy offset: Index.Offset
     ) -> Element? {
-        guard let newIndex = base + offset else { return nil }
+        guard let newIndex = try? (base + offset) else { return nil }
         guard newIndex < count else { return nil }
-        return unsafe storage.read(at: newIndex).pointee
+        return storage.withElement(at: newIndex) { $0 }
     }
 }
 
@@ -87,9 +87,7 @@ where Tag == Sequence.ForEach, Base == Array<Element>.Static<n>, Element: Copyab
     @inlinable
     public mutating func consuming(_ body: (Element) -> Void) {
         let count = unsafe base.pointee.count
-        (0..<count).forEach { i in
-            unsafe body(base.pointee.storage.read(at: i).pointee)
-        }
+        unsafe base.pointee.storage.forEach(count: count) { body($0) }
         unsafe base.pointee.storage.deinitialize(count: count)
         unsafe base.pointee.count = .zero
     }

@@ -11,6 +11,7 @@
 
 public import Array_Primitives_Core
 public import Collection_Primitives
+public import Index_Primitives
 public import Sequence_Primitives
 
 // ============================================================================
@@ -70,7 +71,7 @@ extension Array.Small where Element: Copyable {
         public mutating func next() -> Element? {
             guard position < end else { return nil }
             let result = unsafe base[position]
-            position = (position + 1)!
+            position = position + Index.Count.one
             return result
         }
     }
@@ -105,7 +106,7 @@ extension Array.Small: Sequence.`Protocol` where Element: Copyable {
 
         if let heapState = heap {
             // Heap storage - use cached pointer (convert mutable to immutable)
-            return unsafe Iterator(base: Pointer(UnsafePointer(heapState.pointer.base)), count: .init(__unchecked: count.rawValue))
+            return unsafe Iterator(base: Pointer(UnsafePointer(heapState.pointer.base)), count: .init(count.rawValue))
         } else {
             // Inline storage - get pointer to first element via withUnsafePointer
             // Note: We use withUnsafePointer directly on the stored property because
@@ -114,7 +115,7 @@ extension Array.Small: Sequence.`Protocol` where Element: Copyable {
             return unsafe withUnsafePointer(to: inline) { storagePtr in
                 let basePtr = unsafe UnsafeRawPointer(storagePtr)
                 let elementPtr = unsafe basePtr.assumingMemoryBound(to: Element.self)
-                return unsafe Iterator(base: Pointer(elementPtr), count: .init(__unchecked: count.rawValue))
+                return unsafe Iterator(base: Pointer(elementPtr), count: .init(count.rawValue))
             }
         }
     }
