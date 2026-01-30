@@ -175,12 +175,12 @@ public struct Array<Element: ~Copyable>: ~Copyable {
         /// Creates an empty inline array.
         @inlinable
         public init() {
-            self.storage = Storage_Primitives.Storage<Element>.Inline<capacity>()
+            self.storage = try! Storage_Primitives.Storage<Element>.Inline<capacity>()
             self.count = .zero
         }
 
         deinit {
-            guard count > 0 else { return }
+            guard count > .zero else { return }
             storage.deinitialize(count: count)
         }
     }

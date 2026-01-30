@@ -62,13 +62,13 @@ extension Array where Element: ~Copyable {
                 )
             }
 
-            self.inline = Storage.Inline<inlineCapacity>()
+            self.inline = try! Storage.Inline<inlineCapacity>()
             self.count = .zero
             self.heap = nil
         }
 
         deinit {
-            guard count > 0 else { return }
+            guard count > .zero else { return }
 
             if let heapState = heap {
                 // Elements are on heap - ElementStorage handles cleanup via its deinit

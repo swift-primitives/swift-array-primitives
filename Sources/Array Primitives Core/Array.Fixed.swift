@@ -29,11 +29,11 @@ extension Array.Fixed {
         count: Array.Index.Count,
         initializingWith initializer: (Array.Index) -> Element
     ) throws(Error) {
-        guard count >= 0 else {
+        guard count >= .zero else {
             throw .invalidCount(count)
         }
 
-        if count == 0 {
+        if count == .zero {
             self.storage = Storage.create(minimumCapacity: .zero)
             unsafe self._cachedPtr = storage.pointer(at: .zero)
             self.count = .zero
@@ -57,7 +57,7 @@ extension Array.Fixed {
     ///   - __unchecked: Marker parameter indicating unchecked operation.
     ///   - count: The number of elements. Must be non-negative.
     ///   - initializer: A closure that provides the element for each index.
-    /// - Precondition: `count >= 0`
+    /// - Precondition: `count >= .zero`
     @inlinable
     public init(
         __unchecked: Void,

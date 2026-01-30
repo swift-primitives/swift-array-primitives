@@ -51,7 +51,7 @@ extension Array.Small where Element: ~Copyable {
         /// Ensures capacity, reallocating if needed.
         @usableFromInline
         package mutating func ensureCapacity(_ minimumCapacity: Array.Index.Count) {
-            let storageCapacity = Array.Index.Count(__unchecked: storage.capacity)
+            let storageCapacity: Array<Element>.Index.Count = .init(__unchecked: (), .init(UInt(storage.capacity)))
             guard storageCapacity < minimumCapacity else { return }
             
             let newCapacity: Array.Index.Count = max(minimumCapacity, storageCapacity * 2, 8)
