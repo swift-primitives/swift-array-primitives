@@ -167,7 +167,7 @@ where Tag == Sequence.ForEach, Base == Array<Element>.Fixed, Element: ~Copyable 
     @inlinable
     public func callAsFunction(_ body: (borrowing Element) -> Void) {
         let count = unsafe base.pointee.count
-        (0..<count).forEach { i in
+        (.zero..<count).forEach { i in
             unsafe body(base.pointee._cachedPtr[i])
         }
     }

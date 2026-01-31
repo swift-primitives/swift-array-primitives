@@ -11,8 +11,8 @@
 
 public import Array_Primitives_Core
 public import Collection_Primitives
-public import Index_Primitives
-public import Sequence_Primitives
+import Index_Primitives
+import Sequence_Primitives
 
 // ============================================================================
 // MARK: - Protocol Conformances
@@ -74,7 +74,7 @@ extension Array.Static {
 
         @usableFromInline @unsafe
         init(base: Pointer<Element>, count: Index.Count) {
-            unsafe self.base = base
+            self.base = base
             self.end = count
             self.position = .zero
         }
@@ -82,7 +82,7 @@ extension Array.Static {
         @inlinable
         public mutating func next() -> Element? {
             guard position < end else { return nil }
-            let result = unsafe base[position]
+            let result = base[position]
             position = position + Index.Count.one
             return result
         }
@@ -111,7 +111,7 @@ extension Array.Static: Sequence.`Protocol` {
             return unsafe Iterator(base: Pointer(UnsafePointer<Element>(bitPattern: 1)!), count: .zero)
         }
         // Use withUnsafePointer because storage.pointer(at:) is mutating
-        return unsafe withUnsafePointer(to: storage._storage) { storagePtr in
+        return unsafe withUnsafePointer(to: storage) { storagePtr in
             let basePtr = unsafe UnsafeRawPointer(storagePtr)
             let elementPtr = unsafe basePtr.assumingMemoryBound(to: Element.self)
             return unsafe Iterator(base: Pointer(elementPtr), count: count)

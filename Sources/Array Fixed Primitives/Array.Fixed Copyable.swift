@@ -42,11 +42,11 @@ extension Array.Fixed where Element: Copyable {
     public subscript(index: Index) -> Element {
         get {
             precondition(index < count, "Index out of bounds")
-            return unsafe _cachedPtr[index]
+            return _cachedPtr[index]
         }
         set {
             precondition(index < count, "Index out of bounds")
-            unsafe _cachedPtr[index] = newValue
+            _cachedPtr[index] = newValue
         }
     }
 }

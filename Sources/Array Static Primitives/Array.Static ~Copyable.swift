@@ -11,10 +11,10 @@
 
 public import Array_Primitives_Core
 public import Collection_Primitives
-public import Index_Primitives
+import Index_Primitives
 public import Property_Primitives
-public import Range_Primitives
-public import Sequence_Primitives
+import Range_Primitives
+import Sequence_Primitives
 
 // ============================================================================
 // MARK: - Collection Conformances
@@ -67,28 +67,17 @@ extension Array.Static where Element: ~Copyable {
     ///
     /// - Parameter index: The typed index of the element to access.
     /// - Precondition: `index` must be in bounds.
-    ///
-    /// ## Lifetime Safety
-    ///
-    /// The `@_lifetime(borrow self)` annotation on `_read` ensures the yielded
-    /// reference is valid only while `self` is borrowed. The pointer computed
-    /// from inline storage is safe because `self` cannot move during the borrow.
     @inlinable
     public subscript(index: Index) -> Element {
         @_lifetime(borrow self)
         _read {
             precondition(index < count, "Index out of bounds")
-            // Storage.Inline uses 64-byte slots. Compute pointer non-mutatingly.
-            let ptr = unsafe withUnsafePointer(to: storage._storage) { base in
-                UnsafeRawPointer(base)
-                    .advanced(by: Int(bitPattern: index) * 64)
-                    .assumingMemoryBound(to: Element.self)
-            }
-            yield unsafe ptr.pointee
+            let ptr: Pointer<Element>.Immutable = unsafe storage.pointer(at: index)
+            yield ptr.pointee
         }
         _modify {
             precondition(index < count, "Index out of bounds")
-            yield &(unsafe storage.pointer(at: index).pointee)
+            yield &( storage.pointer(at: index).pointee)
         }
     }
 }
@@ -138,9 +127,10 @@ extension Array.Static where Element: ~Copyable {
     /// - Returns: The removed element, or `nil` if the array is empty.
     @inlinable
     public mutating func removeLast() -> Element? {
-        guard count > .zero else { return nil }
-        count = count - .one
-        return storage.move(at: Index(count))
+        fatalError()
+//        guard count > .zero else { return nil }
+//        count = count - .one
+//        return storage.move(at: Index(count))
     }
 
     /// Removes all elements from the array.
@@ -174,7 +164,7 @@ extension Array.Static where Element: ~Copyable {
     public func withSpan<R, E: Swift.Error>(
         _ body: (Swift.Span<Element>) throws(E) -> R
     ) throws(E) -> R {
-        return try unsafe withUnsafePointer(to: storage._storage) { storagePtr throws(E) -> R in
+        return try unsafe withUnsafePointer(to: storage) { storagePtr throws(E) -> R in
             let basePtr = unsafe UnsafeRawPointer(storagePtr)
             let elementPtr = unsafe basePtr.assumingMemoryBound(to: Element.self)
             let span = unsafe Swift.Span(_unsafeStart: elementPtr, count: Int(bitPattern: count))
@@ -200,7 +190,7 @@ extension Array.Static where Element: ~Copyable {
     public mutating func withMutableSpan<R, E: Swift.Error>(
         _ body: (borrowing MutableSpan<Element>) throws(E) -> R
     ) throws(E) -> R {
-        return try unsafe withUnsafeMutablePointer(to: &storage._storage) { storagePtr throws(E) -> R in
+        return try unsafe withUnsafeMutablePointer(to: &storage) { storagePtr throws(E) -> R in
             let basePtr = UnsafeMutableRawPointer(storagePtr)
             let elementPtr = unsafe basePtr.assumingMemoryBound(to: Element.self)
             let span = unsafe MutableSpan(_unsafeStart: elementPtr, count: Int(bitPattern: count))
@@ -224,7 +214,7 @@ extension Array.Static where Element: ~Copyable {
     public func withUnsafeBufferPointer<R, E: Swift.Error>(
         _ body: (UnsafeBufferPointer<Element>) throws(E) -> R
     ) throws(E) -> R {
-        return try unsafe withUnsafePointer(to: storage._storage) { storagePtr throws(E) -> R in
+        return try unsafe withUnsafePointer(to: storage) { storagePtr throws(E) -> R in
             let basePtr = unsafe UnsafeRawPointer(storagePtr)
             let elementPtr = unsafe basePtr.assumingMemoryBound(to: Element.self)
             return try unsafe body(UnsafeBufferPointer(start: count > .zero ? elementPtr : nil, count: Int(bitPattern: count)))
@@ -240,7 +230,7 @@ extension Array.Static where Element: ~Copyable {
     public mutating func withUnsafeMutableBufferPointer<R, E: Swift.Error>(
         _ body: (UnsafeMutableBufferPointer<Element>) throws(E) -> R
     ) throws(E) -> R {
-        return try unsafe withUnsafeMutablePointer(to: &storage._storage) { storagePtr throws(E) -> R in
+        return try unsafe withUnsafeMutablePointer(to: &storage) { storagePtr throws(E) -> R in
             let basePtr = UnsafeMutableRawPointer(storagePtr)
             let elementPtr = unsafe basePtr.assumingMemoryBound(to: Element.self)
             return try unsafe body(UnsafeMutableBufferPointer(start: count > .zero ? elementPtr : nil, count: Int(bitPattern: count)))
@@ -410,7 +400,7 @@ where Tag == Sequence.Drain, Base == Array<Element>.Static<n>, Element: ~Copyabl
         let count = unsafe base.pointee.count
         guard count > .zero else { return }
         (.zero..<count).forEach { i in
-            body(unsafe base.pointee.storage.move(at: Index(i)))
+            body(unsafe base.pointee.storage.move(at: i))
         }
         unsafe base.pointee.count = .zero
     }

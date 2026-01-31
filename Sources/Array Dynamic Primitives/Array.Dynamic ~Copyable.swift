@@ -29,14 +29,14 @@ extension Array: Collection.Indexed where Element: ~Copyable {
     public var endIndex: Index { Index(count) }
 
     @inlinable
-    public func index(after i: Index) -> Index { (i + 1)! }
+    public func index(after i: Index) -> Index { i + .one }
 }
 
 // MARK: Collection.Bidirectional
 
 extension Array: Collection.Bidirectional where Element: ~Copyable {
     @inlinable
-    public func index(before i: Index) -> Index { (i - 1)! }
+    public func index(before i: Index) -> Index { try! i - .one }
 }
 
 // ============================================================================
@@ -132,7 +132,7 @@ extension Array where Element: ~Copyable {
     @inlinable
     public mutating func append(_ element: consuming Element) {
         let count = Index.Count(__unchecked: storage.header)
-        ensureCapacity(count + 1)
+        ensureCapacity(count + .one)
         storage.initialize(to: element, at: .init(count))
         storage.header = (count + .one).rawValue
     }

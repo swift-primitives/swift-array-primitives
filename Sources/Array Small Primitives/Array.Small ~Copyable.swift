@@ -12,6 +12,7 @@
 public import Array_Primitives_Core
 public import Collection_Primitives
 public import Index_Primitives
+public import Ordinal_Primitives
 public import Property_Primitives
 public import Range_Primitives
 public import Sequence_Primitives
@@ -32,14 +33,14 @@ extension Array.Small: Collection.Indexed where Element: ~Copyable {
     public var endIndex: Index { Index(count) }
 
     @inlinable
-    public func index(after i: Index) -> Index { (i + 1)! }
+    public func index(after i: Index) -> Index { i + .one }
 }
 
 // MARK: Collection.Bidirectional
 
 extension Array.Small: Collection.Bidirectional where Element: ~Copyable {
     @inlinable
-    public func index(before i: Index) -> Index { (i - 1)! }
+    public func index(before i: Index) -> Index { try! i - .one }
 }
 
 // Note: Array.Small cannot conform to Swift.Collection because it is unconditionally
@@ -88,7 +89,7 @@ extension Array.Small where Element: ~Copyable {
             if let heap {
                 yield unsafe heap.pointer[index]
             } else {
-                yield unsafe inline.read(at: index).pointee
+                yield inline.pointer(at: index).pointee
             }
         }
         _modify {
@@ -224,7 +225,7 @@ extension Array.Small where Element: ~Copyable {
                 self.heap = nil
             }
         } else {
-            // Inline mode - deinitialize via Storage.Inline
+            // Inline mode - deinitialize via Storage.Static
             inline.deinitialize(count: count)
         }
         count = .zero

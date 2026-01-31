@@ -94,7 +94,7 @@ extension Array where Element: Copyable {
     public mutating func append(_ element: Element) {
         makeUnique()
         let count = storage.count
-        ensureCapacity(count + 1)
+        ensureCapacity(count + .one)
         storage.initialize(to: element, at: .init(count))
         storage.header = (count + 1).rawValue
     }
@@ -121,7 +121,7 @@ extension Array where Element: Copyable {
         makeUnique()
         storage.deinitialize()
         if !keepingCapacity {
-            storage = Array.Storage.create(minimumCapacity: 0)
+            storage = Array.Storage.create(minimumCapacity: .zero)
             unsafe (_cachedPtr = storage.pointer(at: .zero))
         }
     }

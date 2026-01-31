@@ -155,11 +155,11 @@ public struct Array<Element: ~Copyable>: ~Copyable {
     public struct Static<let capacity: Int>: ~Copyable {
         /// Inline storage for elements.
         ///
-        /// Uses `Storage<Element>.Inline` from storage-primitives for consistency
+        /// Uses `Storage<Element>.Static` from storage-primitives for consistency
         /// with `Array.Small`. This provides a uniform API: `pointer(at:)`,
         /// `mutablePointer(at:)`, `move(at:)`, `initialize(to:at:)`, `deinitialize(count:)`.
         @usableFromInline
-        package var storage: Storage_Primitives.Storage<Element>.Inline<capacity>
+        package var storage: Storage_Primitives.Storage<Element>.Static<capacity>
 
         /// Current element count.
         @usableFromInline
@@ -175,7 +175,7 @@ public struct Array<Element: ~Copyable>: ~Copyable {
         /// Creates an empty inline array.
         @inlinable
         public init() {
-            self.storage = try! Storage_Primitives.Storage<Element>.Inline<capacity>()
+            self.storage = try! Storage_Primitives.Storage<Element>.Static<capacity>()
             self.count = .zero
         }
 

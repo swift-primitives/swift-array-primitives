@@ -4,3 +4,5 @@
 @_exported public import Index_Primitives
 @_exported public import Collection_Primitives
 @_exported public import Storage_Primitives
+@_exported public import Ordinal_Primitives
+@_exported public import Cardinal_Primitives
