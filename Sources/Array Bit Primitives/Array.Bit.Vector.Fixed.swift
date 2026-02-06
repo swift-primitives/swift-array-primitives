@@ -296,7 +296,7 @@ extension Array<Bit>.Vector.Fixed {
     /// Appends a `Bit` value to the array.
     @inlinable
     public mutating func append(_ bit: Bit) throws(Error) {
-        try append(bit.boolValue)
+        try append(Bool(bit))
     }
 
     /// Removes and returns the last element.

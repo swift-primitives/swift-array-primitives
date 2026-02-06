@@ -49,10 +49,10 @@ extension Array where Element: ~Copyable {
             let stride = MemoryLayout<Element>.stride
             let alignment = MemoryLayout<Element>.alignment
 
-            guard stride <= Storage.Static<inlineCapacity>.maxStride else {
+            guard stride <= Storage.Inline<inlineCapacity>.maxStride else {
                 throw .strideExceedsSlotSize(
                     elementStride: stride,
-                    maxSlotSize: Storage.Static<inlineCapacity>.maxStride
+                    maxSlotSize: Storage.Inline<inlineCapacity>.maxStride
                 )
             }
             guard alignment <= MemoryLayout<Int>.alignment else {
@@ -62,7 +62,7 @@ extension Array where Element: ~Copyable {
                 )
             }
 
-            self.inline = try! Storage.Static<inlineCapacity>()
+            self.inline = try! Storage.Inline<inlineCapacity>()
             self.count = .zero
             self.heap = nil
         }
@@ -74,7 +74,7 @@ extension Array where Element: ~Copyable {
                 // Elements are on heap - ElementStorage handles cleanup via its deinit
                 heapState.storage.count = count
             } else {
-                // Elements are inline - clean up via Storage.Static
+                // Elements are inline - clean up via Storage.Inline
                 inline.deinitialize(count: count)
             }
         }

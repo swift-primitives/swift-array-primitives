@@ -400,7 +400,7 @@ extension Array<Bit>.Vector {
     /// Appends a `Bit` value to the array.
     @inlinable
     public mutating func append(_ bit: Bit) {
-        append(bit.boolValue)
+        append(Bool(bit))
     }
 
     /// Removes and returns the last element.
@@ -456,7 +456,7 @@ extension Array<Bit>.Vector {
     public init<S: Swift.Sequence>(_ elements: S) where S.Element == Bit {
         self.init()
         for element in elements {
-            append(element.boolValue)
+            append(Bool(element))
         }
     }
 
@@ -467,7 +467,7 @@ extension Array<Bit>.Vector {
         let bitsPerWord = Self._bitsPerWord.factor
         _storage.reserveCapacity((bits.count + bitsPerWord - 1) / bitsPerWord)
         for bit in bits {
-            append(bit.boolValue)
+            append(Bool(bit))
         }
     }
 
@@ -489,7 +489,7 @@ extension Array<Bit>.Vector {
     /// Creates a packed bit array with a repeated `Bit` value.
     @inlinable
     public init(repeating bit: Bit, count: Index.Count) {
-        self.init(repeating: bit.boolValue, count: count)
+        self.init(repeating: Bool(bit), count: count)
     }
 }
 

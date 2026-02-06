@@ -225,7 +225,7 @@ extension Array.Small where Element: ~Copyable {
                 self.heap = nil
             }
         } else {
-            // Inline mode - deinitialize via Storage.Static
+            // Inline mode - deinitialize via Storage.Inline
             inline.deinitialize(count: count)
         }
         count = .zero
