@@ -115,13 +115,13 @@ extension ArrayTests.Unit {
     }
 
     @Test("forEach matches subscript access")
-    func forEachMatchesSubscriptAccess() throws {
+    func forEachMatchesSubscriptAccess() {
         var array = Array<Int>()
         for i in 0..<20 { array.append(i * 5) }
 
         // Capture expected values first to avoid exclusivity violation
         var expected: [Int] = []
-        for i in 0..<20 { expected.append(array[try! Index<Int>(i)]) }
+        for i in 0..<20 { expected.append(array[Index<Int>(__unchecked: (), Ordinal(UInt(i)))]) }
 
         var actual: [Int] = []
         array.forEach { actual.append($0) }
@@ -151,7 +151,7 @@ extension ArrayTests.Unit {
     }
 
     @Test("CoW: Mutation of copy does not affect original")
-    func cowMutationOfCopyDoesNotAffectOriginal() throws {
+    func cowMutationOfCopyDoesNotAffectOriginal() {
         var original = Array<Int>()
         original.append(1)
         original.append(2)
@@ -161,22 +161,22 @@ extension ArrayTests.Unit {
 
         // Mutate the copy
         copy.append(4)
-        copy[try Index<Int>.init(0)] = 100
+        copy[Index<Int>(__unchecked: (), Ordinal(UInt(0)))] = 100
 
         // Original should be unchanged
         #expect(original.count == 3)
-        #expect(original[try Index<Int>.init(0)] == 1)
-        #expect(original[try Index<Int>.init(1)] == 2)
-        #expect(original[try Index<Int>.init(2)] == 3)
+        #expect(original[Index<Int>(__unchecked: (), Ordinal(UInt(0)))] == 1)
+        #expect(original[Index<Int>(__unchecked: (), Ordinal(UInt(1)))] == 2)
+        #expect(original[Index<Int>(__unchecked: (), Ordinal(UInt(2)))] == 3)
 
         // Copy should have the mutations
         #expect(copy.count == 4)
-        #expect(copy[try Index<Int>.init(0)] == 100)
-        #expect(copy[try Index<Int>.init(3)] == 4)
+        #expect(copy[Index<Int>(__unchecked: (), Ordinal(UInt(0)))] == 100)
+        #expect(copy[Index<Int>(__unchecked: (), Ordinal(UInt(3)))] == 4)
     }
 
     @Test("CoW: Mutation of original does not affect copy")
-    func cowMutationOfOriginalDoesNotAffectCopy() throws {
+    func cowMutationOfOriginalDoesNotAffectCopy() {
         var original = Array<Int>()
         original.append(1)
         original.append(2)
@@ -186,17 +186,17 @@ extension ArrayTests.Unit {
 
         // Mutate the original
         original.append(4)
-        original[try Index<Int>.init(0)] = 100
+        original[Index<Int>(__unchecked: (), Ordinal(UInt(0)))] = 100
 
         // Copy should be unchanged
         #expect(copy.count == 3)
-        #expect(copy[try Index<Int>.init(0)] == 1)
-        #expect(copy[try Index<Int>.init(1)] == 2)
-        #expect(copy[try Index<Int>.init(2)] == 3)
+        #expect(copy[Index<Int>(__unchecked: (), Ordinal(UInt(0)))] == 1)
+        #expect(copy[Index<Int>(__unchecked: (), Ordinal(UInt(1)))] == 2)
+        #expect(copy[Index<Int>(__unchecked: (), Ordinal(UInt(2)))] == 3)
     }
 
     @Test("CoW: Multiple copies are independent")
-    func cowMultipleCopiesAreIndependent() throws {
+    func cowMultipleCopiesAreIndependent() {
         var original = Array<Int>()
         original.append(1)
         original.append(2)
@@ -208,9 +208,9 @@ extension ArrayTests.Unit {
         copy2.append(200)
         original.append(300)
 
-        #expect(original[try Index<Int>.init(2)] == 300)
-        #expect(copy1[try Index<Int>.init(2)] == 100)
-        #expect(copy2[try Index<Int>.init(2)] == 200)
+        #expect(original[Index<Int>(__unchecked: (), Ordinal(UInt(2)))] == 300)
+        #expect(copy1[Index<Int>(__unchecked: (), Ordinal(UInt(2)))] == 100)
+        #expect(copy2[Index<Int>(__unchecked: (), Ordinal(UInt(2)))] == 200)
     }
 
     // MARK: - Capacity Invariants
@@ -229,7 +229,7 @@ extension ArrayTests.Unit {
 
         // Verify all elements are accessible
         for i in 0..<100 {
-            #expect(array[try! Index<Int>(i)] == i)
+            #expect(array[Index<Int>(__unchecked: (), Ordinal(UInt(i)))] == i)
         }
     }
 
@@ -268,13 +268,13 @@ extension ArrayTests.Unit {
     }
 
     @Test("Span elements match subscript access")
-    func spanElementsMatchSubscriptAccess() throws {
+    func spanElementsMatchSubscriptAccess() {
         var array = Array<Int>()
         for i in 0..<5 { array.append(i * 7) }
 
         let span = array.span
         for i in 0..<5 {
-            #expect(span[i] == array[try Index<Int>.init(i)])
+            #expect(span[i] == array[Index<Int>(__unchecked: (), Ordinal(UInt(i)))])
         }
     }
 }
@@ -284,12 +284,12 @@ extension ArrayTests.Unit {
 extension ArrayTests.EdgeCase {
 
     @Test("Single element operations")
-    func singleElementOperations() throws {
+    func singleElementOperations() {
         var array = Array<Int>()
 
         array.append(42)
         #expect(array.count == 1)
-        #expect(array[try Index<Int>.init(0)] == 42)
+        #expect(array[Index<Int>(__unchecked: (), Ordinal(UInt(0)))] == 42)
 
         var elements: [Int] = []
         array.forEach { elements.append($0) }
@@ -301,7 +301,7 @@ extension ArrayTests.EdgeCase {
     }
 
     @Test("Growth beyond initial capacity preserves elements")
-    func growthBeyondInitialCapacityPreservesElements() throws {
+    func growthBeyondInitialCapacityPreservesElements() {
         var array = Array<Int>()  // Small initial capacity
 
         // Add many elements
@@ -313,7 +313,7 @@ extension ArrayTests.EdgeCase {
 
         // Verify all elements preserved through growth
         for i in 0..<1000 {
-            #expect(array[try Index<Int>.init(i)] == i * 2)
+            #expect(array[Index<Int>(__unchecked: (), Ordinal(UInt(i)))] == i * 2)
         }
 
         // Verify forEach still works
@@ -341,7 +341,7 @@ extension ArrayTests.EdgeCase {
     }
 
     @Test("Append after removeAll works")
-    func appendAfterRemoveAllWorks() throws {
+    func appendAfterRemoveAllWorks() {
         var array = Array<Int>()
         array.append(1)
         array.append(2)
@@ -352,8 +352,8 @@ extension ArrayTests.EdgeCase {
         array.append(200)
 
         #expect(array.count == 2)
-        #expect(array[try Index<Int>.init(0)] == 100)
-        #expect(array[try Index<Int>.init(1)] == 200)
+        #expect(array[Index<Int>(__unchecked: (), Ordinal(UInt(0)))] == 100)
+        #expect(array[Index<Int>(__unchecked: (), Ordinal(UInt(1)))] == 200)
     }
 }
 

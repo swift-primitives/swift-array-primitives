@@ -69,7 +69,7 @@ extension Array where Element == Bit {
         @inlinable
         public init(count: Index.Count) {
             let storage = Bit.Storage<UInt>(count: count, bitsPerWord: Self._bitsPerWord)
-            self._storage = ContiguousArray(repeating: 0, count: Int(bitPattern: storage.wordCount))
+            self._storage = ContiguousArray(repeating: 0, count: storage.wordCount)
             self._count = count
         }
     }
@@ -105,15 +105,15 @@ extension Array<Bit>.Vector {
         get {
             precondition(index < _count, "Index out of bounds")
             let loc = index.location(bitsPerWord: Self._bitsPerWord)
-            return (_storage[Int(bitPattern: loc.word)] & loc.mask) != 0
+            return (_storage[loc.word] & loc.mask) != 0
         }
         set {
             precondition(index < _count, "Index out of bounds")
             let loc = index.location(bitsPerWord: Self._bitsPerWord)
             if newValue {
-                _storage[Int(bitPattern: loc.word)] |= loc.mask
+                _storage[loc.word] |= loc.mask
             } else {
-                _storage[Int(bitPattern: loc.word)] &= ~loc.mask
+                _storage[loc.word] &= ~loc.mask
             }
         }
     }
@@ -124,7 +124,7 @@ extension Array<Bit>.Vector {
             throw .bounds(index: index, count: _count)
         }
         let loc = index.location(bitsPerWord: Self._bitsPerWord)
-        return (_storage[Int(bitPattern: loc.word)] & loc.mask) != 0
+        return (_storage[loc.word] & loc.mask) != 0
     }
 }
 
@@ -137,7 +137,7 @@ extension Array<Bit>.Vector {
             throw .bounds(index: index, count: _count)
         }
         let loc = index.location(bitsPerWord: Self._bitsPerWord)
-        _storage[Int(bitPattern: loc.word)] |= loc.mask
+        _storage[loc.word] |= loc.mask
     }
 
     @inlinable
@@ -146,7 +146,7 @@ extension Array<Bit>.Vector {
             throw .bounds(index: index, count: _count)
         }
         let loc = index.location(bitsPerWord: Self._bitsPerWord)
-        _storage[Int(bitPattern: loc.word)] &= ~loc.mask
+        _storage[loc.word] &= ~loc.mask
     }
 
     @inlinable
@@ -155,7 +155,7 @@ extension Array<Bit>.Vector {
             throw .bounds(index: index, count: _count)
         }
         let loc = index.location(bitsPerWord: Self._bitsPerWord)
-        _storage[Int(bitPattern: loc.word)] ^= loc.mask
+        _storage[loc.word] ^= loc.mask
     }
 
     @inlinable
@@ -286,7 +286,7 @@ extension Array<Bit>.Vector {
         guard _count > .zero else { return nil }
         let lastCount = _count.subtract.saturating(.one)
         let loc = Bit.Storage<UInt>.Location(count: lastCount, bitsPerWord: Self._bitsPerWord)
-        return (_storage[Int(bitPattern: loc.word)] & loc.mask) != 0
+        return (_storage[loc.word] & loc.mask) != 0
     }
 }
 
@@ -422,7 +422,7 @@ extension Array<Bit>.Vector {
         precondition(_count > .zero, "Cannot remove from empty array")
         _count = try! _count.subtract.exact(.one)  // Safe: count > 0
         let loc = Bit.Storage<UInt>.Location(count: _count, bitsPerWord: Self._bitsPerWord)
-        _storage[Int(bitPattern: loc.word)] &= ~loc.mask
+        _storage[loc.word] &= ~loc.mask
     }
 
     /// Removes all elements from the array.

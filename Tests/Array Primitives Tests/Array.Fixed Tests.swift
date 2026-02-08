@@ -58,7 +58,7 @@ extension ArrayFixedTests.Unit {
         let array = try Array<Int>.Fixed(count: 100) { $0.position * 2 }
 
         for i in 0..<100 {
-            let idx = try Index<Int>(i)
+            let idx = Index<Int>(__unchecked: (), Ordinal(UInt(i)))
             #expect(array[idx] == i * 2)
         }
     }
@@ -107,7 +107,7 @@ extension ArrayFixedTests.Unit {
 
         // Capture expected values first to avoid exclusivity violation
         var expected: [Int] = []
-        for i in 0..<20 { expected.append(array[try! Index<Int>(i)]) }
+        for i in 0..<20 { expected.append(array[Index<Int>(__unchecked: (), Ordinal(UInt(i)))]) }
 
         var actual: [Int] = []
         array.forEach { actual.append($0) }
@@ -121,13 +121,13 @@ extension ArrayFixedTests.Unit {
     func subscriptWritePreservesOtherElements() throws {
         var array = try Array<Int>.Fixed(count: 5) { $0.position }
 
-        array[try Index<Int>(2)] = 999
+        array[Index<Int>(__unchecked: (), Ordinal(UInt(2)))] = 999
 
-        #expect(array[try Index<Int>(0)] == 0)
-        #expect(array[try Index<Int>(1)] == 1)
-        #expect(array[try Index<Int>(2)] == 999)
-        #expect(array[try Index<Int>(3)] == 3)
-        #expect(array[try Index<Int>(4)] == 4)
+        #expect(array[Index<Int>(__unchecked: (), Ordinal(UInt(0)))] == 0)
+        #expect(array[Index<Int>(__unchecked: (), Ordinal(UInt(1)))] == 1)
+        #expect(array[Index<Int>(__unchecked: (), Ordinal(UInt(2)))] == 999)
+        #expect(array[Index<Int>(__unchecked: (), Ordinal(UInt(3)))] == 3)
+        #expect(array[Index<Int>(__unchecked: (), Ordinal(UInt(4)))] == 4)
     }
 
     @Test("forEach visits all elements in order")
@@ -169,7 +169,7 @@ extension ArrayFixedTests.Unit {
         let span = array.span
 
         for i in 0..<5 {
-            #expect(span[i] == array[try Index<Int>(i)])
+            #expect(span[i] == array[Index<Int>(__unchecked: (), Ordinal(UInt(i)))])
         }
     }
 }
@@ -183,7 +183,7 @@ extension ArrayFixedTests.EdgeCase {
         var array = try Array<Int>.Fixed(count: 1) { _ in 42 }
 
         #expect(array.count == 1)
-        #expect(array[try Index<Int>(0)] == 42)
+        #expect(array[Index<Int>(__unchecked: (), Ordinal(UInt(0)))] == 42)
 
         var iteratedElements: [Int] = []
         array.forEach { iteratedElements.append($0) }
@@ -198,9 +198,9 @@ extension ArrayFixedTests.EdgeCase {
         #expect(array.count == size)
 
         // Check first, middle, last
-        #expect(array[try Index<Int>(0)] == 0)
-        #expect(array[try Index<Int>(size / 2)] == size / 2)
-        #expect(array[try Index<Int>(size - 1)] == size - 1)
+        #expect(array[Index<Int>(__unchecked: (), Ordinal(UInt(0)))] == 0)
+        #expect(array[Index<Int>(__unchecked: (), Ordinal(UInt(size / 2)))] == size / 2)
+        #expect(array[Index<Int>(__unchecked: (), Ordinal(UInt(size - 1)))] == size - 1)
 
         // forEach count matches
         var iterCount = 0
@@ -212,7 +212,7 @@ extension ArrayFixedTests.EdgeCase {
     func mutationViaSubscriptReflectsInForEach() throws {
         var array = try Array<Int>.Fixed(count: 3) { $0.position }
 
-        array[try Index<Int>(1)] = 100
+        array[Index<Int>(__unchecked: (), Ordinal(UInt(1)))] = 100
 
         var elements: [Int] = []
         array.forEach { elements.append($0) }

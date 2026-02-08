@@ -47,16 +47,16 @@ extension Array where Element: ~Copyable {
     /// The number of elements in the array.
     @inlinable
     public var count: Index.Count {
-        Index.Count(__unchecked: storage.header)
+        _buffer.count
     }
 
     /// Whether the array is empty.
     @inlinable
-    public var isEmpty: Bool { storage.header == 0 }
+    public var isEmpty: Bool { _buffer.isEmpty }
 
     /// The current capacity of the array.
     @inlinable
-    public var capacity: Int { storage.capacity }
+    public var capacity: Index.Count { _buffer.capacity }
 }
 
 // ============================================================================
@@ -74,11 +74,11 @@ extension Array where Element: ~Copyable {
     public subscript(index: Index) -> Element {
         _read {
             precondition(index < count, "Index out of bounds")
-            yield unsafe _cachedPtr[index]
+            yield _buffer[index]
         }
         _modify {
             precondition(index < count, "Index out of bounds")
-            yield &(unsafe _cachedPtr[index])
+            yield &_buffer[index]
         }
     }
 }
@@ -98,9 +98,7 @@ extension Array where Element: ~Copyable {
     @inlinable
     public func withElement<R>(at index: Index, _ body: (borrowing Element) -> R) -> R {
         precondition(index < count, "Index out of bounds")
-        return unsafe storage.withUnsafeMutablePointerToElements { elements in
-            body(unsafe (elements + index).pointee)
-        }
+        return body(_buffer[index])
     }
 }
 
@@ -109,32 +107,13 @@ extension Array where Element: ~Copyable {
 // ============================================================================
 
 extension Array where Element: ~Copyable {
-    /// Ensures the array has capacity for at least the specified number of elements.
-    @usableFromInline
-    package mutating func ensureCapacity(_ minimumCapacity: Index.Count) {
-        guard Index.Count.init(__unchecked: storage.capacity) < minimumCapacity else { return }
-
-        // Growth factor 2.0, minimum capacity 4
-        let newCapacity = Swift.max(minimumCapacity, storage.capacity * 2, 4)
-        let newStorage = Array.Storage.create(minimumCapacity: newCapacity)
-        let currentCount = storage.header
-
-        storage.move(to: newStorage)
-        newStorage.header = currentCount
-        storage = newStorage
-        unsafe (_cachedPtr = storage.pointer(at: .zero))  // CRITICAL: Update cached pointer
-    }
-
     /// Appends an element to the array.
     ///
     /// - Parameter element: The element to append (consumed).
     /// - Complexity: O(1) amortized.
     @inlinable
     public mutating func append(_ element: consuming Element) {
-        let count = Index.Count(__unchecked: storage.header)
-        ensureCapacity(count + .one)
-        storage.initialize(to: element, at: .init(count))
-        storage.header = (count + .one).rawValue
+        _buffer.append(consume element)
     }
 
     /// Removes and returns the last element, or nil if empty.
@@ -143,10 +122,8 @@ extension Array where Element: ~Copyable {
     /// - Complexity: O(1).
     @inlinable
     public mutating func removeLast() -> Element? {
-        let count = storage.header
-        guard count > 0 else { return nil }
-        storage.header = count - 1
-        return storage.move(at: .init(__unchecked: (), position: count - 1))
+        guard !_buffer.isEmpty else { return nil }
+        return _buffer.removeLast()
     }
 
     /// Removes all elements from the array.
@@ -154,10 +131,9 @@ extension Array where Element: ~Copyable {
     /// - Parameter keepingCapacity: Whether to keep the current capacity.
     @inlinable
     public mutating func removeAll(keepingCapacity: Bool = false) {
-        storage.deinitialize()
+        _buffer.removeAll()
         if !keepingCapacity {
-            storage = Array.Storage.create(minimumCapacity: 0)
-            unsafe (_cachedPtr = storage.pointer(at: .zero))
+            _buffer = Buffer<Element>.Linear(minimumCapacity: .zero)
         }
     }
 }
@@ -168,40 +144,20 @@ extension Array where Element: ~Copyable {
 
 extension Array where Element: ~Copyable {
     /// Read-only span of the array elements.
-    ///
-    /// ## Lifetime Contract
-    ///
-    /// - The span is valid ONLY for the duration of the borrow of `self`.
-    /// - The span MUST NOT be stored, returned, or allowed to escape.
-    /// - The returned span is lifetime-dependent; the compiler is expected to diagnose escapes.
-    /// - Violating this contract is undefined behavior.
     @inlinable
     public var span: Swift.Span<Element> {
         @_lifetime(borrow self)
         borrowing get {
-            let count = storage.header
-            // _cachedPtr from ManagedBuffer is always valid; pointer irrelevant when count == 0
-            return unsafe Swift.Span(_unsafeStart: _cachedPtr.base, count: count)
+            _buffer.span
         }
     }
 
     /// Mutable span of the array elements.
-    ///
-    /// ## Lifetime Contract
-    ///
-    /// - The span is valid ONLY for the duration of the exclusive mutable borrow.
-    /// - The span MUST NOT be stored, returned, or allowed to escape.
-    /// - The returned span is lifetime-dependent; the compiler is expected to diagnose escapes.
-    /// - No concurrent mutable borrows are permitted.
-    /// - No mutable + immutable borrow overlap is permitted.
-    /// - Violating this contract is undefined behavior.
     @inlinable
     public var mutableSpan: MutableSpan<Element> {
         @_lifetime(&self)
         mutating get {
-            let count = storage.header
-            // _cachedPtr from ManagedBuffer is always valid; pointer irrelevant when count == 0
-            return unsafe MutableSpan(_unsafeStart: _cachedPtr.base, count: count)
+            _buffer.mutableSpan
         }
     }
 }
@@ -221,12 +177,7 @@ extension Array where Element: ~Copyable {
     public func withUnsafeBufferPointer<R, E: Swift.Error>(
         _ body: (UnsafeBufferPointer<Element>) throws(E) -> R
     ) throws(E) -> R {
-        let count = storage.header
-        if count > 0 {
-            return try unsafe body(UnsafeBufferPointer(start: _cachedPtr.base, count: count))
-        } else {
-            return try unsafe body(UnsafeBufferPointer(start: nil, count: 0))
-        }
+        try _buffer.withUnsafeBufferPointer(body)
     }
 
     /// Provides mutable access to the underlying contiguous storage.
@@ -238,12 +189,7 @@ extension Array where Element: ~Copyable {
     public mutating func withUnsafeMutableBufferPointer<R, E: Swift.Error>(
         _ body: (UnsafeMutableBufferPointer<Element>) throws(E) -> R
     ) throws(E) -> R {
-        let count = storage.header
-        if count > 0 {
-            return try unsafe body(UnsafeMutableBufferPointer(start: _cachedPtr.base, count: count))
-        } else {
-            return try unsafe body(UnsafeMutableBufferPointer(start: nil, count: 0))
-        }
+        try _buffer.withUnsafeMutableBufferPointer(body)
     }
 }
 
@@ -255,29 +201,6 @@ extension Array where Element: ~Copyable {
 
 extension Array where Element: ~Copyable {
     /// Property view for iteration operations.
-    ///
-    /// Provides iteration patterns for ALL element types including `~Copyable`:
-    /// - `.forEach { }` — Borrowing iteration via `callAsFunction`
-    /// - `.forEach.borrowing { }` — Explicit borrowing iteration
-    ///
-    /// For `Copyable` elements only:
-    /// - `.forEach.consuming { }` — Consuming iteration (clears array)
-    ///
-    /// ## Example
-    ///
-    /// ```swift
-    /// var array = Array<Int>()
-    /// array.append(1)
-    /// array.append(2)
-    /// array.append(3)
-    ///
-    /// // Borrowing iteration (works for ALL elements)
-    /// array.forEach { print($0) }
-    ///
-    /// // Consuming iteration (Copyable elements only)
-    /// array.forEach.consuming { print($0) }
-    /// // array is now empty
-    /// ```
     @inlinable
     public var forEach: Property<Sequence.ForEach, Self>.View.Typed<Element> {
         mutating _read {
@@ -295,28 +218,17 @@ extension Array where Element: ~Copyable {
 extension Property.View.Typed
 where Tag == Sequence.ForEach, Base == Array<Element>, Element: ~Copyable {
     /// Borrowing iteration: `.forEach { }`
-    ///
-    /// Iterates over all elements without consuming them.
-    /// Works for ALL element types including `~Copyable`.
-    ///
-    /// - Parameter body: A closure called with each borrowed element.
     @inlinable
     public func callAsFunction(_ body: (borrowing Element) -> Void) {
-        let count = unsafe base.pointee.storage.header
-        guard count > 0 else { return }
-        unsafe base.pointee.storage.withUnsafeMutablePointerToElements { elements in
-            for i in 0..<count {
-                unsafe body(elements[i])
-            }
+        let count = unsafe base.pointee._buffer.count
+        guard count > .zero else { return }
+        for i in 0..<Int(bitPattern: count) {
+            let slot = Index_Primitives.Index<Element>(Ordinal(UInt(i)))
+            body(unsafe base.pointee._buffer[slot])
         }
     }
 
     /// Explicit borrowing iteration: `.forEach.borrowing { }`
-    ///
-    /// Same as `callAsFunction`, but with explicit naming for clarity.
-    /// Works for ALL element types including `~Copyable`.
-    ///
-    /// - Parameter body: A closure called with each borrowed element.
     @inlinable
     public func borrowing(_ body: (borrowing Element) -> Void) {
         callAsFunction(body)
@@ -327,28 +239,6 @@ where Tag == Sequence.ForEach, Base == Array<Element>, Element: ~Copyable {
 
 extension Array where Element: ~Copyable {
     /// Property view for draining operations.
-    ///
-    /// Provides `.drain { }` via `callAsFunction`, which removes all elements
-    /// from the array and passes each to the closure with ownership.
-    /// Works for ALL element types including `~Copyable`.
-    ///
-    /// After draining, the array is empty but still usable.
-    ///
-    /// ## Example
-    ///
-    /// ```swift
-    /// var array = Array<Int>()
-    /// array.append(1)
-    /// array.append(2)
-    /// array.append(3)
-    ///
-    /// // Drain all elements (takes ownership)
-    /// array.drain { element in
-    ///     process(element)
-    /// }
-    /// // array is now empty but still usable
-    /// array.append(4)
-    /// ```
     @inlinable
     public var drain: Property<Sequence.Drain, Self>.View.Typed<Element> {
         mutating _read {
@@ -366,22 +256,11 @@ extension Array where Element: ~Copyable {
 extension Property.View.Typed
 where Tag == Sequence.Drain, Base == Array<Element>, Element: ~Copyable {
     /// Drain iteration: `.drain { }`
-    ///
-    /// Removes all elements from the array, passing each to the closure
-    /// with ownership. After this call, the array is empty but usable.
-    /// Works for ALL element types including `~Copyable`.
-    ///
-    /// - Parameter body: A closure called with each element (consuming).
     @_lifetime(&self)
     @inlinable
     public mutating func callAsFunction(_ body: (consuming Element) -> Void) {
-        let count = unsafe base.pointee.storage.header
-        guard count > 0 else { return }
-        unsafe base.pointee.storage.withUnsafeMutablePointerToElements { elements in
-            for i in 0..<count {
-                unsafe body((elements + i).move())
-            }
+        while !unsafe base.pointee._buffer.isEmpty {
+            body(unsafe base.pointee._buffer.consumeFront())
         }
-        unsafe base.pointee.storage.header = 0
     }
 }

@@ -28,10 +28,10 @@ extension Array where Element: ~Copyable {
 
         /// Current element count (valid in both inline and heap modes).
         public var count: Index.Count
-        
-        /// Inline storage for elements.
+
+        /// Inline buffer for elements (used when count <= inlineCapacity).
         @usableFromInline
-        package var inline: Storage_Primitives.Storage<Element>.Static<inlineCapacity>
+        package var _inlineBuffer: Buffer<Element>.Linear.Inline<inlineCapacity>
 
         /// Heap storage state when spilled. Nil when using inline storage.
         ///
@@ -41,28 +41,9 @@ extension Array where Element: ~Copyable {
         package var heap: Array.Small<inlineCapacity>.Heap?
 
         /// Creates an empty small array.
-        ///
-        /// - Throws: `Error.strideExceedsSlotSize` if element stride exceeds inline storage slot size (64 bytes).
-        /// - Throws: `Error.alignmentExceedsStorageAlignment` if element alignment exceeds inline storage alignment.
         @inlinable
-        public init() throws(Error) {
-            let stride = MemoryLayout<Element>.stride
-            let alignment = MemoryLayout<Element>.alignment
-
-            guard stride <= Storage.Inline<inlineCapacity>.maxStride else {
-                throw .strideExceedsSlotSize(
-                    elementStride: stride,
-                    maxSlotSize: Storage.Inline<inlineCapacity>.maxStride
-                )
-            }
-            guard alignment <= MemoryLayout<Int>.alignment else {
-                throw .alignmentExceedsStorageAlignment(
-                    elementAlignment: alignment,
-                    maxAlignment: MemoryLayout<Int>.alignment
-                )
-            }
-
-            self.inline = try! Storage.Inline<inlineCapacity>()
+        public init() {
+            self._inlineBuffer = Buffer<Element>.Linear.Inline<inlineCapacity>()
             self.count = .zero
             self.heap = nil
         }
@@ -71,14 +52,11 @@ extension Array where Element: ~Copyable {
             guard count > .zero else { return }
 
             if let heapState = heap {
-                // Elements are on heap - ElementStorage handles cleanup via its deinit
-                heapState.storage.count = count
-            } else {
-                // Elements are inline - clean up via Storage.Inline
-                inline.deinitialize(count: count)
+                // Sync initialization state so Storage.Heap's deinit knows what to clean up.
+                // Storage.Heap.deinit reads header.initialization to deinitialize elements.
+                heapState.storage.initialization = .linear(count: count)
             }
+            // Inline path: Storage.Inline's deinit auto-cleans up via _slots bit tracking.
         }
     }
 }
-
-

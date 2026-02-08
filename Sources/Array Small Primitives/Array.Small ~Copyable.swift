@@ -82,25 +82,21 @@ extension Array.Small where Element: ~Copyable {
     /// - Precondition: `index` must be in bounds.
     @inlinable
     public subscript(index: Index) -> Element {
-        // Note: _read must be mutating because inline storage access requires &self
-        // to obtain a pointer. This is a fundamental limitation - see Non-Mutating-Accessor-Problem.md
         mutating _read {
             precondition(index < count, "Index out of bounds")
             if let heap {
-                yield unsafe heap.pointer[index]
+                yield unsafe heap.pointer[Int(bitPattern: index)]
             } else {
-                yield inline.pointer(at: index).pointee
+                yield _inlineBuffer[index]
             }
         }
         _modify {
             precondition(index < count, "Index out of bounds")
             if let heap {
-                // Note: Using `var` is required for custom subscript with unsafeMutableAddress
-                // to work through optional binding. See: Experiments/pointer-subscript-modify
                 var ptr = unsafe heap.pointer
                 yield &(unsafe ptr[index])
             } else {
-                yield &(unsafe inline.pointer(at: index).pointee)
+                yield &_inlineBuffer[index]
             }
         }
     }
@@ -112,12 +108,6 @@ extension Array.Small where Element: ~Copyable {
 
 extension Array.Small where Element: ~Copyable {
     /// Accesses the element at the given index via closure (for ~Copyable elements).
-    ///
-    /// - Parameters:
-    ///   - index: The index of the element.
-    ///   - body: A closure that receives a borrowed reference to the element.
-    /// - Returns: The result of the closure.
-    /// - Precondition: The index must be in bounds.
     @inlinable
     public func withElement<R>(at index: Index, _ body: (borrowing Element) -> R) -> R {
         precondition(index < count, "Index out of bounds")
@@ -126,14 +116,7 @@ extension Array.Small where Element: ~Copyable {
                 body(unsafe (elements + index).pointee)
             }
         } else {
-            // Use withUnsafePointer directly - inline accessor requires mutating context
-            let stride = Affine.Discrete.Ratio<Element, UInt8>(MemoryLayout<Element>.stride)
-            return unsafe withUnsafePointer(to: inline) { storagePtr in
-                let basePtr = unsafe UnsafeRawPointer(storagePtr)
-                let elementPtr = unsafe (basePtr + (Index<Element>.Offset(index) * stride).vector.rawValue)
-                    .assumingMemoryBound(to: Element.self)
-                return unsafe body(elementPtr.pointee)
-            }
+            return body(_inlineBuffer[index])
         }
     }
 }
@@ -147,38 +130,35 @@ extension Array.Small where Element: ~Copyable {
     ///
     /// Called when appending would exceed inline capacity.
     /// Moves all inline elements to newly allocated heap storage.
-    ///
-    /// - Parameter minimumCapacity: The minimum capacity for heap storage.
-    /// - Precondition: Must not already be in heap mode.
     @usableFromInline
     package mutating func spill(minimumCapacity: Array.Index.Count) {
         precondition(heap == nil, "Already spilled")
 
         let newStorage = Heap.create(minimumCapacity: minimumCapacity)
-        inline.move(to: newStorage, count: count)
+        // Move elements from inline buffer to heap storage
+        for i in 0..<Int(bitPattern: count) {
+            let slot = Index_Primitives.Index<Element>(Ordinal(UInt(i)))
+            let element = _inlineBuffer.consumeFront()
+            newStorage.initialize(to: element, at: slot)
+        }
         newStorage.header = count.rawValue
         heap = Heap(newStorage)
     }
 
     /// Appends an element to the array.
-    ///
-    /// If the array is in inline mode and full, it spills to heap storage first.
-    ///
-    /// - Parameter element: The element to append (consumed).
     @inlinable
     public mutating func append(_ element: consuming Element) {
         if var heap {
             // Heap mode
             let currentCount: Array.Index.Count = .init(__unchecked: heap.storage.header)
             heap.ensureCapacity(currentCount + .one)
-            self.heap = heap  // Write back mutation
+            self.heap = heap
             heap.storage.initialize(to: element, at: Index(currentCount))
             heap.storage.header = currentCount.rawValue + 1
             count = count + .one
         } else if count.rawValue < inlineCapacity {
             // Inline mode with room
-            let ptr = unsafe inline.pointer(at: Array.Index(count))
-            unsafe ptr.initialize(to: element)
+            _ = _inlineBuffer.append(element)
             count = count + .one
         } else {
             // Need to spill
@@ -190,43 +170,35 @@ extension Array.Small where Element: ~Copyable {
     }
 
     /// Removes and returns the last element.
-    ///
-    /// - Returns: The removed element, or `nil` if the array is empty.
     @inlinable
     public mutating func removeLast() -> Element? {
         guard count.rawValue > 0 else { return nil }
 
         if let heap {
-            // Heap mode
             guard let newCount = count - .one else { return nil }
             self.heap?.storage.header = newCount.rawValue
             count = newCount
             return heap.storage.move(at: Index(newCount))
         } else {
             // Inline mode
-            let newCount = count.rawValue - 1
-            count = Index.Count(__unchecked: newCount)
-            let ptr = unsafe inline.pointer(at: Array.Index(__unchecked: (), position: newCount))
-            return unsafe ptr.move()
+            guard !_inlineBuffer.isEmpty else { return nil }
+            count = count - .one
+            return _inlineBuffer.removeLast()
         }
     }
 
     /// Removes all elements from the array.
-    ///
-    /// - Parameter keepingCapacity: Whether to keep heap storage (if spilled).
     @inlinable
     public mutating func removeAll(keepingCapacity: Bool = false) {
         guard count.rawValue > 0 else { return }
 
         if let heap {
-            // Heap mode - deinitialize via storage
             heap.storage.deinitialize()
             if !keepingCapacity {
                 self.heap = nil
             }
         } else {
-            // Inline mode - deinitialize via Storage.Inline
-            inline.deinitialize(count: count)
+            _inlineBuffer.removeAll()
         }
         count = .zero
     }
@@ -247,12 +219,7 @@ extension Array.Small where Element: ~Copyable {
                 let span = unsafe Swift.Span(_unsafeStart: heap.pointer, count: count.rawValue)
                 return try body(span)
             } else {
-                return try unsafe withUnsafePointer(to: inline) { storagePtr throws(E) -> R in
-                    let basePtr = unsafe UnsafeRawPointer(storagePtr)
-                    let elementPtr = unsafe basePtr.assumingMemoryBound(to: Element.self)
-                    let span = unsafe Swift.Span(_unsafeStart: elementPtr, count: count.rawValue)
-                    return try body(span)
-                }
+                return try body(_inlineBuffer.span)
             }
         } else {
             let span = unsafe Swift.Span(_unsafeStart: UnsafePointer<Element>(bitPattern: 1)!, count: 0)
@@ -270,13 +237,7 @@ extension Array.Small where Element: ~Copyable {
                 let span = unsafe MutableSpan(_unsafeStart: heap.pointer, count: count.rawValue)
                 return try body(span)
             } else {
-                let count = count.rawValue
-                return try unsafe withUnsafeMutablePointer(to: &inline) { storagePtr throws(E) -> R in
-                    let basePtr = UnsafeMutableRawPointer(storagePtr)
-                    let elementPtr = unsafe basePtr.assumingMemoryBound(to: Element.self)
-                    let span = unsafe MutableSpan(_unsafeStart: elementPtr, count: count)
-                    return try body(span)
-                }
+                return try body(_inlineBuffer.mutableSpan)
             }
         } else {
             let span = unsafe MutableSpan(_unsafeStart: UnsafeMutablePointer<Element>(bitPattern: 1)!, count: 0)
@@ -301,11 +262,8 @@ extension Array.Small where Element: ~Copyable {
             if let heap {
                 return try unsafe body(UnsafeBufferPointer(start: heap.pointer, count: count.rawValue))
             } else {
-                return try unsafe withUnsafePointer(to: inline) { (storagePtr) throws(E) -> R in
-                    let basePtr = unsafe UnsafeRawPointer(storagePtr)
-                    let elementPtr = unsafe basePtr.assumingMemoryBound(to: Element.self)
-                    return try unsafe body(UnsafeBufferPointer(start: elementPtr, count: count.rawValue))
-                }
+                let span = _inlineBuffer.span
+                return try unsafe body(UnsafeBufferPointer(start: span.unsafeBaseAddress, count: count.rawValue))
             }
         } else {
             return try unsafe body(UnsafeBufferPointer(start: nil, count: 0))
@@ -322,12 +280,9 @@ extension Array.Small where Element: ~Copyable {
             if let heap {
                 return try unsafe body(UnsafeMutableBufferPointer(start: heap.pointer, count: count.rawValue))
             } else {
-                let count = count.rawValue
-                return try unsafe withUnsafeMutablePointer(to: &inline) { (storagePtr) throws(E) -> R in
-                    let basePtr = UnsafeMutableRawPointer(storagePtr)
-                    let elementPtr = unsafe basePtr.assumingMemoryBound(to: Element.self)
-                    return try unsafe body(UnsafeMutableBufferPointer(start: elementPtr, count: count))
-                }
+                let span = _inlineBuffer.mutableSpan
+                let ptr = unsafe UnsafeMutablePointer(mutating: span.unsafeBaseAddress!)
+                return try unsafe body(UnsafeMutableBufferPointer(start: ptr, count: count.rawValue))
             }
         } else {
             return try unsafe body(UnsafeMutableBufferPointer(start: nil, count: 0))
@@ -343,29 +298,6 @@ extension Array.Small where Element: ~Copyable {
 
 extension Array.Small where Element: ~Copyable {
     /// Property view for iteration operations.
-    ///
-    /// Provides iteration patterns for ALL element types including `~Copyable`:
-    /// - `.forEach { }` — Borrowing iteration via `callAsFunction`
-    /// - `.forEach.borrowing { }` — Explicit borrowing iteration
-    ///
-    /// For `Copyable` elements only:
-    /// - `.forEach.consuming { }` — Consuming iteration (clears array)
-    ///
-    /// ## Example
-    ///
-    /// ```swift
-    /// var array = try Array<Int>.Small<4>()
-    /// array.append(1)
-    /// array.append(2)
-    /// array.append(3)
-    ///
-    /// // Borrowing iteration (works for ALL elements)
-    /// array.forEach { print($0) }
-    ///
-    /// // Consuming iteration (Copyable elements only)
-    /// array.forEach.consuming { print($0) }
-    /// // array is now empty
-    /// ```
     @inlinable
     public var forEach: Property<Sequence.ForEach, Self>.View.Typed<Element>.Valued<inlineCapacity> {
         mutating _read {
@@ -383,11 +315,6 @@ extension Array.Small where Element: ~Copyable {
 extension Property.View.Typed.Valued
 where Tag == Sequence.ForEach, Base == Array<Element>.Small<n>, Element: ~Copyable {
     /// Borrowing iteration: `.forEach { }`
-    ///
-    /// Iterates over all elements without consuming them.
-    /// Works for ALL element types including `~Copyable`.
-    ///
-    /// - Parameter body: A closure called with each borrowed element.
     @inlinable
     public func callAsFunction(_ body: (borrowing Element) -> Void) {
         let count = unsafe base.pointee.count
@@ -400,25 +327,14 @@ where Tag == Sequence.ForEach, Base == Array<Element>.Small<n>, Element: ~Copyab
                 }
             }
         } else {
-            // Inline storage uses stride-based raw pointer arithmetic
-            let stride = MemoryLayout<Element>.stride
-            unsafe withUnsafePointer(to: base.pointee.inline) { storagePtr in
-                let basePtr = unsafe UnsafeRawPointer(storagePtr)
-                for i in 0..<count.rawValue {
-                    let elementPtr = unsafe (basePtr + i * stride)
-                        .assumingMemoryBound(to: Element.self)
-                    unsafe body(elementPtr.pointee)
-                }
+            for i in 0..<Int(bitPattern: count) {
+                let slot = Index_Primitives.Index<Element>(Ordinal(UInt(i)))
+                body(unsafe base.pointee._inlineBuffer[slot])
             }
         }
     }
 
     /// Explicit borrowing iteration: `.forEach.borrowing { }`
-    ///
-    /// Same as `callAsFunction`, but with explicit naming for clarity.
-    /// Works for ALL element types including `~Copyable`.
-    ///
-    /// - Parameter body: A closure called with each borrowed element.
     @inlinable
     public func borrowing(_ body: (borrowing Element) -> Void) {
         callAsFunction(body)
@@ -429,28 +345,6 @@ where Tag == Sequence.ForEach, Base == Array<Element>.Small<n>, Element: ~Copyab
 
 extension Array.Small where Element: ~Copyable {
     /// Property view for draining operations.
-    ///
-    /// Provides `.drain { }` via `callAsFunction`, which removes all elements
-    /// from the array and passes each to the closure with ownership.
-    /// Works for ALL element types including `~Copyable`.
-    ///
-    /// After draining, the array is empty but still usable.
-    ///
-    /// ## Example
-    ///
-    /// ```swift
-    /// var array = try Array<Int>.Small<4>()
-    /// array.append(1)
-    /// array.append(2)
-    /// array.append(3)
-    ///
-    /// // Drain all elements (takes ownership)
-    /// array.drain { element in
-    ///     process(element)
-    /// }
-    /// // array is now empty but still usable
-    /// array.append(4)
-    /// ```
     @inlinable
     public var drain: Property<Sequence.Drain, Self>.View.Typed<Element>.Valued<inlineCapacity> {
         mutating _read {
@@ -468,12 +362,6 @@ extension Array.Small where Element: ~Copyable {
 extension Property.View.Typed.Valued
 where Tag == Sequence.Drain, Base == Array<Element>.Small<n>, Element: ~Copyable {
     /// Drain iteration: `.drain { }`
-    ///
-    /// Removes all elements from the array, passing each to the closure
-    /// with ownership. After this call, the array is empty but usable.
-    /// Works for ALL element types including `~Copyable`.
-    ///
-    /// - Parameter body: A closure called with each element (consuming).
     @_lifetime(&self)
     @inlinable
     public mutating func callAsFunction(_ body: (consuming Element) -> Void) {
@@ -488,8 +376,8 @@ where Tag == Sequence.Drain, Base == Array<Element>.Small<n>, Element: ~Copyable
             }
             unsafe base.pointee.heap!.storage.header = 0
         } else {
-            (0..<count).forEach { i in
-                body(unsafe base.pointee.inline.move(at: i))
+            while !unsafe base.pointee._inlineBuffer.isEmpty {
+                body(unsafe base.pointee._inlineBuffer.consumeFront())
             }
         }
         unsafe base.pointee.count = .zero

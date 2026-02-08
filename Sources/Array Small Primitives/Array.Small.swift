@@ -19,13 +19,10 @@ public import Sequence_Primitives
 // ============================================================================
 
 // MARK: Collection.Protocol Conformance
-// Note: Index, startIndex, endIndex, index(after:) defined in Collection.Indexed conformance
 
 extension Array.Small: Collection.`Protocol` where Element: Copyable {}
 
 // MARK: Collection.Access.Random Conformance
-// Note: Collection.Bidirectional conformance is provided in ~Copyable.swift
-// for ALL element types (including ~Copyable) via `where Element: ~Copyable`.
 
 extension Array.Small: Collection.Access.Random where Element: Copyable {}
 
@@ -52,7 +49,7 @@ extension Array.Small where Element: Copyable {
     @safe
     public struct Iterator: IteratorProtocol {
         @usableFromInline
-        let base: Pointer<Element>
+        let base: UnsafePointer<Element>
 
         @usableFromInline
         let end: Index.Count
@@ -61,7 +58,7 @@ extension Array.Small where Element: Copyable {
         var position: Index
 
         @usableFromInline @unsafe
-        init(base: Pointer<Element>, count: Index.Count) {
+        init(base: UnsafePointer<Element>, count: Index.Count) {
             unsafe self.base = base
             self.end = count
             self.position = .zero
@@ -83,40 +80,18 @@ extension Array.Small.Iterator: @unchecked Sendable where Element: Sendable {}
 
 extension Array.Small: Sequence.`Protocol` where Element: Copyable {
     /// Returns a pointer-based iterator over the array elements.
-    ///
-    /// Zero-copy iteration - no allocation, no element copying.
-    /// Uses typed `Index<Element>` for position tracking.
-    ///
-    /// ## Implementation Note
-    ///
-    /// This function must be `borrowing` (non-mutating) per Sequence protocol.
-    /// For heap storage, we use the cached `_heapPtr` pointer directly.
-    /// For inline storage, we use `withUnsafePointer(to:)` on the stored property
-    /// to obtain a pointer without requiring `&self`.
-    ///
-    /// The `inline` accessor cannot be used here because it requires `mutating`
-    /// context (needs `&self` to construct the accessor struct). See:
-    /// `/Users/coen/Developer/swift-institute/Research/Non-Mutating-Accessor-Problem.md`
     @inlinable
     public borrowing func makeIterator() -> Iterator {
         guard count.rawValue > 0 else {
-            // Empty array - pointer is irrelevant, count is zero
-            return unsafe Iterator(base: Pointer(UnsafePointer<Element>(bitPattern: 1)!), count: .zero)
+            return unsafe Iterator(base: UnsafePointer<Element>(bitPattern: 1)!, count: .zero)
         }
 
         if let heapState = heap {
-            // Heap storage - use cached pointer (convert mutable to immutable)
-            return unsafe Iterator(base: Pointer(UnsafePointer(heapState.pointer.base)), count: .init(count.rawValue))
+            return unsafe Iterator(base: UnsafePointer(heapState.pointer), count: .init(count.rawValue))
         } else {
-            // Inline storage - get pointer to first element via withUnsafePointer
-            // Note: We use withUnsafePointer directly on the stored property because
-            // the `inline` accessor requires mutating context (needs &self).
-            _ = MemoryLayout<Element>.stride
-            return unsafe withUnsafePointer(to: inline) { storagePtr in
-                let basePtr = unsafe UnsafeRawPointer(storagePtr)
-                let elementPtr = unsafe basePtr.assumingMemoryBound(to: Element.self)
-                return unsafe Iterator(base: Pointer(elementPtr), count: .init(count.rawValue))
-            }
+            // Inline storage - get pointer from inline buffer's span
+            let span = _inlineBuffer.span
+            return unsafe Iterator(base: span.unsafeBaseAddress!, count: .init(count.rawValue))
         }
     }
 }

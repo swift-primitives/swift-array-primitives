@@ -11,7 +11,7 @@
 
 // Note: Array.Fixed is declared INSIDE the Array struct body (in Array.swift)
 // due to Swift's ~Copyable constraint propagation rules. This file contains
-// only extensions that require internal access to _storage.
+// only extensions that require internal access to _buffer.
 
 public import Index_Primitives
 
@@ -34,15 +34,21 @@ extension Array.Fixed {
         }
 
         if count == .zero {
-            self.storage = Storage.create(minimumCapacity: .zero)
-            unsafe self._cachedPtr = storage.pointer(at: .zero)
-            self.count = .zero
+            self._buffer = Buffer<Element>.Linear.Bounded(minimumCapacity: .zero)
             return
         }
 
-        self.storage = Storage.create(capacity: count, initializingWith: initializer)
-        unsafe self._cachedPtr = storage.pointer(at: .zero)
-        self.count = count
+        let buffer = Buffer<Element>.Linear.Bounded(
+            minimumCapacity: count,
+            initializingCount: count,
+            with: { ptr in
+                for i in 0..<Int(bitPattern: count) {
+                    let index = Array.Index(Ordinal(UInt(i)))
+                    unsafe (ptr + i).initialize(to: initializer(index))
+                }
+            }
+        )
+        self._buffer = buffer
     }
 }
 
@@ -67,15 +73,20 @@ extension Array.Fixed {
         // Count is unsigned, always non-negative by construction
 
         if count == .zero {
-            self.storage = Storage.create(minimumCapacity: .zero)
-            unsafe self._cachedPtr = storage.pointer(at: .zero)
-            self.count = .zero
+            self._buffer = Buffer<Element>.Linear.Bounded(minimumCapacity: .zero)
             return
         }
 
-        self.storage = Storage.create(capacity: count, initializingWith: initializer)
-        unsafe self._cachedPtr = storage.pointer(at: .zero)
-        self.count = count
+        let buffer = Buffer<Element>.Linear.Bounded(
+            minimumCapacity: count,
+            initializingCount: count,
+            with: { ptr in
+                for i in 0..<Int(bitPattern: count) {
+                    let index = Array.Index(Ordinal(UInt(i)))
+                    unsafe (ptr + i).initialize(to: initializer(index))
+                }
+            }
+        )
+        self._buffer = buffer
     }
 }
-

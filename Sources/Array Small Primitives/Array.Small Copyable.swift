@@ -29,16 +29,9 @@ extension Array.Small where Element: Copyable {
         get {
             precondition(index < count, "Index out of bounds")
             if let heap {
-                return unsafe heap.pointer[index]
+                return unsafe heap.pointer[Int(bitPattern: index)]
             } else {
-                // Use withUnsafePointer directly - inline accessor requires mutating context
-                let stride = Affine.Discrete.Ratio<Element, UInt8>(MemoryLayout<Element>.stride)
-                return unsafe withUnsafePointer(to: inline) { storagePtr in
-                    let basePtr = unsafe UnsafeRawPointer(storagePtr)
-                    let elementPtr = unsafe (basePtr + (Index<Element>.Offset(index) * stride).vector.rawValue)
-                        .assumingMemoryBound(to: Element.self)
-                    return unsafe elementPtr.pointee
-                }
+                return _inlineBuffer[index]
             }
         }
         set {
@@ -47,7 +40,7 @@ extension Array.Small where Element: Copyable {
                 _ = heap!.storage.move(at: index)
                 heap!.storage.initialize(to: newValue, at: index)
             } else {
-                unsafe inline.pointer(at: index).pointee = newValue
+                _inlineBuffer[index] = newValue
             }
         }
     }
@@ -59,32 +52,17 @@ extension Array.Small where Element: Copyable {
 
 extension Array.Small where Element: Copyable {
     /// Returns the element at the typed index, or nil if out of bounds.
-    ///
-    /// - Parameter index: The typed index of the element to access.
-    /// - Returns: The element at the index, or `nil` if out of bounds.
     @inlinable
     public func element(at index: Index) -> Element? {
         guard index < count else { return nil }
         if let heap {
-            return unsafe heap.pointer[index]
+            return unsafe heap.pointer[Int(bitPattern: index)]
         } else {
-            // Use withUnsafePointer directly - inline accessor requires mutating context
-            let stride = Affine.Discrete.Ratio<Element, UInt8>(MemoryLayout<Element>.stride)
-            return unsafe withUnsafePointer(to: inline) { storagePtr in
-                let basePtr = unsafe UnsafeRawPointer(storagePtr)
-                let elementPtr = unsafe (basePtr + (Index<Element>.Offset(index) * stride).vector.rawValue)
-                    .assumingMemoryBound(to: Element.self)
-                return unsafe elementPtr.pointee
-            }
+            return _inlineBuffer[index]
         }
     }
 
     /// Returns element at index offset from given base index.
-    ///
-    /// - Parameters:
-    ///   - base: The starting index.
-    ///   - offset: The signed offset from the base.
-    /// - Returns: The element at the computed position, or `nil` if out of bounds.
     @inlinable
     public func element(
         at base: Index,
@@ -93,16 +71,9 @@ extension Array.Small where Element: Copyable {
         guard let newIndex = base + offset else { return nil }
         guard newIndex < count else { return nil }
         if let heap {
-            return unsafe heap.pointer[newIndex]
+            return unsafe heap.pointer[Int(bitPattern: newIndex)]
         } else {
-            // Use withUnsafePointer directly - inline accessor requires mutating context
-            let stride = Affine.Discrete.Ratio<Element, UInt8>(MemoryLayout<Element>.stride)
-            return unsafe withUnsafePointer(to: inline) { storagePtr in
-                let basePtr = unsafe UnsafeRawPointer(storagePtr)
-                let elementPtr = unsafe (basePtr + (Index<Element>.Offset(newIndex) * stride).vector.rawValue)
-                    .assumingMemoryBound(to: Element.self)
-                return unsafe elementPtr.pointee
-            }
+            return _inlineBuffer[newIndex]
         }
     }
 }
@@ -114,11 +85,6 @@ extension Array.Small where Element: Copyable {
 extension Property.View.Typed.Valued
 where Tag == Sequence.ForEach, Base == Array<Element>.Small<n>, Element: Copyable {
     /// Consuming iteration: `.forEach.consuming { }`
-    ///
-    /// Iterates over all elements and then clears the array.
-    /// Only available for `Copyable` elements.
-    ///
-    /// - Parameter body: A closure called with each element.
     @_lifetime(&self)
     @inlinable
     public mutating func consuming(_ body: (Element) -> Void) {
@@ -133,17 +99,11 @@ where Tag == Sequence.ForEach, Base == Array<Element>.Small<n>, Element: Copyabl
             }
             heapState.storage.deinitialize()
         } else {
-            // Inline storage uses stride-based raw pointer arithmetic
-            let stride = MemoryLayout<Element>.stride
-            unsafe withUnsafePointer(to: base.pointee.inline) { storagePtr in
-                let basePtr = unsafe UnsafeRawPointer(storagePtr)
-                for i in 0..<count.rawValue {
-                    let elementPtr = unsafe (basePtr + i * stride)
-                        .assumingMemoryBound(to: Element.self)
-                    unsafe body(elementPtr.pointee)
-                }
+            for i in 0..<Int(bitPattern: count) {
+                let slot = Index_Primitives.Index<Element>(Ordinal(UInt(i)))
+                body(unsafe base.pointee._inlineBuffer[slot])
             }
-            unsafe base.pointee.inline.deinitialize(count: count)
+            unsafe base.pointee._inlineBuffer.removeAll()
         }
         unsafe base.pointee.count = .zero
     }

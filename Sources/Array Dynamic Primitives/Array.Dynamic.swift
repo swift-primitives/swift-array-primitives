@@ -52,16 +52,10 @@ extension Array where Element: Copyable {
     /// Pointer-based iterator for Array.
     ///
     /// Zero-copy iteration using typed `Index<Element>` for position tracking.
-    /// The iterator holds a pointer to the storage, not a copy of the elements.
-    ///
-    /// ## Safety
-    ///
-    /// The iterator is only valid while the source array exists and is not mutated.
-    /// This matches the semantics of stdlib's Array.Iterator.
     @safe
     public struct Iterator: IteratorProtocol {
         @usableFromInline
-        let base: Pointer<Element>
+        let base: UnsafePointer<Element>
 
         @usableFromInline
         let end: Index.Count
@@ -70,7 +64,7 @@ extension Array where Element: Copyable {
         var position: Index
 
         @usableFromInline @unsafe
-        init(base: Pointer<Element>, count: Index.Count) {
+        init(base: UnsafePointer<Element>, count: Index.Count) {
             unsafe self.base = base
             self.end = count
             self.position = .zero
@@ -79,7 +73,7 @@ extension Array where Element: Copyable {
         @inlinable
         public mutating func next() -> Element? {
             guard position < end else { return nil }
-            let result = unsafe base[position]
+            let result = unsafe base[Int(bitPattern: position)]
             position = position + Index.Count.one
             return result
         }
@@ -92,16 +86,18 @@ extension Array.Iterator: @unchecked Sendable where Element: Sendable {}
 
 extension Array: Sequence.`Protocol` where Element: Copyable {
     /// Returns a pointer-based iterator over the array elements.
-    ///
-    /// Zero-copy iteration - no allocation, no element copying.
-    /// Uses typed `Index<Element>` for position tracking.
     @inlinable
     public borrowing func makeIterator() -> Iterator {
-        guard count.rawValue > 0 else {
-            // Empty array - pointer is irrelevant, count is zero
-            return unsafe Iterator(base: Pointer(UnsafePointer<Element>(bitPattern: 1)!), count: .zero)
+        let count = _buffer.count
+        guard count > .zero else {
+            return unsafe Iterator(base: UnsafePointer<Element>(bitPattern: 1)!, count: .zero)
         }
-        return unsafe Iterator(base: _cachedPtr.immutable, count: .init(count.rawValue))
+        // Access the buffer's underlying storage pointer for zero-copy iteration
+        let span = _buffer.span
+        return unsafe Iterator(
+            base: span.unsafeBaseAddress!,
+            count: count
+        )
     }
 }
 

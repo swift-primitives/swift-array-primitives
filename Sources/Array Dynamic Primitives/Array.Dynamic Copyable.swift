@@ -12,23 +12,11 @@
 public import Array_Primitives_Core
 
 // ============================================================================
-// MARK: - Copy-on-Write
+// MARK: - Subscripts (Copyable with CoW)
 // ============================================================================
 
-extension Array where Element: Copyable {
-    /// Ensures the storage is uniquely referenced before mutation.
-    @usableFromInline
-    package mutating func makeUnique() {
-        if !isKnownUniquelyReferenced(&storage) {
-            storage = storage.copy()
-            unsafe (_cachedPtr = storage.pointer(at: .zero))  // CRITICAL: Update cached pointer
-        }
-    }
-}
-
-// ============================================================================
-// MARK: - Subscripts
-// ============================================================================
+// Copy-on-Write is now handled internally by Buffer.Linear.
+// No manual makeUnique() needed at the Array level.
 
 extension Array where Element: Copyable {
     /// Accesses the element at the given typed index with copy-on-write semantics.
@@ -39,12 +27,11 @@ extension Array where Element: Copyable {
     public subscript(index: Index) -> Element {
         get {
             precondition(index < count, "Index out of bounds")
-            return unsafe _cachedPtr[index]
+            return _buffer[index]
         }
         set {
-            makeUnique()
             precondition(index < count, "Index out of bounds")
-            unsafe _cachedPtr[index] = newValue
+            _buffer[index] = newValue
         }
     }
 }
@@ -55,21 +42,13 @@ extension Array where Element: Copyable {
 
 extension Array where Element: Copyable {
     /// Returns the element at the typed index, or nil if out of bounds.
-    ///
-    /// - Parameter index: The typed index of the element to access.
-    /// - Returns: The element at the index, or `nil` if out of bounds.
     @inlinable
     public func element(at index: Index) -> Element? {
         guard index < count else { return nil }
-        return unsafe _cachedPtr[index]
+        return _buffer[index]
     }
 
     /// Returns element at index offset from given base index.
-    ///
-    /// - Parameters:
-    ///   - base: The starting index.
-    ///   - offset: The signed offset from the base.
-    /// - Returns: The element at the computed position, or `nil` if out of bounds.
     @inlinable
     public func element(
         at base: Index,
@@ -77,7 +56,7 @@ extension Array where Element: Copyable {
     ) -> Element? {
         guard let newIndex = base + offset else { return nil }
         guard newIndex < count else { return nil }
-        return unsafe _cachedPtr[newIndex]
+        return _buffer[newIndex]
     }
 }
 
@@ -87,42 +66,24 @@ extension Array where Element: Copyable {
 
 extension Array where Element: Copyable {
     /// Appends an element to the array (CoW-aware).
-    ///
-    /// This method shadows the base `append(_:)` when `Element: Copyable`,
-    /// providing copy-on-write semantics.
     @inlinable
     public mutating func append(_ element: Element) {
-        makeUnique()
-        let count = storage.count
-        ensureCapacity(count + .one)
-        storage.initialize(to: element, at: .init(count))
-        storage.header = (count + 1).rawValue
+        _buffer.append(element)
     }
 
     /// Removes and returns the last element (CoW-aware).
-    ///
-    /// This method shadows the base `removeLast()` when `Element: Copyable`,
-    /// providing copy-on-write semantics.
     @inlinable
     public mutating func removeLast() -> Element? {
-        makeUnique()
-        let count = storage.header
-        guard count > 0 else { return nil }
-        storage.header = count - 1
-        return storage.move(at: .init(__unchecked: (), position: count - 1))
+        guard !_buffer.isEmpty else { return nil }
+        return _buffer.removeLast()
     }
 
     /// Removes all elements from the array (CoW-aware).
-    ///
-    /// This method shadows the base `removeAll(keepingCapacity:)` when `Element: Copyable`,
-    /// providing copy-on-write semantics.
     @inlinable
     public mutating func removeAll(keepingCapacity: Bool = false) {
-        makeUnique()
-        storage.deinitialize()
+        _buffer.removeAll()
         if !keepingCapacity {
-            storage = Array.Storage.create(minimumCapacity: .zero)
-            unsafe (_cachedPtr = storage.pointer(at: .zero))
+            _buffer = Buffer<Element>.Linear(minimumCapacity: .zero)
         }
     }
 }
@@ -134,21 +95,11 @@ extension Array where Element: Copyable {
 extension Property.View.Typed
 where Tag == Sequence.ForEach, Base == Array<Element>, Element: Copyable {
     /// Consuming iteration: `.forEach.consuming { }`
-    ///
-    /// Iterates over all elements and then clears the array.
-    /// Only available for `Copyable` elements.
-    ///
-    /// - Parameter body: A closure called with each element.
     @_lifetime(&self)
     @inlinable
     public mutating func consuming(_ body: (Element) -> Void) {
-        let count = unsafe base.pointee.storage.header
-        guard count > 0 else { return }
-        unsafe base.pointee.storage.withUnsafeMutablePointerToElements { elements in
-            for i in 0..<count {
-                unsafe body(elements[i])
-            }
+        while !unsafe base.pointee._buffer.isEmpty {
+            body(unsafe base.pointee._buffer.consumeFront())
         }
-        unsafe base.pointee.storage.deinitialize()
     }
 }

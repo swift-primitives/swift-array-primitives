@@ -22,7 +22,7 @@ extension Array.Indexed where Element: Copyable {
 
     /// The current capacity of the array.
     @inlinable
-    public var capacity: Int { _storage.capacity }
+    public var capacity: Index.Count { _storage.capacity }
 }
 
 // ============================================================================

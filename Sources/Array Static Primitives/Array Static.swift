@@ -19,13 +19,10 @@ import Sequence_Primitives
 // ============================================================================
 
 // MARK: Collection.Protocol Conformance
-// Note: Index, startIndex, endIndex, index(after:) defined in Collection.Indexed conformance
 
 extension Array.Static: Collection.`Protocol` {}
 
 // MARK: Collection.Access.Random Conformance
-// Note: Collection.Bidirectional conformance is provided in ~Copyable.swift
-// for ALL element types (including ~Copyable) via `where Element: ~Copyable`.
 
 extension Array.Static: Collection.Access.Random {}
 
@@ -33,14 +30,10 @@ extension Array.Static: Collection.Access.Random {}
 // ~Copyable (has deinit for inline storage cleanup). Swift.Collection requires Self: Copyable.
 
 // MARK: Collection.Remove.Last Conformance
-// Provides `.remove.last()` fluent API via protocol extension.
-// Primitive: `removeLast()` defined in ~Copyable.swift Mutating Operations section.
 
 extension Array.Static: Collection.Remove.Last {}
 
 // MARK: Collection.Clearable Conformance
-// Provides `.remove.all()` fluent API via protocol extension.
-// Primitive: `removeAll()` defined in ~Copyable.swift Mutating Operations section.
 
 extension Array.Static: Collection.Clearable {}
 
@@ -64,7 +57,7 @@ extension Array.Static {
     @safe
     public struct Iterator: IteratorProtocol {
         @usableFromInline
-        let base: Pointer<Element>
+        let base: UnsafePointer<Element>
 
         @usableFromInline
         let end: Index.Count
@@ -73,7 +66,7 @@ extension Array.Static {
         var position: Index
 
         @usableFromInline @unsafe
-        init(base: Pointer<Element>, count: Index.Count) {
+        init(base: UnsafePointer<Element>, count: Index.Count) {
             self.base = base
             self.end = count
             self.position = .zero
@@ -82,7 +75,7 @@ extension Array.Static {
         @inlinable
         public mutating func next() -> Element? {
             guard position < end else { return nil }
-            let result = base[position]
+            let result = unsafe base[position]
             position = position + Index.Count.one
             return result
         }
@@ -95,27 +88,14 @@ extension Array.Static.Iterator: @unchecked Sendable where Element: Sendable {}
 
 extension Array.Static: Sequence.`Protocol` {
     /// Returns a pointer-based iterator over the array elements.
-    ///
-    /// Zero-copy iteration - no allocation, no element copying.
-    /// Uses typed `Index<Element>` for position tracking.
-    ///
-    /// ## Note
-    ///
-    /// Array.Static uses inline storage. The iterator captures a pointer to
-    /// element 0, which is valid for the duration of this borrow.
     @inlinable
     public borrowing func makeIterator() -> Iterator {
-        // Get pointer to first element (or a valid pointer if empty)
+        let count = _buffer.count
         guard count > .zero else {
-            // Empty array - pointer is irrelevant, count is zero
-            return unsafe Iterator(base: Pointer(UnsafePointer<Element>(bitPattern: 1)!), count: .zero)
+            return unsafe Iterator(base: UnsafePointer<Element>(bitPattern: 1)!, count: .zero)
         }
-        // Use withUnsafePointer because storage.pointer(at:) is mutating
-        return unsafe withUnsafePointer(to: storage) { storagePtr in
-            let basePtr = unsafe UnsafeRawPointer(storagePtr)
-            let elementPtr = unsafe basePtr.assumingMemoryBound(to: Element.self)
-            return unsafe Iterator(base: Pointer(elementPtr), count: count)
-        }
+        let span = _buffer.span
+        return unsafe Iterator(base: span.unsafeBaseAddress!, count: count)
     }
 }
 

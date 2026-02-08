@@ -22,47 +22,17 @@ extension Array.Static where Element: ~Copyable {
     /// `Indexed<Tag>` wraps an `Array<Element>.Static<capacity>` and provides subscript
     /// access via `Index<Tag>` instead of the element-typed index, enabling type-safe
     /// indexing where the phantom type differs from the element type.
-    ///
-    /// ## Usage
-    ///
-    /// ```swift
-    /// enum NodeTag {}
-    /// var storage = Array<Payload>.Static<8>()
-    /// try storage.append(payload)
-    ///
-    /// var indexed = Array<Payload>.Static<8>.Indexed<NodeTag>(storage)
-    /// let node: Index<NodeTag> = .zero
-    /// indexed[node]  // Access via typed index
-    /// guard node < indexed.count else { return }  // Typed bounds check
-    /// ```
-    ///
-    /// ## Design
-    ///
-    /// This follows the `Property.Typed` pattern: the nested type "smuggles" the
-    /// `Tag` generic parameter into scope, allowing typed operations without
-    /// requiring protocols (which can't have `~Copyable` associated types).
-    ///
-    /// ## Note
-    ///
-    /// `Array.Static` is `~Copyable` unconditionally, so `Indexed` is also `~Copyable`.
     public struct Indexed<Tag: ~Copyable>: ~Copyable {
         @usableFromInline
         var storage: Array<Element>.Static<capacity>
 
         /// Creates an indexed wrapper around the given storage.
-        ///
-        /// - Parameter storage: The static array to wrap.
         @inlinable
         public init(_ storage: consuming Array<Element>.Static<capacity>) {
             self.storage = storage
         }
 
         /// The phantom-typed count for bounds checking.
-        ///
-        /// Use with `Index<Tag>` for typed bounds checks:
-        /// ```swift
-        /// guard node < indexed.count else { return }
-        /// ```
         @inlinable
         public var count: Index_Primitives.Index<Tag>.Count {
             storage.count.retag(Tag.self)
@@ -90,9 +60,6 @@ extension Array.Static.Indexed where Element: ~Copyable {
 
 extension Array.Static.Indexed where Element: ~Copyable {
     /// Accesses the element at the given phantom-typed index.
-    ///
-    /// - Parameter index: The typed index of the element to access.
-    /// - Precondition: `index` must be within bounds.
     @inlinable
     public subscript(index: Index_Primitives.Index<Tag>) -> Element {
         _read {
@@ -102,8 +69,6 @@ extension Array.Static.Indexed where Element: ~Copyable {
             yield &storage[index.retag(Element.self)]
         }
     }
-
-    // Note: Index.Bounded<N> subscript removed - type not yet implemented in index-primitives
 }
 
 // ============================================================================
@@ -112,12 +77,6 @@ extension Array.Static.Indexed where Element: ~Copyable {
 
 extension Array.Static.Indexed where Element: ~Copyable {
     /// Accesses the element at the given index via closure (for ~Copyable elements).
-    ///
-    /// - Parameters:
-    ///   - index: The phantom-typed index of the element.
-    ///   - body: A closure that receives a borrowed reference to the element.
-    /// - Returns: The result of the closure.
-    /// - Precondition: The index must be in bounds.
     @inlinable
     public func withElement<R>(at index: Index_Primitives.Index<Tag>, _ body: (borrowing Element) -> R) -> R {
         storage.withElement(at: index.retag(Element.self), body)
@@ -139,8 +98,6 @@ extension Array.Static.Indexed where Element: ~Copyable {
     }
 
     /// Removes and returns the last element, or nil if empty.
-    ///
-    /// - Returns: The removed element, or `nil` if the array is empty.
     @inlinable
     public mutating func removeLast() -> Element? {
         storage.removeLast()

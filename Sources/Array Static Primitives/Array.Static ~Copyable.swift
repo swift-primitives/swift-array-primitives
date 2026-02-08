@@ -47,13 +47,19 @@ extension Array.Static: Collection.Bidirectional where Element: ~Copyable {
 // ============================================================================
 
 extension Array.Static where Element: ~Copyable {
+    /// The number of elements in the array.
+    @inlinable
+    public var count: Index.Count {
+        _buffer.count
+    }
+
     /// Whether the array is empty.
     @inlinable
-    public var isEmpty: Bool { count == .zero }
+    public var isEmpty: Bool { _buffer.isEmpty }
 
     /// Whether the array is at full capacity.
     @inlinable
-    public var isFull: Bool { Int(bitPattern: count) >= capacity }
+    public var isFull: Bool { _buffer.isFull }
 }
 
 // ============================================================================
@@ -72,18 +78,14 @@ extension Array.Static where Element: ~Copyable {
         @_lifetime(borrow self)
         _read {
             precondition(index < count, "Index out of bounds")
-            let ptr: Pointer<Element>.Immutable = unsafe storage.pointer(at: index)
-            yield ptr.pointee
+            yield _buffer[index]
         }
         _modify {
             precondition(index < count, "Index out of bounds")
-            yield &( storage.pointer(at: index).pointee)
+            yield &_buffer[index]
         }
     }
 }
-
-// MARK: Bounded Subscript
-// Note: Index.Bounded<N> subscript removed - type not yet implemented in index-primitives
 
 // ============================================================================
 // MARK: - Element Access
@@ -91,16 +93,10 @@ extension Array.Static where Element: ~Copyable {
 
 extension Array.Static where Element: ~Copyable {
     /// Accesses the element at the given index via closure (for ~Copyable elements).
-    ///
-    /// - Parameters:
-    ///   - index: The index of the element.
-    ///   - body: A closure that receives a borrowed reference to the element.
-    /// - Returns: The result of the closure.
-    /// - Precondition: The index must be in bounds.
     @inlinable
     public func withElement<R>(at index: Index, _ body: (borrowing Element) -> R) -> R {
         precondition(index < count, "Index out of bounds")
-        return storage.withElement(at: index) { body($0) }
+        return body(_buffer[index])
     }
 }
 
@@ -115,11 +111,10 @@ extension Array.Static where Element: ~Copyable {
     /// - Throws: ``Array.Static.Error.overflow`` if the array is full.
     @inlinable
     public mutating func append(_ element: consuming Element) throws(Array.Static.Error) {
-        guard Int(bitPattern: count) < capacity else {
+        if let overflow = _buffer.append(element) {
+            _ = consume overflow
             throw .overflow
         }
-        storage.initialize(to: element, at: Index(count))
-        count = count + .one
     }
 
     /// Removes and returns the last element.
@@ -127,18 +122,15 @@ extension Array.Static where Element: ~Copyable {
     /// - Returns: The removed element, or `nil` if the array is empty.
     @inlinable
     public mutating func removeLast() -> Element? {
-        fatalError()
-//        guard count > .zero else { return nil }
-//        count = count - .one
-//        return storage.move(at: Index(count))
+        guard !_buffer.isEmpty else { return nil }
+        return _buffer.removeLast()
     }
 
     /// Removes all elements from the array.
     @inlinable
     public mutating func removeAll() {
-        guard count.rawValue > 0 else { return }
-        storage.deinitialize(count: count)
-        count = .zero
+        guard _buffer.count > .zero else { return }
+        _buffer.removeAll()
     }
 }
 
@@ -148,54 +140,19 @@ extension Array.Static where Element: ~Copyable {
 
 extension Array.Static where Element: ~Copyable {
     /// Provides read-only span access to the array elements.
-    ///
-    /// ## Lifetime Contract
-    ///
-    /// - The span is valid ONLY for the duration of the closure.
-    /// - The span MUST NOT be stored, returned, or allowed to escape.
-    /// - Violating this contract is undefined behavior.
-    ///
-    /// ## Note
-    ///
-    /// Inline storage requires closure-based access because the storage address
-    /// is not stable (it moves with the struct). Use `span` property on heap-backed
-    /// variants (Fixed, Array) for direct access.
     @inlinable
     public func withSpan<R, E: Swift.Error>(
         _ body: (Swift.Span<Element>) throws(E) -> R
     ) throws(E) -> R {
-        return try unsafe withUnsafePointer(to: storage) { storagePtr throws(E) -> R in
-            let basePtr = unsafe UnsafeRawPointer(storagePtr)
-            let elementPtr = unsafe basePtr.assumingMemoryBound(to: Element.self)
-            let span = unsafe Swift.Span(_unsafeStart: elementPtr, count: Int(bitPattern: count))
-            return try body(span)
-        }
+        try body(_buffer.span)
     }
 
     /// Provides mutable span access to the array elements.
-    ///
-    /// ## Lifetime Contract
-    ///
-    /// - The span is valid ONLY for the duration of the closure.
-    /// - The span MUST NOT be stored, returned, or allowed to escape.
-    /// - No concurrent mutable borrows are permitted.
-    /// - Violating this contract is undefined behavior.
-    ///
-    /// ## Note
-    ///
-    /// Inline storage requires closure-based access because the storage address
-    /// is not stable (it moves with the struct). Use `mutableSpan` property on
-    /// heap-backed variants (Fixed, Array) for direct access.
     @inlinable
     public mutating func withMutableSpan<R, E: Swift.Error>(
         _ body: (borrowing MutableSpan<Element>) throws(E) -> R
     ) throws(E) -> R {
-        return try unsafe withUnsafeMutablePointer(to: &storage) { storagePtr throws(E) -> R in
-            let basePtr = UnsafeMutableRawPointer(storagePtr)
-            let elementPtr = unsafe basePtr.assumingMemoryBound(to: Element.self)
-            let span = unsafe MutableSpan(_unsafeStart: elementPtr, count: Int(bitPattern: count))
-            return try body(span)
-        }
+        try body(_buffer.mutableSpan)
     }
 }
 
@@ -206,35 +163,26 @@ extension Array.Static where Element: ~Copyable {
 @_spi(Unsafe)
 extension Array.Static where Element: ~Copyable {
     /// Provides read-only access to the underlying contiguous storage.
-    ///
-    /// - Warning: This is an escape hatch for C interop. Prefer `span` for safe access.
-    /// - Warning: The pointer must not escape the closure scope.
     @unsafe
     @inlinable
     public func withUnsafeBufferPointer<R, E: Swift.Error>(
         _ body: (UnsafeBufferPointer<Element>) throws(E) -> R
     ) throws(E) -> R {
-        return try unsafe withUnsafePointer(to: storage) { storagePtr throws(E) -> R in
-            let basePtr = unsafe UnsafeRawPointer(storagePtr)
-            let elementPtr = unsafe basePtr.assumingMemoryBound(to: Element.self)
-            return try unsafe body(UnsafeBufferPointer(start: count > .zero ? elementPtr : nil, count: Int(bitPattern: count)))
-        }
+        let span = _buffer.span
+        let count = Int(bitPattern: _buffer.count)
+        return try unsafe body(UnsafeBufferPointer(start: count > 0 ? span.unsafeBaseAddress : nil, count: count))
     }
 
     /// Provides mutable access to the underlying contiguous storage.
-    ///
-    /// - Warning: This is an escape hatch for C interop. Prefer `mutableSpan` for safe access.
-    /// - Warning: The pointer must not escape the closure scope.
     @unsafe
     @inlinable
     public mutating func withUnsafeMutableBufferPointer<R, E: Swift.Error>(
         _ body: (UnsafeMutableBufferPointer<Element>) throws(E) -> R
     ) throws(E) -> R {
-        return try unsafe withUnsafeMutablePointer(to: &storage) { storagePtr throws(E) -> R in
-            let basePtr = UnsafeMutableRawPointer(storagePtr)
-            let elementPtr = unsafe basePtr.assumingMemoryBound(to: Element.self)
-            return try unsafe body(UnsafeMutableBufferPointer(start: count > .zero ? elementPtr : nil, count: Int(bitPattern: count)))
-        }
+        let count = Int(bitPattern: _buffer.count)
+        let span = _buffer.mutableSpan
+        let ptr = count > 0 ? unsafe UnsafeMutablePointer(mutating: span.unsafeBaseAddress!) : nil
+        return try unsafe body(UnsafeMutableBufferPointer(start: ptr, count: count))
     }
 }
 
@@ -246,44 +194,6 @@ extension Array.Static where Element: ~Copyable {
 
 extension Array.Static where Element: ~Copyable {
     /// Property view for iteration operations.
-    ///
-    /// Provides iteration patterns for ALL element types including `~Copyable`:
-    /// - `.forEach { }` — Borrowing iteration via `callAsFunction`
-    /// - `.forEach.borrowing { }` — Explicit borrowing iteration
-    ///
-    /// For `Copyable` elements only:
-    /// - `.forEach.consuming { }` — Consuming iteration (clears array)
-    ///
-    /// ## Example
-    ///
-    /// ```swift
-    /// var array = Array<Int>.Inline<8>()
-    /// try array.append(1)
-    /// try array.append(2)
-    /// try array.append(3)
-    ///
-    /// // Borrowing iteration (works for ALL elements)
-    /// array.forEach { print($0) }
-    ///
-    /// // Consuming iteration (Copyable elements only)
-    /// array.forEach.consuming { print($0) }
-    /// // array is now empty
-    /// ```
-    ///
-    /// ## ~Copyable Elements
-    ///
-    /// For `~Copyable` elements, `.forEach { }` provides borrowing access:
-    ///
-    /// ```swift
-    /// struct Handle: ~Copyable { var id: Int }
-    ///
-    /// var handles = Array<Handle>.Inline<4>()
-    /// try handles.append(Handle(id: 1))
-    /// try handles.append(Handle(id: 2))
-    ///
-    /// handles.forEach { print($0.id) }  // Borrows each handle
-    /// // handles still contains both handles
-    /// ```
     @inlinable
     public var forEach: Property<Sequence.ForEach, Self>.View.Typed<Element>.Valued<capacity> {
         mutating _read {
@@ -301,27 +211,20 @@ extension Array.Static where Element: ~Copyable {
 extension Property.View.Typed.Valued
 where Tag == Sequence.ForEach, Base == Array<Element>.Static<n>, Element: ~Copyable {
     /// Borrowing iteration: `.forEach { }`
-    ///
-    /// Iterates over all elements without consuming them.
-    /// Works for ALL element types including `~Copyable`.
-    ///
-    /// - Parameter body: A closure called with each borrowed element.
     @inlinable
     public func callAsFunction(_ body: (borrowing Element) -> Void) {
-        let count = unsafe base.pointee.count
-        unsafe base.pointee.storage.forEach(count: count) { body($0) }
+        let count = unsafe base.pointee._buffer.count
+        guard count > .zero else { return }
+        for i in 0..<Int(bitPattern: count) {
+            let slot = Index_Primitives.Index<Element>(Ordinal(UInt(i)))
+            body(unsafe base.pointee._buffer[slot])
+        }
     }
 
     /// Explicit borrowing iteration: `.forEach.borrowing { }`
-    ///
-    /// Same as `callAsFunction`, but with explicit naming for clarity.
-    /// Works for ALL element types including `~Copyable`.
-    ///
-    /// - Parameter body: A closure called with each borrowed element.
     @inlinable
     public func borrowing(_ body: (borrowing Element) -> Void) {
-        let count = unsafe base.pointee.count
-        unsafe base.pointee.storage.forEach(count: count) { body($0) }
+        callAsFunction(body)
     }
 }
 
@@ -329,48 +232,6 @@ where Tag == Sequence.ForEach, Base == Array<Element>.Static<n>, Element: ~Copya
 
 extension Array.Static where Element: ~Copyable {
     /// Property view for draining operations.
-    ///
-    /// Provides `.drain { }` via `callAsFunction`, which removes all elements
-    /// from the array and passes each to the closure with ownership.
-    /// Works for ALL element types including `~Copyable`.
-    ///
-    /// After draining, the array is empty but still usable.
-    ///
-    /// ## Example
-    ///
-    /// ```swift
-    /// var array = Array<Int>.Inline<8>()
-    /// try array.append(1)
-    /// try array.append(2)
-    /// try array.append(3)
-    ///
-    /// // Drain all elements (takes ownership)
-    /// array.drain { element in
-    ///     process(element)
-    /// }
-    /// // array is now empty but still usable
-    /// try array.append(4)
-    /// ```
-    ///
-    /// ## ~Copyable Elements
-    ///
-    /// For `~Copyable` elements, `.drain { }` transfers ownership:
-    ///
-    /// ```swift
-    /// struct Handle: ~Copyable {
-    ///     var id: Int
-    ///     consuming func close() { print("Closing \(id)") }
-    /// }
-    ///
-    /// var handles = Array<Handle>.Inline<4>()
-    /// try handles.append(Handle(id: 1))
-    /// try handles.append(Handle(id: 2))
-    ///
-    /// handles.drain { handle in
-    ///     handle.close()  // Takes ownership, can consume
-    /// }
-    /// // handles is now empty
-    /// ```
     @inlinable
     public var drain: Property<Sequence.Drain, Self>.View.Typed<Element>.Valued<capacity> {
         mutating _read {
@@ -388,20 +249,13 @@ extension Array.Static where Element: ~Copyable {
 extension Property.View.Typed.Valued
 where Tag == Sequence.Drain, Base == Array<Element>.Static<n>, Element: ~Copyable {
     /// Drain iteration: `.drain { }`
-    ///
-    /// Removes all elements from the array, passing each to the closure
-    /// with ownership. After this call, the array is empty but usable.
-    /// Works for ALL element types including `~Copyable`.
-    ///
-    /// - Parameter body: A closure called with each element (consuming).
     @_lifetime(&self)
     @inlinable
     public mutating func callAsFunction(_ body: (consuming Element) -> Void) {
-        let count = unsafe base.pointee.count
+        let count = unsafe base.pointee._buffer.count
         guard count > .zero else { return }
-        (.zero..<count).forEach { i in
-            body(unsafe base.pointee.storage.move(at: i))
+        while !unsafe base.pointee._buffer.isEmpty {
+            body(unsafe base.pointee._buffer.consumeFront())
         }
-        unsafe base.pointee.count = .zero
     }
 }

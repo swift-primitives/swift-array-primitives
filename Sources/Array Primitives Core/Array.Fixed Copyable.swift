@@ -1,19 +1,13 @@
+// ===----------------------------------------------------------------------===//
 //
-//  File.swift
-//  swift-array-primitives
+// This source file is part of the swift-primitives open source project
 //
-//  Created by Coen ten Thije Boonkkamp on 24/01/2026.
+// Copyright (c) 2024-2026 Coen ten Thije Boonkkamp and the swift-primitives project authors
+// Licensed under Apache License v2.0
 //
+// See LICENSE for license information
+//
+// ===----------------------------------------------------------------------===//
 
-// MARK: - Copy-on-Write (Copyable elements only)
-
-extension Array.Fixed where Element: Copyable {
-    /// Ensures the storage is uniquely referenced before mutation.
-    @usableFromInline
-    package mutating func makeUnique() {
-        if !isKnownUniquelyReferenced(&storage) {
-            storage = storage.copy()
-            unsafe _cachedPtr = storage.pointer(at: .zero)
-        }
-    }
-}
+// Copy-on-Write is now handled internally by Buffer.Linear.Bounded.
+// No manual makeUnique() needed at the Array level.

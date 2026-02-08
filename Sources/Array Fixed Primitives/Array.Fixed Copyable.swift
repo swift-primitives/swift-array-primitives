@@ -14,10 +14,6 @@ public import Array_Primitives_Core
 public import Index_Primitives
 
 // MARK: - Swift.Sequence Conformance
-//
-// Bridge to Swift.Sequence for `for-in` loops and stdlib algorithms.
-// Requires explicit underestimatedCount to resolve ambiguity with
-// Sequence.Protocol+Swift.Sequence default implementation.
 
 extension Array.Fixed: Swift.Sequence where Element: Copyable {
     /// Returns the count as the underestimated count since we know the exact size.
@@ -26,8 +22,6 @@ extension Array.Fixed: Swift.Sequence where Element: Copyable {
 }
 
 // MARK: - Swift.Collection Conformance
-// Bridge to Swift standard library collections for interop with stdlib algorithms.
-// Requirements satisfied by Collection.Protocol conformance above.
 
 extension Array.Fixed: Swift.Collection where Element: Copyable {}
 extension Array.Fixed: Swift.BidirectionalCollection where Element: Copyable {}
@@ -42,11 +36,11 @@ extension Array.Fixed where Element: Copyable {
     public subscript(index: Index) -> Element {
         get {
             precondition(index < count, "Index out of bounds")
-            return _cachedPtr[index]
+            return _buffer[index]
         }
         set {
             precondition(index < count, "Index out of bounds")
-            _cachedPtr[index] = newValue
+            _buffer[index] = newValue
         }
     }
 }
@@ -55,26 +49,17 @@ extension Array.Fixed where Element: Copyable {
 
 extension Array.Fixed where Element: Copyable {
     /// Mutable span with copy-on-write semantics.
-    ///
-    /// This shadows the base `mutableSpan` when `Element: Copyable`,
-    /// ensuring the storage is unique before mutation.
     @inlinable
     public var mutableSpan: MutableSpan<Element> {
         @_lifetime(&self)
         mutating get {
-            makeUnique()
-            return unsafe MutableSpan(_unsafeStart: _cachedPtr.base, count: Int(bitPattern: count))
+            _buffer.mutableSpan
         }
     }
 }
 
 extension Array.Fixed where Element: Copyable {
     /// Returns element at index offset from given base index.
-    ///
-    /// - Parameters:
-    ///   - base: The starting index.
-    ///   - offset: The signed offset from the base.
-    /// - Returns: The element at the computed position, or `nil` if out of bounds.
     @inlinable
     public func element(
         at base: Index,
@@ -82,7 +67,7 @@ extension Array.Fixed where Element: Copyable {
     ) -> Element? {
         guard let newIndex = try? (base + offset) else { return nil }
         guard newIndex < count else { return nil }
-        return unsafe _cachedPtr[newIndex]
+        return _buffer[newIndex]
     }
 }
 
@@ -90,12 +75,9 @@ extension Array.Fixed where Element: Copyable {
 
 extension Array.Fixed where Element: Copyable {
     /// Returns the element at the typed index, or nil if out of bounds.
-    ///
-    /// - Parameter index: The typed index of the element to access.
-    /// - Returns: The element at the index, or `nil` if out of bounds.
     @inlinable
     public func element(at index: Index) -> Element? {
         guard index < count else { return nil }
-        return unsafe _cachedPtr[index]
+        return _buffer[index]
     }
 }

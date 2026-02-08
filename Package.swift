@@ -34,9 +34,13 @@ let package = Package(
         .package(path: "../swift-sequence-primitives"),
         .package(path: "../swift-range-primitives"),
         .package(path: "../swift-storage-primitives"),
+        .package(path: "../swift-buffer-primitives"),
+        .package(path: "../swift-algebra-modular-primitives"),
+        .package(path: "../swift-equation-primitives"),
+        .package(path: "../swift-hash-primitives"),
     ],
     targets: [
-        // Core types with ~Copyable support (Array, Fixed, Static, Small structs)
+        // Core types with ~Copyable support (Array, Fixed, Static, Small, Bounded structs)
         .target(
             name: "Array Primitives Core",
             dependencies: [
@@ -45,7 +49,7 @@ let package = Package(
                 .product(name: "Index Primitives", package: "swift-index-primitives"),
                 .product(name: "Property Primitives", package: "swift-property-primitives"),
                 .product(name: "Range Primitives", package: "swift-range-primitives"),
-                .product(name: "Storage Primitives", package: "swift-storage-primitives"),
+                .product(name: "Buffer Linear Primitives", package: "swift-buffer-primitives"),
             ]
         ),
         // Per-variant modules: Swift.Sequence/Collection conformances (Element: Copyable)
@@ -90,6 +94,17 @@ let package = Package(
                 .product(name: "Collection Primitives", package: "swift-collection-primitives"),
             ]
         ),
+        .target(
+            name: "Array Bounded Primitives",  // Compile-time dimensioned (Algebra.Z<N> indexing)
+            dependencies: [
+                "Array Primitives Core",
+                .product(name: "Collection Primitives", package: "swift-collection-primitives"),
+                .product(name: "Range Primitives", package: "swift-range-primitives"),
+                .product(name: "Algebra Modular Primitives", package: "swift-algebra-modular-primitives"),
+                .product(name: "Equation Primitives", package: "swift-equation-primitives"),
+                .product(name: "Hash Primitives", package: "swift-hash-primitives"),
+            ]
+        ),
         // Public: Re-exports Core and all variant modules
         .target(
             name: "Array Primitives",
@@ -100,6 +115,7 @@ let package = Package(
                 "Array Static Primitives",
                 "Array Small Primitives",
                 "Array Bit Primitives",
+                "Array Bounded Primitives",
             ]
         ),
         .testTarget(

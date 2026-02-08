@@ -28,11 +28,11 @@ extension Array.Static where Element: Copyable {
     public subscript(index: Index) -> Element {
         get {
             precondition(index < count, "Index out of bounds")
-            return storage.withElement(at: index) { $0 }
+            return _buffer[index]
         }
         set {
             precondition(index < count, "Index out of bounds")
-            storage.pointer(at: index).pointee = newValue
+            _buffer[index] = newValue
         }
     }
 }
@@ -43,23 +43,15 @@ extension Array.Static where Element: Copyable {
 
 extension Array.Static where Element: Copyable {
     /// Returns the element at the typed index, or nil if out of bounds.
-    ///
-    /// - Parameter index: The typed index of the element to access.
-    /// - Returns: The element at the index, or `nil` if out of bounds.
     @inlinable
     public func element(at index: Index) -> Element? {
         guard index < count else { return nil }
-        return storage.withElement(at: index) { $0 }
+        return _buffer[index]
     }
 }
 
 extension Array.Static where Element: Copyable {
     /// Returns element at index offset from given base index.
-    ///
-    /// - Parameters:
-    ///   - base: The starting index.
-    ///   - offset: The signed offset from the base.
-    /// - Returns: The element at the computed position, or `nil` if out of bounds.
     @inlinable
     public func element(
         at base: Index,
@@ -67,7 +59,7 @@ extension Array.Static where Element: Copyable {
     ) -> Element? {
         guard let newIndex = try? (base + offset) else { return nil }
         guard newIndex < count else { return nil }
-        return storage.withElement(at: newIndex) { $0 }
+        return _buffer[newIndex]
     }
 }
 
@@ -78,17 +70,15 @@ extension Array.Static where Element: Copyable {
 extension Property.View.Typed.Valued
 where Tag == Sequence.ForEach, Base == Array<Element>.Static<n>, Element: Copyable {
     /// Consuming iteration: `.forEach.consuming { }`
-    ///
-    /// Iterates over all elements and then clears the array.
-    /// Only available for `Copyable` elements.
-    ///
-    /// - Parameter body: A closure called with each element.
     @_lifetime(&self)
     @inlinable
     public mutating func consuming(_ body: (Element) -> Void) {
-        let count = unsafe base.pointee.count
-        unsafe base.pointee.storage.forEach(count: count) { body($0) }
-        unsafe base.pointee.storage.deinitialize(count: count)
-        unsafe base.pointee.count = .zero
+        let count = unsafe base.pointee._buffer.count
+        guard count > .zero else { return }
+        for i in 0..<Int(bitPattern: count) {
+            let slot = Index_Primitives.Index<Element>(Ordinal(UInt(i)))
+            body(unsafe base.pointee._buffer[slot])
+        }
+        unsafe base.pointee._buffer.removeAll()
     }
 }

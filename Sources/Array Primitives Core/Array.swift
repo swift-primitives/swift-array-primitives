@@ -10,8 +10,7 @@
 // ===----------------------------------------------------------------------===//
 
 public import Index_Primitives
-public import Storage_Primitives
-import Standard_Library_Extensions
+public import Buffer_Linear_Primitives
 
 // MARK: - Array (Growable, Heap-Allocated)
 
@@ -44,44 +43,28 @@ import Standard_Library_Extensions
 /// - ``Array/Fixed``: Fixed-count, all elements initialized at creation
 /// - ``Array/Static``: Fixed-capacity inline storage (stack-allocated, variable count)
 /// - ``Array/Small``: Inline storage with automatic spill to heap (SmallVec pattern)
+/// - ``Array/Bounded``: Compile-time dimensioned with `Algebra.Z<N>` indexing
 /// - ``Array/Inline``: Typealias to `Swift.InlineArray` (all N elements always initialized)
 @safe
 public struct Array<Element: ~Copyable>: ~Copyable {
 
-    // MARK: - Unified Storage
+    // MARK: - Buffer Storage
 
-    /// Unified heap storage for array variants.
+    /// Internal growable linear buffer.
     ///
-    /// Typealias to `Storage_Primitives.Storage<Element>`. Uses the canonical
-    /// storage implementation from storage-primitives.
-    ///
-    /// Used by: `Array`, `Array.Fixed`, `Array.Small` (heap mode).
+    /// Delegates growth, CoW, element lifecycle, and span access
+    /// to `Buffer<Element>.Linear` from buffer-primitives.
     @usableFromInline
-    package typealias Storage = Storage_Primitives.Storage<Element>
-
-    // MARK: - Storage
-
-    @usableFromInline
-    package var storage: Storage
-
-    // Cached pointer to element storage for single-dereference subscript access.
-    // If this lived in Storage (ManagedBuffer), every subscript would require:
-    //   1. Dereference storage (class reference)
-    //   2. Call withUnsafeMutablePointerToElements to get pointer
-    //   3. Access element
-    // By caching the pointer in the struct, subscript is a single pointer dereference.
-    // CRITICAL: Must be updated whenever storage is replaced (reallocation, CoW copy).
-    @usableFromInline
-    package var _cachedPtr: Pointer<Element>.Mutable
+    package var _buffer: Buffer<Element>.Linear
 
     // MARK: - Initialization
+
     /// Creates an empty array with initial capacity hint.
     ///
     /// - Parameter initialCapacity: The initial capacity to allocate.
     @inlinable
     public init(initialCapacity: Array.Index.Count = .zero) {
-        self.storage = Storage.create(minimumCapacity: initialCapacity)
-        unsafe (self._cachedPtr = storage.pointer(at: .zero))
+        self._buffer = Buffer<Element>.Linear(minimumCapacity: initialCapacity)
     }
 
     // MARK: - Fixed (Fixed-Count, Heap-Allocated)
@@ -116,18 +99,11 @@ public struct Array<Element: ~Copyable>: ~Copyable {
     /// copies share storage until mutation.
     @safe
     public struct Fixed {
+        /// Internal bounded linear buffer.
         @usableFromInline
-        var storage: Storage
+        package var _buffer: Buffer<Element>.Linear.Bounded
 
-        /// The number of elements in the array.
-        public let count: Index.Count
-
-        /// Cached pointer for Span access.
-        @usableFromInline
-        package var _cachedPtr: Pointer<Element>.Mutable
-
-
-        // Note: No deinit needed - Storage handles cleanup
+        // Note: No deinit needed - Buffer/Storage handles cleanup
     }
 
     // MARK: - Static (Fixed-Capacity, Inline Storage)
@@ -153,35 +129,58 @@ public struct Array<Element: ~Copyable>: ~Copyable {
     ///   Swift compiler bug where nested types with value generic parameters declared
     ///   in extensions do not properly inherit `~Copyable` constraints from the outer type.
     public struct Static<let capacity: Int>: ~Copyable {
-        /// Inline storage for elements.
-        ///
-        /// Uses `Storage<Element>.Static` from storage-primitives for consistency
-        /// with `Array.Small`. This provides a uniform API: `pointer(at:)`,
-        /// `mutablePointer(at:)`, `move(at:)`, `initialize(to:at:)`, `deinitialize(count:)`.
+        /// Internal inline linear buffer.
         @usableFromInline
-        package var storage: Storage_Primitives.Storage<Element>.Static<capacity>
-
-        /// Current element count.
-        @usableFromInline
-        package var count: Index.Count
-
-        /// Workaround for Swift compiler bug where deinit element cleanup
-        /// fails for ~Copyable structs that contain only value-type properties.
-        /// Adding a reference type property (`AnyObject?`) fixes the bug.
-        /// See: https://github.com/swiftlang/swift/issues/86652
-        @usableFromInline
-        var _deinitWorkaround: AnyObject? = nil
+        package var _buffer: Buffer<Element>.Linear.Inline<capacity>
 
         /// Creates an empty inline array.
         @inlinable
         public init() {
-            self.storage = try! Storage_Primitives.Storage<Element>.Static<capacity>()
-            self.count = .zero
+            self._buffer = Buffer<Element>.Linear.Inline<capacity>()
         }
 
-        deinit {
-            guard count > .zero else { return }
-            storage.deinitialize(count: count)
+        // No explicit deinit needed: Buffer.Linear.Inline contains Storage.Inline,
+        // whose deinit auto-cleans up all initialized elements via _slots bit tracking.
+    }
+
+    // MARK: - Bounded (Compile-Time Dimensioned, Heap-Allocated)
+
+    /// A fixed-size array with compile-time dimension and `Algebra.Z<N>` indexing.
+    ///
+    /// `Array.Bounded<N>` provides compile-time dimension safety: the index type
+    /// `Algebra.Z<N>` ensures indices are always within `[0, N)`. Once an index
+    /// is constructed (with a bounds check), subscript access is guaranteed safe.
+    ///
+    /// ## Compile-Time Dimension Safety
+    ///
+    /// ```swift
+    /// let arr = Array<Int>.Bounded<3>([1, 2, 3])
+    /// let idx: Array<Int>.Bounded<3>.Index = try! .init(0)  // Bounds-checked
+    /// print(arr[idx])  // Safe — no runtime check needed
+    /// ```
+    ///
+    /// ## Type-Level Index Separation
+    ///
+    /// Indices from different bounded arrays are distinct types:
+    /// `Array<Int>.Bounded<3>.Index` ≠ `Array<Int>.Bounded<5>.Index`.
+    ///
+    /// ## Copy-on-Write
+    ///
+    /// When `Element` is `Copyable`, uses copy-on-write heap storage.
+    ///
+    /// - Note: This type is declared inside `Array` (not in an extension) due to a
+    ///   Swift compiler bug where nested types with value generic parameters declared
+    ///   in extensions do not properly inherit `~Copyable` constraints from the outer type.
+    @safe
+    public struct Bounded<let N: Int>: ~Copyable {
+        /// Internal bounded linear buffer.
+        @usableFromInline
+        package var _buffer: Buffer<Element>.Linear.Bounded
+
+        /// Internal initializer for use by extension modules.
+        @usableFromInline
+        package init(_buffer: consuming Buffer<Element>.Linear.Bounded) {
+            self._buffer = _buffer
         }
     }
 
@@ -198,6 +197,7 @@ public struct Array<Element: ~Copyable>: ~Copyable {
     /// |------|-------|---------|------|
     /// | `Array.Inline<N>` | Fixed (always N) | Inline | No |
     /// | `Array.Static<N>` | Variable (0..N) | Inline | No |
+    /// | `Array.Bounded<N>` | Fixed (always N) | Heap (CoW) | Yes |
     public typealias Inline<let N: Int> = Swift.InlineArray<N, Element>
 }
 
@@ -215,10 +215,11 @@ extension Array.Fixed: Copyable where Element: Copyable {}
 extension Array: Copyable where Element: Copyable {}
 extension Array: @unchecked Sendable where Element: Sendable {}
 
+/// `Array.Bounded` is `Copyable` when its elements are `Copyable`.
+extension Array.Bounded: Copyable where Element: Copyable {}
+
 // MARK: - Sendable
 
 extension Array.Fixed: @unchecked Sendable where Element: Sendable {}
 extension Array.Static: @unchecked Sendable where Element: Sendable {}
-
-
-
+extension Array.Bounded: @unchecked Sendable where Element: Sendable {}

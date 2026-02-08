@@ -21,13 +21,10 @@ public import Sequence_Primitives
 // ============================================================================
 
 // MARK: - Collection.Protocol Conformance
-// Note: Index, startIndex, endIndex, index(after:) defined in Collection.Indexed conformance
 
 extension Array.Fixed: Collection.`Protocol` {}
 
 // MARK: - Collection.Access.Random Conformance
-// Note: Collection.Bidirectional conformance is provided below
-// for ALL element types (including ~Copyable) via `where Element: ~Copyable`.
 
 extension Array.Fixed: Collection.Access.Random {}
 
@@ -72,7 +69,7 @@ extension Array.Fixed {
     @safe
     public struct Iterator: IteratorProtocol {
         @usableFromInline
-        let base: Pointer<Element>
+        let base: UnsafePointer<Element>
 
         @usableFromInline
         let end: Index.Count
@@ -81,7 +78,7 @@ extension Array.Fixed {
         var index: Index
 
         @usableFromInline @unsafe
-        init(base: Pointer<Element>, count: Index.Count) {
+        init(base: UnsafePointer<Element>, count: Index.Count) {
             unsafe self.base = base
             self.end = count
             self.index = .zero
@@ -90,7 +87,7 @@ extension Array.Fixed {
         @inlinable
         public mutating func next() -> Element? {
             guard index < end else { return nil }
-            let result = unsafe base[index]
+            let result = unsafe base[Int(bitPattern: index)]
             index = index + Index.Count.one
             return result
         }
@@ -103,16 +100,14 @@ extension Array.Fixed.Iterator: @unchecked Sendable where Element: Sendable {}
 
 extension Array.Fixed: Sequence.`Protocol` {
     /// Returns a pointer-based iterator over the array elements.
-    ///
-    /// Zero-copy iteration - no allocation, no element copying.
-    /// Uses typed `Index<Element>` for position tracking.
     @inlinable
     public borrowing func makeIterator() -> Array.Fixed.Iterator {
+        let count = _buffer.count
         guard count > .zero else {
-            // Empty array - pointer is irrelevant, count is zero
-            return unsafe Iterator(base: Pointer(UnsafePointer<Element>(bitPattern: 1)!), count: .zero)
+            return unsafe Iterator(base: UnsafePointer<Element>(bitPattern: 1)!, count: .zero)
         }
-        return unsafe Iterator(base: _cachedPtr.immutable, count: count)
+        let span = _buffer.span
+        return unsafe Iterator(base: span.unsafeBaseAddress!, count: count)
     }
 }
 
@@ -122,26 +117,6 @@ extension Array.Fixed: Sequence.`Protocol` {
 
 extension Array.Fixed where Element: ~Copyable {
     /// Property view for iteration operations.
-    ///
-    /// Provides iteration patterns for ALL element types including `~Copyable`:
-    /// - `.forEach { }` — Borrowing iteration via `callAsFunction`
-    /// - `.forEach.borrowing { }` — Explicit borrowing iteration
-    ///
-    /// ## Note
-    ///
-    /// `Array.Fixed` has a fixed count (immutable), so `.forEach.consuming { }` and
-    /// `.drain { }` are not available. Use `Array` or `Array.Small` for
-    /// mutable-count arrays.
-    ///
-    /// ## Example
-    ///
-    /// ```swift
-    /// let array = Array<Int>.Bounded(capacity: 8)
-    /// // ... initialize with elements ...
-    ///
-    /// // Borrowing iteration (works for ALL elements)
-    /// array.forEach { print($0) }
-    /// ```
     @inlinable
     public var forEach: Property<Sequence.ForEach, Self>.View.Typed<Element> {
         mutating _read {
@@ -159,25 +134,17 @@ extension Array.Fixed where Element: ~Copyable {
 extension Property.View.Typed
 where Tag == Sequence.ForEach, Base == Array<Element>.Fixed, Element: ~Copyable {
     /// Borrowing iteration: `.forEach { }`
-    ///
-    /// Iterates over all elements without consuming them.
-    /// Works for ALL element types including `~Copyable`.
-    ///
-    /// - Parameter body: A closure called with each borrowed element.
     @inlinable
     public func callAsFunction(_ body: (borrowing Element) -> Void) {
-        let count = unsafe base.pointee.count
-        (.zero..<count).forEach { i in
-            unsafe body(base.pointee._cachedPtr[i])
+        let count = unsafe base.pointee._buffer.count
+        guard count > .zero else { return }
+        for i in 0..<Int(bitPattern: count) {
+            let slot = Index_Primitives.Index<Element>(Ordinal(UInt(i)))
+            body(unsafe base.pointee._buffer[slot])
         }
     }
 
     /// Explicit borrowing iteration: `.forEach.borrowing { }`
-    ///
-    /// Same as `callAsFunction`, but with explicit naming for clarity.
-    /// Works for ALL element types including `~Copyable`.
-    ///
-    /// - Parameter body: A closure called with each borrowed element.
     @inlinable
     public func borrowing(_ body: (borrowing Element) -> Void) {
         callAsFunction(body)
@@ -207,11 +174,11 @@ extension Array.Fixed where Element: ~Copyable {
     public subscript(index: Index) -> Element {
         _read {
             precondition(index < count, "Index out of bounds")
-            yield unsafe _cachedPtr[index]
+            yield _buffer[index]
         }
         _modify {
             precondition(index < count, "Index out of bounds")
-            yield &(unsafe _cachedPtr[index])
+            yield &_buffer[index]
         }
     }
 }
@@ -222,19 +189,10 @@ extension Array.Fixed where Element: ~Copyable {
 
 extension Array.Fixed where Element: ~Copyable {
     /// Accesses the element at the given index via closure (for ~Copyable elements).
-    ///
-    /// This method provides borrowed access to elements, enabling safe read access
-    /// to move-only types without consuming them.
-    ///
-    /// - Parameters:
-    ///   - index: The index of the element.
-    ///   - body: A closure that receives a borrowed reference to the element.
-    /// - Returns: The result of the closure.
-    /// - Precondition: The index must be in bounds.
     @inlinable
     public func withElement<R>(at index: Index, _ body: (borrowing Element) -> R) -> R {
         precondition(index < count, "Index out of bounds")
-        return unsafe body(_cachedPtr[index])
+        return body(_buffer[index])
     }
 }
 
@@ -245,27 +203,23 @@ extension Array.Fixed where Element: ~Copyable {
 @_spi(Unsafe)
 extension Array.Fixed where Element: ~Copyable {
     /// Provides read-only access to the underlying contiguous storage.
-    ///
-    /// - Warning: This is an escape hatch for C interop. Prefer `span` for safe access.
-    /// - Warning: The pointer must not escape the closure scope.
     @unsafe
     @inlinable
     public func withUnsafeBufferPointer<R, E: Swift.Error>(
         _ body: (UnsafeBufferPointer<Element>) throws(E) -> R
     ) throws(E) -> R {
-        try unsafe body(UnsafeBufferPointer(start: count > .zero ? _cachedPtr.base : nil, count: Int(bitPattern: count)))
+        try _buffer.withUnsafeBufferPointer(body)
     }
 
     /// Provides mutable access to the underlying contiguous storage.
-    ///
-    /// - Warning: This is an escape hatch for C interop. Prefer `mutableSpan` for safe access.
-    /// - Warning: The pointer must not escape the closure scope.
     @unsafe
     @inlinable
     public mutating func withUnsafeMutableBufferPointer<R, E: Swift.Error>(
         _ body: (UnsafeMutableBufferPointer<Element>) throws(E) -> R
     ) throws(E) -> R {
-        try unsafe body(UnsafeMutableBufferPointer(start: count > .zero ? _cachedPtr.base : nil, count: Int(bitPattern: count)))
+        let count = Int(bitPattern: _buffer.count)
+        let ptr = count > 0 ? unsafe UnsafeMutablePointer(mutating: _buffer.span.unsafeBaseAddress!) : nil
+        return try unsafe body(UnsafeMutableBufferPointer(start: ptr, count: count))
     }
 }
 
@@ -275,36 +229,20 @@ extension Array.Fixed where Element: ~Copyable {
 
 extension Array.Fixed where Element: ~Copyable {
     /// Read-only span of the array elements.
-    ///
-    /// ## Lifetime Contract
-    ///
-    /// - The span is valid ONLY for the duration of the borrow of `self`.
-    /// - The span MUST NOT be stored, returned, or allowed to escape.
-    /// - The returned span is lifetime-dependent; the compiler is expected to diagnose escapes.
-    /// - Violating this contract is undefined behavior.
     @inlinable
     public var span: Swift.Span<Element> {
         @_lifetime(borrow self)
         borrowing get {
-            unsafe Swift.Span(_unsafeStart: _cachedPtr.base, count: Int(bitPattern: count))
+            _buffer.span
         }
     }
 
     /// Mutable span of the array elements.
-    ///
-    /// ## Lifetime Contract
-    ///
-    /// - The span is valid ONLY for the duration of the exclusive mutable borrow.
-    /// - The span MUST NOT be stored, returned, or allowed to escape.
-    /// - The returned span is lifetime-dependent; the compiler is expected to diagnose escapes.
-    /// - No concurrent mutable borrows are permitted.
-    /// - No mutable + immutable borrow overlap is permitted.
-    /// - Violating this contract is undefined behavior.
     @inlinable
     public var mutableSpan: MutableSpan<Element> {
         @_lifetime(&self)
         mutating get {
-            unsafe MutableSpan(_unsafeStart: _cachedPtr.base, count: Int(bitPattern: count))
+            _buffer.mutableSpan
         }
     }
 }
