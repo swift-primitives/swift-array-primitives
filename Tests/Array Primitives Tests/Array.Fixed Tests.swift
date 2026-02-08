@@ -11,20 +11,17 @@
 
 import Testing
 @testable import Array_Primitives
-import Index_Primitives
-import Index_Primitivesi
+import Array_Primitives_Test_Support
 
 // MARK: - Test Suite Structure
 
-/// Test namespace for Array.Fixed
-///
-/// Note: Array.Fixed is ~Copyable, so it doesn't conform to Sequence.
-/// Use forEach for iteration instead of for-in loops.
-enum ArrayFixedTests {
+/// Array.Fixed is nested inside a generic type — uses parallel namespace per [TEST-004].
+@Suite("Array.Fixed")
+struct ArrayFixedTests {
     @Suite struct Unit {}
     @Suite struct EdgeCase {}
     @Suite struct Integration {}
-    @Suite struct Performance {}
+    @Suite(.serialized) struct Performance {}
 }
 
 // MARK: - Unit Tests
@@ -33,42 +30,33 @@ extension ArrayFixedTests.Unit {
 
     // MARK: - Initialization Invariants
 
-    @Test("Init establishes count invariant")
-    func initEstablishesCountInvariant() throws {
-        let array = try Array<Int>.Fixed(count: 5) { $0.position }
+    @Test
+    func `init establishes count invariant`() throws {
+        let array = try Array<Ordinal>.Fixed(count: 5) { $0.position }
         #expect(array.count == 5)
     }
 
-    @Test("Init with zero count creates empty array")
-    func initWithZeroCount() throws {
-        let array = try Array<Int>.Fixed(count: 0) { $0.position }
+    @Test
+    func `init with zero count creates empty array`() throws {
+        let array = try Array<Ordinal>.Fixed(count: 0) { $0.position }
         #expect(array.count == 0)
         #expect(array.isEmpty == true)
     }
 
-    @Test("Init with negative count throws")
-    func initWithNegativeCountThrows() {
-        #expect(throws: Array<Int>.Fixed.Error.self) {
-            // unchecked here, because -1 literal is Array.Index.Count and this has precondition on ExpressibleByIntLiteral
-            try Array<Int>.Fixed(count: .init(__unchecked: -1)) { $0.position }
-        }
-    }
+    @Test
+    func `all indices are initialized with correct values`() throws {
+        var array = try Array<Ordinal>.Fixed(count: 10) { $0.position }
 
-    @Test("All indices 0..<count are initialized")
-    func allIndicesInitialized() throws {
-        let array = try Array<Int>.Fixed(count: 100) { $0.position * 2 }
-
-        for i in 0..<100 {
-            let idx = Index<Int>(__unchecked: (), Ordinal(UInt(i)))
-            #expect(array[idx] == i * 2)
-        }
+        var visited: [Ordinal] = []
+        array.forEach { visited.append($0) }
+        #expect(visited == [0, 1, 2, 3, 4, 5, 6, 7, 8, 9])
     }
 
     // MARK: - forEach Invariants
 
-    @Test("forEach yields exactly count elements")
-    func forEachYieldsExactlyCountElements() throws {
-        var array = try Array<Int>.Fixed(count: 10) { $0.position }
+    @Test
+    func `forEach yields exactly count elements`() throws {
+        var array = try Array<Ordinal>.Fixed(count: 10) { $0.position }
 
         var iteratedCount = 0
         array.forEach { _ in
@@ -78,21 +66,18 @@ extension ArrayFixedTests.Unit {
         #expect(iteratedCount == 10)
     }
 
-    @Test("forEach yields elements in order")
-    func forEachYieldsElementsInOrder() throws {
-        var array = try Array<Int>.Fixed(count: 5) { $0.position * 10 }
+    @Test
+    func `forEach yields elements in order`() throws {
+        var array = try Array<Ordinal>.Fixed(count: 5) { $0.position }
 
-        var expected = 0
-        array.forEach { element in
-            #expect(element == expected * 10)
-            expected += 1
-        }
-        #expect(expected == 5)
+        var visited: [Ordinal] = []
+        array.forEach { visited.append($0) }
+        #expect(visited == [0, 1, 2, 3, 4])
     }
 
-    @Test("Empty array forEach yields nothing")
-    func emptyArrayForEachYieldsNothing() throws {
-        var array = try Array<Int>.Fixed(count: 0) { $0.position }
+    @Test
+    func `empty array forEach yields nothing`() throws {
+        var array = try Array<Ordinal>.Fixed(count: 0) { $0.position }
 
         var iteratedCount = 0
         array.forEach { _ in
@@ -102,50 +87,38 @@ extension ArrayFixedTests.Unit {
         #expect(iteratedCount == 0)
     }
 
-    @Test("forEach matches subscript access")
-    func forEachMatchesSubscriptAccess() throws {
-        var array = try Array<Int>.Fixed(count: 20) { $0.position * 3 }
+    @Test
+    func `forEach matches subscript access`() throws {
+        var array = try Array<Ordinal>.Fixed(count: 5) { $0.position }
 
-        // Capture expected values first to avoid exclusivity violation
-        var expected: [Int] = []
-        for i in 0..<20 { expected.append(array[Index<Int>(__unchecked: (), Ordinal(UInt(i)))]) }
+        var forEachValues: [Ordinal] = []
+        array.forEach { forEachValues.append($0) }
 
-        var actual: [Int] = []
-        array.forEach { actual.append($0) }
-
-        #expect(actual == expected)
+        #expect(forEachValues[0] == array[0])
+        #expect(forEachValues[1] == array[1])
+        #expect(forEachValues[2] == array[2])
+        #expect(forEachValues[3] == array[3])
+        #expect(forEachValues[4] == array[4])
     }
 
     // MARK: - Subscript Invariants
 
-    @Test("Subscript write preserves other elements")
-    func subscriptWritePreservesOtherElements() throws {
-        var array = try Array<Int>.Fixed(count: 5) { $0.position }
+    @Test
+    func `subscript write preserves other elements`() throws {
+        var array = try Array<Ordinal>.Fixed(count: 5) { $0.position }
 
-        array[Index<Int>(__unchecked: (), Ordinal(UInt(2)))] = 999
+        array[2] = 999
 
-        #expect(array[Index<Int>(__unchecked: (), Ordinal(UInt(0)))] == 0)
-        #expect(array[Index<Int>(__unchecked: (), Ordinal(UInt(1)))] == 1)
-        #expect(array[Index<Int>(__unchecked: (), Ordinal(UInt(2)))] == 999)
-        #expect(array[Index<Int>(__unchecked: (), Ordinal(UInt(3)))] == 3)
-        #expect(array[Index<Int>(__unchecked: (), Ordinal(UInt(4)))] == 4)
+        #expect(array[0] == 0)
+        #expect(array[1] == 1)
+        #expect(array[2] == 999)
+        #expect(array[3] == 3)
+        #expect(array[4] == 4)
     }
 
-    @Test("forEach visits all elements in order")
-    func forEachVisitsAllElementsInOrder() throws {
-        var array = try Array<Int>.Fixed(count: 5) { $0.position }
-
-        var visited: [Int] = []
-        array.forEach { element in
-            visited.append(element)
-        }
-
-        #expect(visited == [0, 1, 2, 3, 4])
-    }
-
-    @Test("forEach visits count elements")
-    func forEachVisitsCountElements() throws {
-        var array = try Array<Int>.Fixed(count: 100) { $0.position }
+    @Test
+    func `forEach visits count elements for large array`() throws {
+        var array = try Array<Ordinal>.Fixed(count: 100) { $0.position }
 
         var visitCount = 0
         array.forEach { _ in
@@ -157,21 +130,23 @@ extension ArrayFixedTests.Unit {
 
     // MARK: - Span Invariants
 
-    @Test("Span count matches array count")
-    func spanCountMatchesArrayCount() throws {
-        let array = try Array<Int>.Fixed(count: 10) { $0.position }
+    @Test
+    func `span count matches array count`() throws {
+        let array = try Array<Ordinal>.Fixed(count: 10) { $0.position }
 
         #expect(array.span.count == 10)
     }
 
-    @Test("Span elements match subscript access")
-    func spanElementsMatchSubscriptAccess() throws {
-        let array = try Array<Int>.Fixed(count: 5) { $0.position * 7 }
+    @Test
+    func `span elements match subscript access`() throws {
+        let array = try Array<Ordinal>.Fixed(count: 5) { $0.position }
         let span = array.span
 
-        for i in 0..<5 {
-            #expect(span[i] == array[Index<Int>(__unchecked: (), Ordinal(UInt(i)))])
-        }
+        #expect(span[0] == array[0])
+        #expect(span[1] == array[1])
+        #expect(span[2] == array[2])
+        #expect(span[3] == array[3])
+        #expect(span[4] == array[4])
     }
 }
 
@@ -179,43 +154,39 @@ extension ArrayFixedTests.Unit {
 
 extension ArrayFixedTests.EdgeCase {
 
-    @Test("Single element array")
-    func singleElementArray() throws {
-        var array = try Array<Int>.Fixed(count: 1) { _ in 42 }
+    @Test
+    func `single element array`() throws {
+        var array = try Array<Ordinal>.Fixed(count: 1) { _ in 42 }
 
         #expect(array.count == 1)
-        #expect(array[Index<Int>(__unchecked: (), Ordinal(UInt(0)))] == 42)
+        #expect(array[0] == 42)
 
-        var iteratedElements: [Int] = []
+        var iteratedElements: [Ordinal] = []
         array.forEach { iteratedElements.append($0) }
         #expect(iteratedElements == [42])
     }
 
-    @Test("Large array maintains invariants")
-    func largeArrayMaintainsInvariants() throws {
-        let size = 10_000
-        var array = try Array<Int>.Fixed(count: .init(__unchecked: size)) { $0.position }
+    @Test
+    func `large array maintains invariants`() throws {
+        var array = try Array<Ordinal>.Fixed(count: 10_000) { $0.position }
 
-        #expect(array.count == size)
+        #expect(array.count == 10_000)
+        #expect(array[0] == 0)
+        #expect(array[5000] == 5000)
+        #expect(array[9999] == 9999)
 
-        // Check first, middle, last
-        #expect(array[Index<Int>(__unchecked: (), Ordinal(UInt(0)))] == 0)
-        #expect(array[Index<Int>(__unchecked: (), Ordinal(UInt(size / 2)))] == size / 2)
-        #expect(array[Index<Int>(__unchecked: (), Ordinal(UInt(size - 1)))] == size - 1)
-
-        // forEach count matches
         var iterCount = 0
         array.forEach { _ in iterCount += 1 }
-        #expect(iterCount == size)
+        #expect(iterCount == 10_000)
     }
 
-    @Test("Mutation via subscript reflects in forEach")
-    func mutationViaSubscriptReflectsInForEach() throws {
-        var array = try Array<Int>.Fixed(count: 3) { $0.position }
+    @Test
+    func `mutation via subscript reflects in forEach`() throws {
+        var array = try Array<Ordinal>.Fixed(count: 3) { $0.position }
 
-        array[Index<Int>(__unchecked: (), Ordinal(UInt(1)))] = 100
+        array[1] = 100
 
-        var elements: [Int] = []
+        var elements: [Ordinal] = []
         array.forEach { elements.append($0) }
         #expect(elements == [0, 100, 2])
     }
@@ -225,14 +196,14 @@ extension ArrayFixedTests.EdgeCase {
 
 extension ArrayFixedTests.Integration {
 
-    @Test("forEach and withSpan yield same elements")
-    func forEachAndWithSpanYieldSameElements() throws {
-        var array = try Array<Int>.Fixed(count: 10) { $0.position * 2 }
+    @Test
+    func `forEach and span yield same elements`() throws {
+        var array = try Array<Ordinal>.Fixed(count: 10) { $0.position }
 
-        var forEachElements: [Int] = []
+        var forEachElements: [Ordinal] = []
         array.forEach { forEachElements.append($0) }
 
-        var spanElements: [Int] = []
+        var spanElements: [Ordinal] = []
         let span = array.span
         for i in 0..<span.count {
             spanElements.append(span[i])

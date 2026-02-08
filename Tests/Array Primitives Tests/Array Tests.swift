@@ -11,7 +11,7 @@
 
 import Testing
 @testable import Array_Primitives
-import Index_Primitives
+import Array_Primitives_Test_Support
 
 // MARK: - Test Suite Structure
 
@@ -161,18 +161,18 @@ extension ArrayTests.Unit {
 
         // Mutate the copy
         copy.append(4)
-        copy[Index<Int>(__unchecked: (), Ordinal(UInt(0)))] = 100
+        copy[0] = 100
 
         // Original should be unchanged
         #expect(original.count == 3)
-        #expect(original[Index<Int>(__unchecked: (), Ordinal(UInt(0)))] == 1)
-        #expect(original[Index<Int>(__unchecked: (), Ordinal(UInt(1)))] == 2)
-        #expect(original[Index<Int>(__unchecked: (), Ordinal(UInt(2)))] == 3)
+        #expect(original[0] == 1)
+        #expect(original[1] == 2)
+        #expect(original[2] == 3)
 
         // Copy should have the mutations
         #expect(copy.count == 4)
-        #expect(copy[Index<Int>(__unchecked: (), Ordinal(UInt(0)))] == 100)
-        #expect(copy[Index<Int>(__unchecked: (), Ordinal(UInt(3)))] == 4)
+        #expect(copy[0] == 100)
+        #expect(copy[3] == 4)
     }
 
     @Test("CoW: Mutation of original does not affect copy")
@@ -186,13 +186,13 @@ extension ArrayTests.Unit {
 
         // Mutate the original
         original.append(4)
-        original[Index<Int>(__unchecked: (), Ordinal(UInt(0)))] = 100
+        original[0] = 100
 
         // Copy should be unchanged
         #expect(copy.count == 3)
-        #expect(copy[Index<Int>(__unchecked: (), Ordinal(UInt(0)))] == 1)
-        #expect(copy[Index<Int>(__unchecked: (), Ordinal(UInt(1)))] == 2)
-        #expect(copy[Index<Int>(__unchecked: (), Ordinal(UInt(2)))] == 3)
+        #expect(copy[0] == 1)
+        #expect(copy[1] == 2)
+        #expect(copy[2] == 3)
     }
 
     @Test("CoW: Multiple copies are independent")
@@ -208,9 +208,9 @@ extension ArrayTests.Unit {
         copy2.append(200)
         original.append(300)
 
-        #expect(original[Index<Int>(__unchecked: (), Ordinal(UInt(2)))] == 300)
-        #expect(copy1[Index<Int>(__unchecked: (), Ordinal(UInt(2)))] == 100)
-        #expect(copy2[Index<Int>(__unchecked: (), Ordinal(UInt(2)))] == 200)
+        #expect(original[2] == 300)
+        #expect(copy1[2] == 100)
+        #expect(copy2[2] == 200)
     }
 
     // MARK: - Capacity Invariants
@@ -289,7 +289,7 @@ extension ArrayTests.EdgeCase {
 
         array.append(42)
         #expect(array.count == 1)
-        #expect(array[Index<Int>(__unchecked: (), Ordinal(UInt(0)))] == 42)
+        #expect(array[0] == 42)
 
         var elements: [Int] = []
         array.forEach { elements.append($0) }
@@ -352,8 +352,8 @@ extension ArrayTests.EdgeCase {
         array.append(200)
 
         #expect(array.count == 2)
-        #expect(array[Index<Int>(__unchecked: (), Ordinal(UInt(0)))] == 100)
-        #expect(array[Index<Int>(__unchecked: (), Ordinal(UInt(1)))] == 200)
+        #expect(array[0] == 100)
+        #expect(array[1] == 200)
     }
 }
 

@@ -121,9 +121,20 @@ let package = Package(
                 "Array Bounded Primitives",
             ]
         ),
+        .target(
+            name: "Array Primitives Test Support",
+            dependencies: [
+                "Array Primitives",
+                .product(name: "Buffer Primitives Test Support", package: "swift-buffer-primitives"),
+            ],
+            path: "Tests/Support"
+        ),
         .testTarget(
             name: "Array Primitives Tests",
-            dependencies: ["Array Primitives"]
+            dependencies: [
+                "Array Primitives",
+                "Array Primitives Test Support",
+            ]
         )
     ],
     swiftLanguageModes: [.v6]
