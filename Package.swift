@@ -24,6 +24,18 @@ let package = Package(
             name: "Array Small Primitives",
             targets: ["Array Small Primitives"]
         ),
+        .library(
+            name: "Array Static Primitives",
+            targets: ["Array Static Primitives"]
+        ),
+        .library(
+            name: "Array Fixed Primitives",
+            targets: ["Array Fixed Primitives"]
+        ),
+        .library(
+            name: "Array Dynamic Primitives",
+            targets: ["Array Dynamic Primitives"]
+        ),
     ],
     dependencies: [
         .package(path: "../swift-standard-library-extensions"),
@@ -45,7 +57,6 @@ let package = Package(
             name: "Array Primitives Core",
             dependencies: [
                 .product(name: "Standard Library Extensions", package: "swift-standard-library-extensions"),
-                .product(name: "Bit Primitives", package: "swift-bit-primitives"),
                 .product(name: "Index Primitives", package: "swift-index-primitives"),
                 .product(name: "Property Primitives", package: "swift-property-primitives"),
                 .product(name: "Range Primitives", package: "swift-range-primitives"),
@@ -88,13 +99,6 @@ let package = Package(
             ]
         ),
         .target(
-            name: "Array Bit Primitives",
-            dependencies: [
-                "Array Primitives Core",
-                .product(name: "Collection Primitives", package: "swift-collection-primitives"),
-            ]
-        ),
-        .target(
             name: "Array Bounded Primitives",  // Compile-time dimensioned (Algebra.Z<N> indexing)
             dependencies: [
                 "Array Primitives Core",
@@ -114,7 +118,6 @@ let package = Package(
                 "Array Fixed Primitives",
                 "Array Static Primitives",
                 "Array Small Primitives",
-                "Array Bit Primitives",
                 "Array Bounded Primitives",
             ]
         ),

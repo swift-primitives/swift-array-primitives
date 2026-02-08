@@ -98,7 +98,7 @@ where Tag == Sequence.ForEach, Base == Array<Element>, Element: Copyable {
     @_lifetime(&self)
     @inlinable
     public mutating func consuming(_ body: (Element) -> Void) {
-        while !unsafe base.pointee._buffer.isEmpty {
+        while unsafe !base.pointee._buffer.isEmpty {
             body(unsafe base.pointee._buffer.consumeFront())
         }
     }

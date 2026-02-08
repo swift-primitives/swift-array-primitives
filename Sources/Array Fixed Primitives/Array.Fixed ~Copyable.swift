@@ -37,7 +37,7 @@ extension Array.Fixed: Collection.Indexed where Element: ~Copyable {
     public var startIndex: Index { .zero }
 
     @inlinable
-    public var endIndex: Index { Index(count) }
+    public var endIndex: Index { count.map(Ordinal.init) }
 
     @inlinable
     public func index(after i: Index) -> Index { i + Index.Count.one }
@@ -155,10 +155,18 @@ where Tag == Sequence.ForEach, Base == Array<Element>.Fixed, Element: ~Copyable 
 // MARK: - Properties
 // ============================================================================
 
-extension Array.Fixed {
+extension Array.Fixed where Element: ~Copyable {
+    /// The number of elements in the array.
+    @inlinable
+    public var count: Index.Count { _buffer.count }
+
     /// Whether the array is empty.
     @inlinable
-    public var isEmpty: Bool { count == .zero }
+    public var isEmpty: Bool { _buffer.isEmpty }
+
+    /// The total capacity of the array.
+    @inlinable
+    public var capacity: Index.Count { _buffer.capacity }
 }
 
 // ============================================================================

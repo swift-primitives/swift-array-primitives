@@ -11,14 +11,14 @@
 
 public import Collection_Primitives
 public import Array_Primitives_Core
-public import Index_Primitives
+import Index_Primitives
 
 // MARK: - Swift.Sequence Conformance
 
 extension Array.Fixed: Swift.Sequence where Element: Copyable {
     /// Returns the count as the underestimated count since we know the exact size.
     @inlinable
-    public var underestimatedCount: Int { Int(bitPattern: count) }
+    public var underestimatedCount: Int { count }
 }
 
 // MARK: - Swift.Collection Conformance

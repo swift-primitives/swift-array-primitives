@@ -29,7 +29,7 @@ extension Array.Static: Collection.Indexed where Element: ~Copyable {
     public var startIndex: Index { .zero }
 
     @inlinable
-    public var endIndex: Index { Index(count) }
+    public var endIndex: Index { count.map(Ordinal.init) }
 
     @inlinable
     public func index(after i: Index) -> Index { i + Index.Count.one }
@@ -157,36 +157,6 @@ extension Array.Static where Element: ~Copyable {
 }
 
 // ============================================================================
-// MARK: - Buffer Access
-// ============================================================================
-
-@_spi(Unsafe)
-extension Array.Static where Element: ~Copyable {
-    /// Provides read-only access to the underlying contiguous storage.
-    @unsafe
-    @inlinable
-    public func withUnsafeBufferPointer<R, E: Swift.Error>(
-        _ body: (UnsafeBufferPointer<Element>) throws(E) -> R
-    ) throws(E) -> R {
-        let span = _buffer.span
-        let count = Int(bitPattern: _buffer.count)
-        return try unsafe body(UnsafeBufferPointer(start: count > 0 ? span.unsafeBaseAddress : nil, count: count))
-    }
-
-    /// Provides mutable access to the underlying contiguous storage.
-    @unsafe
-    @inlinable
-    public mutating func withUnsafeMutableBufferPointer<R, E: Swift.Error>(
-        _ body: (UnsafeMutableBufferPointer<Element>) throws(E) -> R
-    ) throws(E) -> R {
-        let count = Int(bitPattern: _buffer.count)
-        let span = _buffer.mutableSpan
-        let ptr = count > 0 ? unsafe UnsafeMutablePointer(mutating: span.unsafeBaseAddress!) : nil
-        return try unsafe body(UnsafeMutableBufferPointer(start: ptr, count: count))
-    }
-}
-
-// ============================================================================
 // MARK: - Property Views
 // ============================================================================
 
@@ -254,7 +224,7 @@ where Tag == Sequence.Drain, Base == Array<Element>.Static<n>, Element: ~Copyabl
     public mutating func callAsFunction(_ body: (consuming Element) -> Void) {
         let count = unsafe base.pointee._buffer.count
         guard count > .zero else { return }
-        while !unsafe base.pointee._buffer.isEmpty {
+        while unsafe !base.pointee._buffer.isEmpty {
             body(unsafe base.pointee._buffer.consumeFront())
         }
     }

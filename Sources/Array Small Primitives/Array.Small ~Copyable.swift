@@ -30,7 +30,7 @@ extension Array.Small: Collection.Indexed where Element: ~Copyable {
     public var startIndex: Index { .zero }
 
     @inlinable
-    public var endIndex: Index { Index(count) }
+    public var endIndex: Index { count.map(Ordinal.init) }
 
     @inlinable
     public func index(after i: Index) -> Index { i + .one }
@@ -376,7 +376,7 @@ where Tag == Sequence.Drain, Base == Array<Element>.Small<n>, Element: ~Copyable
             }
             unsafe base.pointee.heap!.storage.header = 0
         } else {
-            while !unsafe base.pointee._inlineBuffer.isEmpty {
+            while unsafe !base.pointee._inlineBuffer.isEmpty {
                 body(unsafe base.pointee._inlineBuffer.consumeFront())
             }
         }

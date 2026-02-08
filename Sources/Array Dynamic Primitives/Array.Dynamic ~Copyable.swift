@@ -26,7 +26,7 @@ extension Array: Collection.Indexed where Element: ~Copyable {
     public var startIndex: Index { .zero }
 
     @inlinable
-    public var endIndex: Index { Index(count) }
+    public var endIndex: Index { count.map(Ordinal.init) }
 
     @inlinable
     public func index(after i: Index) -> Index { i + .one }
@@ -259,7 +259,7 @@ where Tag == Sequence.Drain, Base == Array<Element>, Element: ~Copyable {
     @_lifetime(&self)
     @inlinable
     public mutating func callAsFunction(_ body: (consuming Element) -> Void) {
-        while !unsafe base.pointee._buffer.isEmpty {
+        while unsafe !base.pointee._buffer.isEmpty {
             body(unsafe base.pointee._buffer.consumeFront())
         }
     }

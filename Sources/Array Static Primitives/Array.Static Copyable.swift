@@ -64,6 +64,31 @@ extension Array.Static where Element: Copyable {
 }
 
 // ============================================================================
+// MARK: - Buffer Access (Memory.Contiguous.Protocol)
+// ============================================================================
+
+@_spi(Unsafe)
+extension Array.Static where Element: Copyable {
+    /// Provides read-only access to the underlying contiguous storage.
+    @unsafe
+    @inlinable
+    public func withUnsafeBufferPointer<R, E: Swift.Error>(
+        _ body: (UnsafeBufferPointer<Element>) throws(E) -> R
+    ) throws(E) -> R {
+        try unsafe _buffer.withUnsafeBufferPointer(body)
+    }
+
+    /// Provides mutable access to the underlying contiguous storage.
+    @unsafe
+    @inlinable
+    public mutating func withUnsafeMutableBufferPointer<R, E: Swift.Error>(
+        _ body: (UnsafeMutableBufferPointer<Element>) throws(E) -> R
+    ) throws(E) -> R {
+        try unsafe _buffer.withUnsafeMutableBufferPointer(body)
+    }
+}
+
+// ============================================================================
 // MARK: - Property View Operations
 // ============================================================================
 
