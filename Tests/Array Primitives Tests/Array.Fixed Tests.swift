@@ -12,6 +12,7 @@
 import Testing
 @testable import Array_Primitives
 import Index_Primitives
+import Index_Primitivesi
 
 // MARK: - Test Suite Structure
 

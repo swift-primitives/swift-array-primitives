@@ -87,11 +87,11 @@ extension Array.Small: Sequence.`Protocol` where Element: Copyable {
         }
 
         if let heapState = heap {
-            return unsafe Iterator(base: UnsafePointer(heapState.pointer), count: .init(count.rawValue))
+            return unsafe Iterator(base: UnsafePointer(heapState.pointer), count: count)
         } else {
-            // Inline storage - get pointer from inline buffer's span
-            let span = _inlineBuffer.span
-            return unsafe Iterator(base: span.unsafeBaseAddress!, count: .init(count.rawValue))
+            return _inlineBuffer.withUnsafeBufferPointer { ubp in
+                unsafe Iterator(base: ubp.baseAddress!, count: count)
+            }
         }
     }
 }

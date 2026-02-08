@@ -68,7 +68,7 @@ extension Array.Small where Element: Copyable {
         at base: Index,
         offsetBy offset: Index.Offset
     ) -> Element? {
-        guard let newIndex = base + offset else { return nil }
+        guard let newIndex = try? (base + offset) else { return nil }
         guard newIndex < count else { return nil }
         if let heap {
             return unsafe heap.pointer[Int(bitPattern: newIndex)]
@@ -93,7 +93,7 @@ where Tag == Sequence.ForEach, Base == Array<Element>.Small<n>, Element: Copyabl
 
         if let heapState = unsafe base.pointee.heap {
             _ = unsafe heapState.storage.withUnsafeMutablePointerToElements { elements in
-                for i in 0..<count.rawValue {
+                for i in 0..<Int(bitPattern: count) {
                     unsafe body(elements[i])
                 }
             }

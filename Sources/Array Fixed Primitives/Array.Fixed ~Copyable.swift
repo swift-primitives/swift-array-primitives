@@ -106,8 +106,9 @@ extension Array.Fixed: Sequence.`Protocol` {
         guard count > .zero else {
             return unsafe Iterator(base: UnsafePointer<Element>(bitPattern: 1)!, count: .zero)
         }
-        let span = _buffer.span
-        return unsafe Iterator(base: span.unsafeBaseAddress!, count: count)
+        return _buffer.withUnsafeBufferPointer { ubp in
+            unsafe Iterator(base: ubp.baseAddress!, count: count)
+        }
     }
 }
 
@@ -209,7 +210,7 @@ extension Array.Fixed where Element: ~Copyable {
 // ============================================================================
 
 @_spi(Unsafe)
-extension Array.Fixed where Element: ~Copyable {
+extension Array.Fixed where Element: Copyable {
     /// Provides read-only access to the underlying contiguous storage.
     @unsafe
     @inlinable
@@ -225,9 +226,7 @@ extension Array.Fixed where Element: ~Copyable {
     public mutating func withUnsafeMutableBufferPointer<R, E: Swift.Error>(
         _ body: (UnsafeMutableBufferPointer<Element>) throws(E) -> R
     ) throws(E) -> R {
-        let count = Int(bitPattern: _buffer.count)
-        let ptr = count > 0 ? unsafe UnsafeMutablePointer(mutating: _buffer.span.unsafeBaseAddress!) : nil
-        return try unsafe body(UnsafeMutableBufferPointer(start: ptr, count: count))
+        try _buffer.withUnsafeMutableBufferPointer(body)
     }
 }
 

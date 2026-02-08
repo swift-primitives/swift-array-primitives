@@ -92,12 +92,9 @@ extension Array: Sequence.`Protocol` where Element: Copyable {
         guard count > .zero else {
             return unsafe Iterator(base: UnsafePointer<Element>(bitPattern: 1)!, count: .zero)
         }
-        // Access the buffer's underlying storage pointer for zero-copy iteration
-        let span = _buffer.span
-        return unsafe Iterator(
-            base: span.unsafeBaseAddress!,
-            count: count
-        )
+        return _buffer.withUnsafeBufferPointer { ubp in
+            unsafe Iterator(base: ubp.baseAddress!, count: count)
+        }
     }
 }
 

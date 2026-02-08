@@ -167,7 +167,7 @@ extension Array where Element: ~Copyable {
 // ============================================================================
 
 @_spi(Unsafe)
-extension Array where Element: ~Copyable {
+extension Array where Element: Copyable {
     /// Provides read-only access to the underlying contiguous storage.
     ///
     /// - Warning: This is an escape hatch for C interop. Prefer `span` for safe access.

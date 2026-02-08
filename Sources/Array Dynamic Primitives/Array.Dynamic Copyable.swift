@@ -54,7 +54,7 @@ extension Array where Element: Copyable {
         at base: Index,
         offsetBy offset: Index.Offset
     ) -> Element? {
-        guard let newIndex = base + offset else { return nil }
+        guard let newIndex = try? (base + offset) else { return nil }
         guard newIndex < count else { return nil }
         return _buffer[newIndex]
     }
