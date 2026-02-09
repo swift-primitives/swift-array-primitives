@@ -13,7 +13,6 @@ public import Array_Primitives_Core
 public import Collection_Primitives
 import Index_Primitives
 public import Property_Primitives
-import Vector_Primitives
 import Sequence_Primitives
 
 // ============================================================================

@@ -14,7 +14,6 @@ public import Collection_Primitives
 public import Index_Primitives
 public import Ordinal_Primitives
 public import Property_Primitives
-public import Vector_Primitives
 public import Sequence_Primitives
 
 // ============================================================================
