@@ -29,14 +29,14 @@ extension Array: Collection.Indexed where Element: ~Copyable {
     public var endIndex: Index { count.map(Ordinal.init) }
 
     @inlinable
-    public func index(after i: Index) -> Index { i + .one }
+    public func index(after i: Index) -> Index { i.successor.saturating() }
 }
 
 // MARK: Collection.Bidirectional
 
 extension Array: Collection.Bidirectional where Element: ~Copyable {
     @inlinable
-    public func index(before i: Index) -> Index { try! i - .one }
+    public func index(before i: Index) -> Index { try! i.predecessor.exact() }
 }
 
 // ============================================================================

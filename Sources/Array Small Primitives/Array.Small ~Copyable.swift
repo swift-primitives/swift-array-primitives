@@ -14,7 +14,6 @@ public import Collection_Primitives
 public import Index_Primitives
 public import Ordinal_Primitives
 public import Property_Primitives
-public import Sequence_Primitives
 
 // ============================================================================
 // MARK: - Collection Conformances
@@ -32,14 +31,14 @@ extension Array.Small: Collection.Indexed where Element: ~Copyable {
     public var endIndex: Index { count.map(Ordinal.init) }
 
     @inlinable
-    public func index(after i: Index) -> Index { i + .one }
+    public func index(after i: Index) -> Index { i.successor.saturating() }
 }
 
 // MARK: Collection.Bidirectional
 
 extension Array.Small: Collection.Bidirectional where Element: ~Copyable {
     @inlinable
-    public func index(before i: Index) -> Index { try! i - .one }
+    public func index(before i: Index) -> Index { try! i.predecessor.exact() }
 }
 
 // Note: Array.Small cannot conform to Swift.Collection because it is unconditionally
@@ -50,22 +49,21 @@ extension Array.Small: Collection.Bidirectional where Element: ~Copyable {
 // ============================================================================
 
 extension Array.Small where Element: ~Copyable {
+    /// The current number of elements in the array.
+    @inlinable
+    public var count: Index.Count { _buffer.count }
+
     /// Whether the array is empty.
     @inlinable
-    public var isEmpty: Bool { count == .zero }
+    public var isEmpty: Bool { _buffer.isEmpty }
 
     /// The current capacity of the array.
     @inlinable
-    public var capacity: Int {
-        if let heap {
-            return heap.storage.capacity
-        }
-        return inlineCapacity
-    }
+    public var capacity: Index.Count { _buffer.capacity }
 
     /// Whether the array is currently using heap storage.
     @inlinable
-    public var isSpilled: Bool { heap != nil }
+    public var isSpilled: Bool { _buffer.isSpilled }
 }
 
 // ============================================================================
@@ -81,22 +79,13 @@ extension Array.Small where Element: ~Copyable {
     /// - Precondition: `index` must be in bounds.
     @inlinable
     public subscript(index: Index) -> Element {
-        mutating _read {
-            precondition(index < count, "Index out of bounds")
-            if let heap {
-                yield unsafe heap.pointer[Int(bitPattern: index)]
-            } else {
-                yield _inlineBuffer[index]
-            }
+        _read {
+            precondition(index < _buffer.count, "Index out of bounds")
+            yield _buffer[index]
         }
         _modify {
-            precondition(index < count, "Index out of bounds")
-            if let heap {
-                var ptr = unsafe heap.pointer
-                yield &(unsafe ptr[index])
-            } else {
-                yield &_inlineBuffer[index]
-            }
+            precondition(index < _buffer.count, "Index out of bounds")
+            yield &_buffer[index]
         }
     }
 }
@@ -109,12 +98,8 @@ extension Array.Small where Element: ~Copyable {
     /// Accesses the element at the given index via closure (for ~Copyable elements).
     @inlinable
     public func withElement<R>(at index: Index, _ body: (borrowing Element) -> R) -> R {
-        precondition(index < count, "Index out of bounds")
-        if let heap {
-            return body(unsafe heap.pointer[Int(bitPattern: index)])
-        } else {
-            return body(_inlineBuffer[index])
-        }
+        precondition(index < _buffer.count, "Index out of bounds")
+        return body(_buffer[index])
     }
 }
 
@@ -123,96 +108,26 @@ extension Array.Small where Element: ~Copyable {
 // ============================================================================
 
 extension Array.Small where Element: ~Copyable {
-    /// Spills inline storage to heap.
-    ///
-    /// Called when appending would exceed inline capacity.
-    /// Moves all inline elements to newly allocated heap storage.
-    @usableFromInline
-    package mutating func spill(minimumCapacity: Array.Index.Count) {
-        precondition(heap == nil, "Already spilled")
-
-        let newStorage = Heap.create(minimumCapacity: minimumCapacity)
-        // Move elements from inline buffer to heap storage
-        for i in 0..<Int(bitPattern: count) {
-            let slot = Index_Primitives.Index<Element>(Ordinal(UInt(i)))
-            let element = _inlineBuffer.consumeFront()
-            newStorage.initialize(to: element, at: slot)
-        }
-        newStorage.initialization = .linear(count: count)
-        var newHeap = Heap(newStorage)
-        newHeap.header.count = count
-        heap = newHeap
-    }
-
     /// Appends an element to the array.
+    ///
+    /// If the array exceeds inline capacity, elements are automatically
+    /// moved to heap storage.
     @inlinable
     public mutating func append(_ element: consuming Element) {
-        if var heapState = heap {
-            // Heap mode
-            let currentCount = heapState.header.count
-            heapState.ensureCapacity(currentCount + .one)
-            let slot = currentCount.map(Ordinal.init)
-            heapState.storage.initialize(to: consume element, at: slot)
-            heapState.header.count = currentCount + .one
-            self.heap = heapState
-            count = count + .one
-        } else if Int(bitPattern: count) < inlineCapacity {
-            // Inline mode with room
-            _ = _inlineBuffer.append(element)
-            count = count + .one
-        } else {
-            // Need to spill
-            spill(minimumCapacity: count + .one)
-            var heapState = heap!
-            let slot = heapState.header.count.map(Ordinal.init)
-            heapState.storage.initialize(to: consume element, at: slot)
-            heapState.header.count = heapState.header.count + .one
-            heap = heapState
-            count = count + .one
-        }
+        _buffer.append(element)
     }
 
     /// Removes and returns the last element.
     @inlinable
     public mutating func removeLast() -> Element? {
-        guard count > .zero else { return nil }
-
-        let newCountRaw = count.rawValue.rawValue &- 1
-        let newCount = Index.Count(Cardinal(newCountRaw))
-        let lastSlot = Index_Primitives.Index<Element>(Ordinal(newCountRaw))
-
-        if var heapState = heap {
-            heapState.header.count = newCount
-            self.heap = heapState
-            count = newCount
-            return heapState.storage.move(at: lastSlot)
-        } else {
-            // Inline mode
-            count = newCount
-            return _inlineBuffer.removeLast()
-        }
+        guard !_buffer.isEmpty else { return nil }
+        return _buffer.removeLast()
     }
 
     /// Removes all elements from the array.
     @inlinable
     public mutating func removeAll(keepingCapacity: Bool = false) {
-        guard count > .zero else { return }
-
-        if let heap {
-            // Sync initialization before deinitializing (storage may be stale)
-            heap.storage.initialization = .linear(count: count)
-            heap.storage.deinitialize()
-            if !keepingCapacity {
-                self.heap = nil
-            } else {
-                var heapState = heap
-                heapState.header.count = .zero
-                self.heap = heapState
-            }
-        } else {
-            _inlineBuffer.removeAll()
-        }
-        count = .zero
+        _buffer.removeAll(keepingCapacity: keepingCapacity)
     }
 }
 
@@ -221,41 +136,22 @@ extension Array.Small where Element: ~Copyable {
 // ============================================================================
 
 extension Array.Small where Element: ~Copyable {
-    /// Provides read-only span access to the array elements.
-    @inlinable
-    public func withSpan<R, E: Swift.Error>(
-        _ body: (Swift.Span<Element>) throws(E) -> R
-    ) throws(E) -> R {
-        let n = Int(bitPattern: count.rawValue.rawValue)
-        if n > 0 {
-            if let heap {
-                let span = unsafe Swift.Span(_unsafeStart: UnsafePointer(heap.pointer), count: n)
-                return try body(span)
-            } else {
-                return try body(_inlineBuffer.span)
-            }
-        } else {
-            let span = unsafe Swift.Span(_unsafeStart: UnsafePointer<Element>(bitPattern: 1)!, count: 0)
-            return try body(span)
+    /// A read-only view of the array's elements.
+    public var span: Span<Element> {
+        @_lifetime(borrow self)
+        @inlinable
+        borrowing get {
+            let span = _buffer.span
+            return unsafe _overrideLifetime(span, borrowing: self)
         }
     }
 
-    /// Provides mutable span access to the array elements.
-    @inlinable
-    public mutating func withMutableSpan<R, E: Swift.Error>(
-        _ body: (borrowing MutableSpan<Element>) throws(E) -> R
-    ) throws(E) -> R {
-        let n = Int(bitPattern: count.rawValue.rawValue)
-        if n > 0 {
-            if let heap {
-                let span = unsafe MutableSpan(_unsafeStart: heap.pointer, count: n)
-                return try body(span)
-            } else {
-                return try body(_inlineBuffer.mutableSpan)
-            }
-        } else {
-            let span = unsafe MutableSpan(_unsafeStart: UnsafeMutablePointer<Element>(bitPattern: 1)!, count: 0)
-            return try body(span)
+    /// A mutable view of the array's elements.
+    public var mutableSpan: MutableSpan<Element> {
+        @_lifetime(&self)
+        @inlinable
+        mutating get {
+            _buffer.mutableSpan
         }
     }
 }
@@ -272,16 +168,11 @@ extension Array.Small where Element: Copyable {
     public func withUnsafeBufferPointer<R, E: Swift.Error>(
         _ body: (UnsafeBufferPointer<Element>) throws(E) -> R
     ) throws(E) -> R {
-        let n = Int(bitPattern: count.rawValue.rawValue)
-        if n > 0 {
-            if let heap {
-                return try unsafe body(UnsafeBufferPointer(start: UnsafePointer(heap.pointer), count: n))
-            } else {
-                return try _inlineBuffer.withUnsafeBufferPointer(body)
-            }
-        } else {
+        let n = Int(bitPattern: _buffer.count)
+        guard n > 0 else {
             return try unsafe body(UnsafeBufferPointer(start: nil, count: 0))
         }
+        return try unsafe span.withUnsafeBufferPointer(body)
     }
 
     /// Provides mutable access to the underlying contiguous storage.
@@ -290,16 +181,12 @@ extension Array.Small where Element: Copyable {
     public mutating func withUnsafeMutableBufferPointer<R, E: Swift.Error>(
         _ body: (UnsafeMutableBufferPointer<Element>) throws(E) -> R
     ) throws(E) -> R {
-        let n = Int(bitPattern: count.rawValue.rawValue)
-        if n > 0 {
-            if let heap {
-                return try unsafe body(UnsafeMutableBufferPointer(start: heap.pointer, count: n))
-            } else {
-                return try _inlineBuffer.withUnsafeMutableBufferPointer(body)
-            }
-        } else {
+        let n = Int(bitPattern: _buffer.count)
+        guard n > 0 else {
             return try unsafe body(UnsafeMutableBufferPointer(start: nil, count: 0))
         }
+        var ms = mutableSpan
+        return try unsafe ms.withUnsafeMutableBufferPointer(body)
     }
 }
 
@@ -330,18 +217,14 @@ where Tag == Sequence.ForEach, Base == Array<Element>.Small<n>, Element: ~Copyab
     /// Borrowing iteration: `.forEach { }`
     @inlinable
     public func callAsFunction(_ body: (borrowing Element) -> Void) {
-        let count = unsafe base.pointee.count
+        let count = unsafe base.pointee._buffer.count
         guard count > .zero else { return }
 
-        if let heapState = unsafe base.pointee.heap {
-            for i in 0..<Int(bitPattern: count.rawValue.rawValue) {
-                unsafe body(heapState.pointer[i])
-            }
-        } else {
-            for i in 0..<Int(bitPattern: count.rawValue.rawValue) {
-                let slot = Index_Primitives.Index<Element>(Ordinal(UInt(i)))
-                body(unsafe base.pointee._inlineBuffer[slot])
-            }
+        var idx: Index_Primitives.Index<Element> = .zero
+        let end = count.map(Ordinal.init)
+        while idx < end {
+            body(unsafe base.pointee._buffer[idx])
+            idx += .one
         }
     }
 
@@ -376,22 +259,8 @@ where Tag == Sequence.Drain, Base == Array<Element>.Small<n>, Element: ~Copyable
     @_lifetime(&self)
     @inlinable
     public mutating func callAsFunction(_ body: (consuming Element) -> Void) {
-        let count = unsafe base.pointee.count
-        guard count > .zero else { return }
-
-        if let heapState = unsafe base.pointee.heap {
-            for i in 0..<Int(bitPattern: count.rawValue.rawValue) {
-                unsafe body((heapState.pointer + i).move())
-            }
-            heapState.storage.initialization = .empty
-            var updatedHeap = heapState
-            updatedHeap.header.count = .zero
-            unsafe base.pointee.heap = updatedHeap
-        } else {
-            while unsafe !base.pointee._inlineBuffer.isEmpty {
-                body(unsafe base.pointee._inlineBuffer.consumeFront())
-            }
+        while unsafe !base.pointee._buffer.isEmpty {
+            body(unsafe base.pointee._buffer.consumeFront())
         }
-        unsafe base.pointee.count = .zero
     }
 }

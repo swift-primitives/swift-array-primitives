@@ -39,14 +39,14 @@ extension Array.Fixed: Collection.Indexed where Element: ~Copyable {
     public var endIndex: Index { count.map(Ordinal.init) }
 
     @inlinable
-    public func index(after i: Index) -> Index { i + Index.Count.one }
+    public func index(after i: Index) -> Index { i.successor.saturating() }
 }
 
 // MARK: - Collection.Bidirectional Conformance
 
 extension Array.Fixed: Collection.Bidirectional where Element: ~Copyable {
     @inlinable
-    public func index(before i: Index) -> Index { try! (i - Index.Offset.one) }
+    public func index(before i: Index) -> Index { try! i.predecessor.exact() }
 }
 
 // ============================================================================
