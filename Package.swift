@@ -36,6 +36,10 @@ let package = Package(
             name: "Array Dynamic Primitives",
             targets: ["Array Dynamic Primitives"]
         ),
+        .library(
+            name: "Array Bounded Primitives",
+            targets: ["Array Bounded Primitives"]
+        ),
     ],
     dependencies: [
         .package(path: "../swift-standard-library-extensions"),
