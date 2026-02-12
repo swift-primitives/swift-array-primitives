@@ -10,10 +10,7 @@
 // ===----------------------------------------------------------------------===//
 
 public import Array_Primitives_Core
-public import Collection_Primitives
-public import Index_Primitives
 public import Property_Primitives
-public import Sequence_Primitives
 
 // ============================================================================
 // MARK: - Subscripts
@@ -27,21 +24,12 @@ extension Array.Small where Element: Copyable {
     @inlinable
     public subscript(index: Index) -> Element {
         get {
-            precondition(index < count, "Index out of bounds")
-            if let heap {
-                return unsafe heap.pointer[Int(bitPattern: index)]
-            } else {
-                return _inlineBuffer[index]
-            }
+            precondition(index < _buffer.count, "Index out of bounds")
+            return _buffer[index]
         }
         set {
-            precondition(index < count, "Index out of bounds")
-            if heap != nil {
-                _ = heap!.storage.move(at: index)
-                heap!.storage.initialize(to: newValue, at: index)
-            } else {
-                _inlineBuffer[index] = newValue
-            }
+            precondition(index < _buffer.count, "Index out of bounds")
+            _buffer[index] = newValue
         }
     }
 }
@@ -54,12 +42,8 @@ extension Array.Small where Element: Copyable {
     /// Returns the element at the typed index, or nil if out of bounds.
     @inlinable
     public func element(at index: Index) -> Element? {
-        guard index < count else { return nil }
-        if let heap {
-            return unsafe heap.pointer[Int(bitPattern: index)]
-        } else {
-            return _inlineBuffer[index]
-        }
+        guard index < _buffer.count else { return nil }
+        return _buffer[index]
     }
 
     /// Returns element at index offset from given base index.
@@ -69,12 +53,8 @@ extension Array.Small where Element: Copyable {
         offsetBy offset: Index.Offset
     ) -> Element? {
         guard let newIndex = try? (base + offset) else { return nil }
-        guard newIndex < count else { return nil }
-        if let heap {
-            return unsafe heap.pointer[Int(bitPattern: newIndex)]
-        } else {
-            return _inlineBuffer[newIndex]
-        }
+        guard newIndex < _buffer.count else { return nil }
+        return _buffer[newIndex]
     }
 }
 
@@ -88,23 +68,8 @@ where Tag == Sequence.ForEach, Base == Array<Element>.Small<n>, Element: Copyabl
     @_lifetime(&self)
     @inlinable
     public mutating func consuming(_ body: (Element) -> Void) {
-        let count = unsafe base.pointee.count
-        guard count > .zero else { return }
-
-        if let heapState = unsafe base.pointee.heap {
-            _ = unsafe heapState.storage.withUnsafeMutablePointerToElements { elements in
-                for i in 0..<Int(bitPattern: count) {
-                    unsafe body(elements[i])
-                }
-            }
-            heapState.storage.deinitialize()
-        } else {
-            for i in 0..<Int(bitPattern: count) {
-                let slot = Index_Primitives.Index<Element>(Ordinal(UInt(i)))
-                body(unsafe base.pointee._inlineBuffer[slot])
-            }
-            unsafe base.pointee._inlineBuffer.removeAll()
+        while unsafe !base.pointee._buffer.isEmpty {
+            body(unsafe base.pointee._buffer.consumeFront())
         }
-        unsafe base.pointee.count = .zero
     }
 }

@@ -11,8 +11,6 @@
 
 public import Array_Primitives_Core
 public import Collection_Primitives
-public import Index_Primitives
-public import Sequence_Primitives
 
 // ============================================================================
 // MARK: - Protocol Conformances
@@ -36,40 +34,22 @@ extension Array.Small: Collection.Access.Random where Element: Copyable {}
 // MARK: Iterator
 
 extension Array.Small where Element: Copyable {
-    /// Pointer-based iterator for Array.Small.
+    /// Iterator for Array.Small elements.
     ///
-    /// Zero-copy iteration using typed `Index<Element>` for position tracking.
-    /// The iterator holds a pointer to either inline or heap storage.
-    ///
-    /// ## Safety
-    ///
-    /// The iterator is only valid while the source array exists and is not mutated.
-    /// For inline storage, the iterator must be used within the same scope where
-    /// it was created (inline storage moves with the struct).
+    /// Delegates to the buffer's iterator for zero-copy iteration.
     @safe
     public struct Iterator: IteratorProtocol {
         @usableFromInline
-        let base: UnsafePointer<Element>
+        var _inner: Buffer<Element>.Linear.Small<inlineCapacity>.Iterator
 
         @usableFromInline
-        let end: Index.Count
-
-        @usableFromInline
-        var position: Index
-
-        @usableFromInline @unsafe
-        init(base: UnsafePointer<Element>, count: Index.Count) {
-            unsafe self.base = base
-            self.end = count
-            self.position = .zero
+        init(_inner: Buffer<Element>.Linear.Small<inlineCapacity>.Iterator) {
+            self._inner = _inner
         }
 
         @inlinable
         public mutating func next() -> Element? {
-            guard position < end else { return nil }
-            let result = unsafe base[position]
-            position = position + Index.Count.one
-            return result
+            _inner.next()
         }
     }
 }
@@ -79,20 +59,10 @@ extension Array.Small.Iterator: @unchecked Sendable where Element: Sendable {}
 // MARK: Sequence.Protocol Conformance
 
 extension Array.Small: Sequence.`Protocol` where Element: Copyable {
-    /// Returns a pointer-based iterator over the array elements.
+    /// Returns an iterator over the array elements.
     @inlinable
     public borrowing func makeIterator() -> Iterator {
-        guard count.rawValue > 0 else {
-            return unsafe Iterator(base: UnsafePointer<Element>(bitPattern: 1)!, count: .zero)
-        }
-
-        if let heapState = heap {
-            return unsafe Iterator(base: UnsafePointer(heapState.pointer), count: count)
-        } else {
-            return _inlineBuffer.withUnsafeBufferPointer { ubp in
-                unsafe Iterator(base: ubp.baseAddress!, count: count)
-            }
-        }
+        Iterator(_inner: _buffer.makeIterator())
     }
 }
 

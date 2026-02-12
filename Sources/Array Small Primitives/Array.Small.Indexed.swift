@@ -81,7 +81,7 @@ extension Array.Small.Indexed where Element: Copyable {
 
     /// The current capacity of the array.
     @inlinable
-    public var capacity: Int { _storage.capacity }
+    public var capacity: Array.Small<inlineCapacity>.Index.Count { _storage.capacity }
 }
 
 // ============================================================================

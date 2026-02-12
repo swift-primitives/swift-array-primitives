@@ -39,12 +39,10 @@ let package = Package(
     ],
     dependencies: [
         .package(path: "../swift-standard-library-extensions"),
-        .package(path: "../swift-bit-primitives"),
         .package(path: "../swift-index-primitives"),
         .package(path: "../swift-collection-primitives"),
         .package(path: "../swift-property-primitives"),
         .package(path: "../swift-sequence-primitives"),
-        .package(path: "../swift-storage-primitives"),
         .package(path: "../swift-buffer-primitives"),
         .package(path: "../swift-algebra-modular-primitives"),
         .package(path: "../swift-equation-primitives"),

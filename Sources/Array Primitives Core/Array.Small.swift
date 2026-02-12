@@ -26,37 +26,17 @@ extension Array where Element: ~Copyable {
     @safe
     public struct Small<let inlineCapacity: Int>: ~Copyable {
 
-        /// Current element count (valid in both inline and heap modes).
-        public var count: Index.Count
-
-        /// Inline buffer for elements (used when count <= inlineCapacity).
-        @usableFromInline
-        package var _inlineBuffer: Buffer<Element>.Linear.Inline<inlineCapacity>
-
-        /// Heap storage state when spilled. Nil when using inline storage.
+        /// Internal small linear buffer.
         ///
-        /// Contains both the storage reference and cached element pointer,
-        /// ensuring they are always consistent by construction.
+        /// Delegates growth, spill, element lifecycle, and span access
+        /// to `Buffer<Element>.Linear.Small` from buffer-primitives.
         @usableFromInline
-        package var heap: Array.Small<inlineCapacity>.Heap?
+        package var _buffer: Buffer<Element>.Linear.Small<inlineCapacity>
 
         /// Creates an empty small array.
         @inlinable
         public init() {
-            self._inlineBuffer = Buffer<Element>.Linear.Inline<inlineCapacity>()
-            self.count = .zero
-            self.heap = nil
-        }
-
-        deinit {
-            guard count > .zero else { return }
-
-            if let heapState = heap {
-                // Sync initialization state so Storage.Heap's deinit knows what to clean up.
-                // Storage.Heap.deinit reads header.initialization to deinitialize elements.
-                heapState.storage.initialization = .linear(count: count)
-            }
-            // Inline path: Storage.Inline's deinit auto-cleans up via _slots bit tracking.
+            self._buffer = .init()
         }
     }
 }
