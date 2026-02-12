@@ -194,19 +194,25 @@ extension Array.Small where Element: Copyable {
 // MARK: - Property Views
 // ============================================================================
 
+// MARK: Sequence Tag Enums
+
+extension Array.Small where Element: ~Copyable {
+    public enum ForEach {
+        public typealias View = Property<Sequence.ForEach, Array<Element>.Small<inlineCapacity>>.View.Typed<Element>.Valued<inlineCapacity>
+    }
+    public enum Drain {
+        public typealias View = Property<Sequence.Drain, Array<Element>.Small<inlineCapacity>>.View.Typed<Element>.Valued<inlineCapacity>
+    }
+}
+
 // MARK: ForEach Property View
 
 extension Array.Small where Element: ~Copyable {
     /// Property view for iteration operations.
     @inlinable
-    public var forEach: Property<Sequence.ForEach, Self>.View.Typed<Element>.Valued<inlineCapacity> {
-        mutating _read {
-            yield unsafe Property<Sequence.ForEach, Self>.View.Typed<Element>.Valued<inlineCapacity>(&self)
-        }
-        mutating _modify {
-            var view = unsafe Property<Sequence.ForEach, Self>.View.Typed<Element>.Valued<inlineCapacity>(&self)
-            yield &view
-        }
+    public var forEach: ForEach.View {
+        mutating _read { yield unsafe .init(&self) }
+        mutating _modify { var view: ForEach.View = unsafe .init(&self); yield &view }
     }
 }
 
@@ -240,14 +246,9 @@ where Tag == Sequence.ForEach, Base == Array<Element>.Small<n>, Element: ~Copyab
 extension Array.Small where Element: ~Copyable {
     /// Property view for draining operations.
     @inlinable
-    public var drain: Property<Sequence.Drain, Self>.View.Typed<Element>.Valued<inlineCapacity> {
-        mutating _read {
-            yield unsafe Property<Sequence.Drain, Self>.View.Typed<Element>.Valued<inlineCapacity>(&self)
-        }
-        mutating _modify {
-            var view = unsafe Property<Sequence.Drain, Self>.View.Typed<Element>.Valued<inlineCapacity>(&self)
-            yield &view
-        }
+    public var drain: Drain.View {
+        mutating _read { yield unsafe .init(&self) }
+        mutating _modify { var view: Drain.View = unsafe .init(&self); yield &view }
     }
 }
 
