@@ -66,7 +66,7 @@ extension Array.Fixed {
     /// The iterator is only valid while the source array exists and is not mutated.
     /// This matches the semantics of stdlib's Array.Iterator.
     @safe
-    public struct Iterator: IteratorProtocol {
+    public struct Iterator: Sequence.Iterator.`Protocol`, IteratorProtocol {
         @usableFromInline
         let base: UnsafePointer<Element>
 

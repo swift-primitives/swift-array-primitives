@@ -53,7 +53,7 @@ extension Array where Element: Copyable {
     ///
     /// Zero-copy iteration using typed `Index<Element>` for position tracking.
     @safe
-    public struct Iterator: IteratorProtocol {
+    public struct Iterator: Sequence.Iterator.`Protocol`, IteratorProtocol {
         @usableFromInline
         let base: UnsafePointer<Element>
 

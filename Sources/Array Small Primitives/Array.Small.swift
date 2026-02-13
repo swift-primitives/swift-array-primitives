@@ -38,7 +38,7 @@ extension Array.Small where Element: Copyable {
     ///
     /// Delegates to the buffer's iterator for zero-copy iteration.
     @safe
-    public struct Iterator: IteratorProtocol {
+    public struct Iterator: Sequence.Iterator.`Protocol`, IteratorProtocol {
         @usableFromInline
         var _inner: Buffer<Element>.Linear.Small<inlineCapacity>.Iterator
 
