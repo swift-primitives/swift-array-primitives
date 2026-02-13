@@ -225,7 +225,7 @@ where Tag == Sequence.Drain, Base == Array<Element>.Static<n>, Element: ~Copyabl
         let count = unsafe base.pointee._buffer.count
         guard count > .zero else { return }
         while unsafe !base.pointee._buffer.isEmpty {
-            body(unsafe base.pointee._buffer.consumeFront())
+            body(unsafe base.pointee._buffer.removeFirst())
         }
     }
 }

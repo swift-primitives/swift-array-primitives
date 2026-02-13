@@ -69,7 +69,7 @@ where Tag == Sequence.ForEach, Base == Array<Element>.Small<n>, Element: Copyabl
     @inlinable
     public mutating func consuming(_ body: (Element) -> Void) {
         while unsafe !base.pointee._buffer.isEmpty {
-            body(unsafe base.pointee._buffer.consumeFront())
+            body(unsafe base.pointee._buffer.removeFirst())
         }
     }
 }

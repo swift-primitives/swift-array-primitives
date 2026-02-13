@@ -272,7 +272,7 @@ where Tag == Sequence.Drain, Base == Array<Element>, Element: ~Copyable {
     @inlinable
     public mutating func callAsFunction(_ body: (consuming Element) -> Void) {
         while unsafe !base.pointee._buffer.isEmpty {
-            body(unsafe base.pointee._buffer.consumeFront())
+            body(unsafe base.pointee._buffer.removeFirst())
         }
     }
 }

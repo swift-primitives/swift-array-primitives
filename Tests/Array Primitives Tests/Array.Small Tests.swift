@@ -34,21 +34,22 @@ extension ArraySmallTests.Unit {
 
     @Test("Uses inline storage when count <= inlineCapacity")
     func usesInlineStorageWhenCountLessThanOrEqualToInlineCapacity() {
-        var array = try! Array<Int>.Small<4>()
+        var array = Array<Int>.Small<4>()
 
         array.append(1)
-        #expect(array.capacity == Array<Int>.Small<4>.inlineCapacity)
+        
+        #expect(array.capacity.rawValue.rawValue == Array<Int>.Small<4>.inlineCapacity)
 
         array.append(2)
         array.append(3)
         array.append(4)
         // Still inline at exactly inlineCapacity
-        #expect(array.capacity == Array<Int>.Small<4>.inlineCapacity)
+        #expect(array.capacity.rawValue.rawValue == Array<Int>.Small<4>.inlineCapacity)
     }
 
     @Test("Spills to heap when exceeding inlineCapacity")
     func spillsToHeapWhenExceedingInlineCapacity() {
-        var array = try! Array<Int>.Small<4>()
+        var array = Array<Int>.Small<4>()
 
         // Fill inline
         array.append(1)
@@ -58,21 +59,21 @@ extension ArraySmallTests.Unit {
 
         // Spill
         array.append(5)
-        #expect(array.capacity > Array<Int>.Small<4>.inlineCapacity)
+        #expect(array.capacity.rawValue.rawValue > Array<Int>.Small<4>.inlineCapacity)
     }
 
     @Test("Capacity reports inline capacity when not spilled")
     func capacityReportsInlineCapacityWhenNotSpilled() {
-        var array = try! Array<Int>.Small<8>()
+        var array = Array<Int>.Small<8>()
         array.append(1)
         array.append(2)
 
-        #expect(array.capacity == 8)
+        #expect(array.capacity.rawValue.rawValue == 8)
     }
 
     @Test("Capacity grows after spill")
     func capacityGrowsAfterSpill() {
-        var array = try! Array<Int>.Small<2>()
+        var array = Array<Int>.Small<2>()
         array.append(1)
         array.append(2)
 
@@ -80,21 +81,21 @@ extension ArraySmallTests.Unit {
 
         array.append(3)  // Spill
 
-        #expect(array.capacity > inlineCapacity)
+        #expect(array.capacity.rawValue.rawValue > inlineCapacity)
     }
 
     // MARK: - Count Invariants
 
     @Test("Empty array has count zero")
     func emptyArrayHasCountZero() {
-        let array = try! Array<Int>.Small<4>()
+        let array = Array<Int>.Small<4>()
         #expect(array.count == 0)
         #expect(array.isEmpty == true)
     }
 
     @Test("Append increments count (inline mode)")
     func appendIncrementsCountInlineMode() {
-        var array = try! Array<Int>.Small<4>()
+        var array = Array<Int>.Small<4>()
 
         array.append(1)
         #expect(array.count == 1)
@@ -105,7 +106,7 @@ extension ArraySmallTests.Unit {
 
     @Test("Append increments count (heap mode)")
     func appendIncrementsCountHeapMode() {
-        var array = try! Array<Int>.Small<2>()
+        var array = Array<Int>.Small<2>()
         array.append(1)
         array.append(2)
         array.append(3)  // Spill
@@ -118,7 +119,7 @@ extension ArraySmallTests.Unit {
 
     @Test("RemoveLast decrements count (inline mode)")
     func removeLastDecrementsCountInlineMode() {
-        var array = try! Array<Int>.Small<4>()
+        var array = Array<Int>.Small<4>()
         array.append(1)
         array.append(2)
 
@@ -128,7 +129,7 @@ extension ArraySmallTests.Unit {
 
     @Test("RemoveLast decrements count (heap mode)")
     func removeLastDecrementsCountHeapMode() {
-        var array = try! Array<Int>.Small<2>()
+        var array = Array<Int>.Small<2>()
         array.append(1)
         array.append(2)
         array.append(3)
@@ -142,7 +143,7 @@ extension ArraySmallTests.Unit {
 
     @Test("forEach yields exactly count elements (inline)")
     func forEachYieldsExactlyCountElementsInline() {
-        var array = try! Array<Int>.Small<8>()
+        var array = Array<Int>.Small<8>()
         for i in 0..<5 { array.append(i) }
 
         var iteratedCount = 0
@@ -264,7 +265,7 @@ extension ArraySmallTests.Unit {
 
     @Test("forEach visits all elements in order (inline)")
     func forEachVisitsAllElementsInOrderInline() {
-        var array = try! Array<Int>.Small<8>()
+        var array = Array<Int>.Small<8>()
         array.append(100)
         array.append(200)
         array.append(300)
@@ -277,7 +278,7 @@ extension ArraySmallTests.Unit {
 
     @Test("forEach visits all elements in order (heap)")
     func forEachVisitsAllElementsInOrderHeap() {
-        var array = try! Array<Int>.Small<2>()
+        var array = Array<Int>.Small<2>()
         array.append(100)
         array.append(200)
         array.append(300)  // Spill
@@ -292,27 +293,24 @@ extension ArraySmallTests.Unit {
 
     @Test("withSpan provides correct access (inline)")
     func withSpanProvidesCorrectAccessInline() {
-        var array = try! Array<Int>.Small<8>()
+        var array = Array<Int>.Small<8>()
         for i in 0..<5 { array.append(i * 2) }
 
-        array.withSpan { span in
-            #expect(span.count == 5)
-            for i in 0..<5 {
-                #expect(span[i] == i * 2)
-            }
+        #expect(array.span.count == 5)
+        for i in 0..<5 {
+            #expect(array.span[i] == i * 2)
         }
     }
 
     @Test("withSpan provides correct access (heap)")
     func withSpanProvidesCorrectAccessHeap() {
-        var array = try! Array<Int>.Small<2>()
+        var array = Array<Int>.Small<2>()
         for i in 0..<5 { array.append(i * 2) }
 
-        array.withSpan { span in
-            #expect(span.count == 5)
-            for i in 0..<5 {
-                #expect(span[i] == i * 2)
-            }
+        
+        #expect(array.span.count == 5)
+        for i in 0..<5 {
+            #expect(array.span[i] == i * 2)
         }
     }
 }
@@ -323,7 +321,7 @@ extension ArraySmallTests.EdgeCase {
 
     @Test("Spill preserves all elements")
     func spillPreservesAllElements() {
-        var array = try! Array<Int>.Small<4>()
+        var array = Array<Int>.Small<4>()
 
         // Fill inline
         array.append(1)
@@ -351,7 +349,7 @@ extension ArraySmallTests.EdgeCase {
 
     @Test("Large growth after spill preserves elements")
     func largeGrowthAfterSpillPreservesElements() {
-        var array = try! Array<Int>.Small<4>()
+        var array = Array<Int>.Small<4>()
 
         // Add many elements
         for i in 0..<1000 {
@@ -376,7 +374,7 @@ extension ArraySmallTests.EdgeCase {
 
     @Test("forEach works at exact inline capacity boundary")
     func forEachWorksAtExactInlineCapacityBoundary() {
-        var array = try! Array<Int>.Small<4>()
+        var array = Array<Int>.Small<4>()
         array.append(1)
         array.append(2)
         array.append(3)
@@ -398,7 +396,7 @@ extension ArraySmallTests.EdgeCase {
     @Test("removeAll clears both modes")
     func removeAllClearsBothModes() {
         // Test inline mode
-        var inlineArray = try! Array<Int>.Small<4>()
+        var inlineArray = Array<Int>.Small<4>()
         inlineArray.append(1)
         inlineArray.append(2)
         inlineArray.removeAll()
@@ -409,7 +407,7 @@ extension ArraySmallTests.EdgeCase {
         #expect(iterCount == 0)
 
         // Test heap mode
-        var heapArray = try! Array<Int>.Small<2>()
+        var heapArray = Array<Int>.Small<2>()
         heapArray.append(1)
         heapArray.append(2)
         heapArray.append(3)
@@ -423,7 +421,7 @@ extension ArraySmallTests.EdgeCase {
 
     @Test("Single inline capacity")
     func singleInlineCapacity() {
-        var array = try! Array<Int>.Small<1>()
+        var array = Array<Int>.Small<1>()
 
         array.append(42)
         #expect(array.count == 1)
@@ -452,33 +450,29 @@ extension ArraySmallTests.Integration {
     @Test("forEach and withSpan yield same elements (both modes)")
     func forEachAndWithSpanYieldSameElementsBothModes() {
         // Inline mode
-        var inlineArray = try! Array<Int>.Small<10>()
+        var inlineArray = Array<Int>.Small<10>()
         for i in 0..<5 { inlineArray.append(i * 2) }
 
         var forEachElements: [Int] = []
         inlineArray.forEach { forEachElements.append($0) }
 
         var spanElements: [Int] = []
-        inlineArray.withSpan { span in
-            for i in 0..<span.count {
-                spanElements.append(span[i])
-            }
+        for i in 0..<inlineArray.span.count {
+            spanElements.append(inlineArray.span[i])
         }
 
         #expect(forEachElements == spanElements)
 
         // Heap mode
-        var heapArray = try! Array<Int>.Small<2>()
+        var heapArray = Array<Int>.Small<2>()
         for i in 0..<5 { heapArray.append(i * 2) }
 
         forEachElements = []
         heapArray.forEach { forEachElements.append($0) }
 
         spanElements = []
-        heapArray.withSpan { span in
-            for i in 0..<span.count {
-                spanElements.append(span[i])
-            }
+        for i in 0..<heapArray.span.count {
+            spanElements.append(heapArray.span[i])
         }
 
         #expect(forEachElements == spanElements)
