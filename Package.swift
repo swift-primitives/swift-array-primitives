@@ -61,6 +61,7 @@ let package = Package(
                 .product(name: "Index Primitives", package: "swift-index-primitives"),
                 .product(name: "Property Primitives", package: "swift-property-primitives"),
                 .product(name: "Buffer Linear Primitives", package: "swift-buffer-primitives"),
+                .product(name: "Buffer Linear Inline Primitives", package: "swift-buffer-primitives"),
             ]
         ),
         // Per-variant modules: Swift.Sequence/Collection conformances (Element: Copyable)

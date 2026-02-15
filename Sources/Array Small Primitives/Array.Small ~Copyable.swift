@@ -83,10 +83,9 @@ extension Array.Small where Element: ~Copyable {
             precondition(index < _buffer.count, "Index out of bounds")
             yield _buffer[index]
         }
-        _modify {
-            precondition(index < _buffer.count, "Index out of bounds")
-            yield &_buffer[index]
-        }
+        // WORKAROUND: _modify removed — Buffer.Linear.Small ~Copyable subscript
+        // lacks _modify due to DiagnoseStaticExclusivity compiler crash.
+        // Restore when Swift compiler fix lands.
     }
 }
 
