@@ -41,6 +41,10 @@ extension Array.Small: Collection.Bidirectional where Element: ~Copyable {
     public func index(before i: Index) -> Index { try! i.predecessor.exact() }
 }
 
+// MARK: Array.Protocol
+
+extension Array.Small: __ArrayProtocol where Element: ~Copyable {}
+
 // Note: Array.Small cannot conform to Swift.Collection because it is unconditionally
 // ~Copyable (has deinit for inline storage cleanup). Swift.Collection requires Self: Copyable.
 

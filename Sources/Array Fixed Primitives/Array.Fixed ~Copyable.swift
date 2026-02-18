@@ -49,6 +49,10 @@ extension Array.Fixed: Collection.Bidirectional where Element: ~Copyable {
     public func index(before i: Index) -> Index { try! i.predecessor.exact() }
 }
 
+// MARK: Array.Protocol
+
+extension Array.Fixed: __ArrayProtocol where Element: ~Copyable {}
+
 // ============================================================================
 // MARK: - Sequence Protocol Conformances
 // ============================================================================
