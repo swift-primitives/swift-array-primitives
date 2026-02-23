@@ -39,20 +39,15 @@ extension Array.Indexed where Element: Copyable {
         _storage.append(element)
     }
 
-    /// Removes and returns the last element, or nil if empty.
-    ///
-    /// - Returns: The removed element, or `nil` if the array is empty.
-    /// - Complexity: O(1).
+    /// Static primitive for `Collection.Remove.Last`. Use `.remove.last()` at call sites.
     @inlinable
-    public mutating func removeLast() -> Element? {
-        _storage.removeLast()
+    public static func removeLast(_ base: inout Self) -> Element? {
+        Array.removeLast(&base._storage)
     }
 
-    /// Removes all elements from the array.
-    ///
-    /// - Parameter keepingCapacity: Whether to keep the current capacity.
+    /// Static primitive for `Collection.Clearable`. Use `.remove.all()` at call sites.
     @inlinable
-    public mutating func removeAll(keepingCapacity: Bool = false) {
-        _storage.removeAll(keepingCapacity: keepingCapacity)
+    public static func removeAll(_ base: inout Self) {
+        Array.removeAll(&base._storage)
     }
 }

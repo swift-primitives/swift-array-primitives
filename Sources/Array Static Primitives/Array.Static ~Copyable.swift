@@ -120,20 +120,18 @@ extension Array.Static where Element: ~Copyable {
         }
     }
 
-    /// Removes and returns the last element.
-    ///
-    /// - Returns: The removed element, or `nil` if the array is empty.
+    /// Static primitive for `Collection.Remove.Last`. Use `.remove.last()` at call sites.
     @inlinable
-    public mutating func removeLast() -> Element? {
-        guard !_buffer.isEmpty else { return nil }
-        return _buffer.remove.last()
+    public static func removeLast(_ base: inout Self) -> Element? {
+        guard !base._buffer.isEmpty else { return nil }
+        return base._buffer.remove.last()
     }
 
-    /// Removes all elements from the array.
+    /// Static primitive for `Collection.Clearable`. Use `.remove.all()` at call sites.
     @inlinable
-    public mutating func removeAll() {
-        guard _buffer.count > .zero else { return }
-        _buffer.remove.all()
+    public static func removeAll(_ base: inout Self) {
+        guard base._buffer.count > .zero else { return }
+        base._buffer.remove.all()
     }
 }
 

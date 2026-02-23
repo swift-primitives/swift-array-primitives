@@ -123,7 +123,7 @@ extension ArraySmallTests.Unit {
         array.append(1)
         array.append(2)
 
-        _ = array.removeLast()
+        _ = array.remove.last()
         #expect(array.count == 1)
     }
 
@@ -135,7 +135,7 @@ extension ArraySmallTests.Unit {
         array.append(3)
         array.append(4)
 
-        _ = array.removeLast()
+        _ = array.remove.last()
         #expect(array.count == 3)
     }
 
@@ -399,7 +399,7 @@ extension ArraySmallTests.EdgeCase {
         var inlineArray = Array<Int>.Small<4>()
         inlineArray.append(1)
         inlineArray.append(2)
-        inlineArray.removeAll()
+        inlineArray.remove.all()
         #expect(inlineArray.count == 0)
 
         var iterCount = 0
@@ -411,7 +411,7 @@ extension ArraySmallTests.EdgeCase {
         heapArray.append(1)
         heapArray.append(2)
         heapArray.append(3)
-        heapArray.removeAll()
+        heapArray.remove.all()
         #expect(heapArray.count == 0)
 
         iterCount = 0

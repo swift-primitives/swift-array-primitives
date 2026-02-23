@@ -85,14 +85,25 @@ extension Array.Small.Indexed where Element: Copyable {
 }
 
 // ============================================================================
-// MARK: - Subscripts
+// MARK: - Collection.Protocol Conformance
 // ============================================================================
 
-extension Array.Small.Indexed where Element: Copyable {
-    /// Accesses the element at the given phantom-typed index.
-    ///
-    /// - Parameter index: The typed index of the element to access.
-    // Note: Index.Bounded<N> subscript removed - type not yet implemented in index-primitives
+extension Array.Small.Indexed: Collection.`Protocol` where Element: Copyable {
+    @inlinable
+    public var startIndex: Array.Small<inlineCapacity>.Index { _storage.startIndex }
+
+    @inlinable
+    public var endIndex: Array.Small<inlineCapacity>.Index { _storage.endIndex }
+
+    @inlinable
+    public subscript(_ position: Array.Small<inlineCapacity>.Index) -> Element {
+        _read { yield _storage[position] }
+    }
+
+    @inlinable
+    public func index(after i: Array.Small<inlineCapacity>.Index) -> Array.Small<inlineCapacity>.Index {
+        _storage.index(after: i)
+    }
 }
 
 // ============================================================================
@@ -110,25 +121,23 @@ extension Array.Small.Indexed where Element: Copyable {
         _storage.append(element)
     }
 
-    /// Removes and returns the last element, or nil if empty.
-    ///
-    /// - Returns: The removed element, or `nil` if the array is empty.
+    /// Static primitive for `Collection.Remove.Last`. Use `.remove.last()` at call sites.
     @inlinable
-    public mutating func removeLast() -> Element? {
-        _storage.removeLast()
+    public static func removeLast(_ base: inout Self) -> Element? {
+        Array.Small.removeLast(&base._storage)
     }
 
-    /// Removes all elements from the array.
-    ///
-    /// - Parameter keepingCapacity: Whether to keep heap storage (if spilled).
+    /// Static primitive for `Collection.Clearable`. Use `.remove.all()` at call sites.
     @inlinable
-    public mutating func removeAll(keepingCapacity: Bool = false) {
-        _storage.removeAll(keepingCapacity: keepingCapacity)
+    public static func removeAll(_ base: inout Self) {
+        Array.Small.removeAll(&base._storage)
     }
 }
 
 // ============================================================================
-// MARK: - Sendable Conformance
+// MARK: - Conformance Declarations
 // ============================================================================
 
+extension Array.Small.Indexed: Collection.Remove.Last where Element: Copyable {}
+extension Array.Small.Indexed: Collection.Clearable where Element: Copyable {}
 extension Array.Small.Indexed: @unchecked Sendable where Element: Sendable, Tag: ~Copyable {}

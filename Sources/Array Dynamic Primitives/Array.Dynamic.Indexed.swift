@@ -68,3 +68,32 @@ extension Array.Indexed {
         }
     }
 }
+
+// ============================================================================
+// MARK: - Collection.Protocol Conformance
+// ============================================================================
+
+extension Array.Indexed: Collection.`Protocol` {
+    @inlinable
+    public var startIndex: Index_Primitives.Index<Element> { _storage.startIndex }
+
+    @inlinable
+    public var endIndex: Index_Primitives.Index<Element> { _storage.endIndex }
+
+    @inlinable
+    public subscript(_ position: Index_Primitives.Index<Element>) -> Element {
+        get { _storage[position] }
+    }
+
+    @inlinable
+    public func index(after i: Index_Primitives.Index<Element>) -> Index_Primitives.Index<Element> {
+        _storage.index(after: i)
+    }
+}
+
+// ============================================================================
+// MARK: - Conformance Declarations
+// ============================================================================
+
+extension Array.Indexed: Collection.Remove.Last {}
+extension Array.Indexed: Collection.Clearable {}

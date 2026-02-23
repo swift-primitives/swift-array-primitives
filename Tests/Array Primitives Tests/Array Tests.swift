@@ -60,20 +60,20 @@ extension ArrayTests.Unit {
         array.append(2)
         array.append(3)
 
-        _ = array.removeLast()
+        _ = array.remove.last()
         #expect(array.count == 2)
 
-        _ = array.removeLast()
+        _ = array.remove.last()
         #expect(array.count == 1)
 
-        _ = array.removeLast()
+        _ = array.remove.last()
         #expect(array.count == 0)
     }
 
     @Test
     func `RemoveLast on empty returns nil`() {
         var array = Array<Int>()
-        #expect(array.removeLast() == nil)
+        #expect(array.remove.last() == nil)
         #expect(array.count == 0)
     }
 
@@ -295,7 +295,7 @@ extension ArrayTests.EdgeCase {
         array.forEach { elements.append($0) }
         #expect(elements == [42])
 
-        let removed = array.removeLast()
+        let removed = array.remove.last()
         #expect(removed == 42)
         #expect(array.count == 0)
     }
@@ -330,7 +330,7 @@ extension ArrayTests.EdgeCase {
         var array = Array<Int>()
         for i in 0..<10 { array.append(i) }
 
-        array.removeAll()
+        array.remove.all()
 
         #expect(array.count == 0)
         #expect(array.isEmpty == true)
@@ -346,7 +346,7 @@ extension ArrayTests.EdgeCase {
         array.append(1)
         array.append(2)
 
-        array.removeAll()
+        array.remove.all()
 
         array.append(100)
         array.append(200)

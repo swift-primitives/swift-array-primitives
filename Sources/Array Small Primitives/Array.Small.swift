@@ -22,6 +22,14 @@ public import Collection_Primitives
 
 extension Array.Small: Collection.Access.Random where Element: Copyable {}
 
+// MARK: Collection.Remove.Last Conformance
+
+extension Array.Small: Collection.Remove.Last where Element: ~Copyable {}
+
+// MARK: Collection.Clearable Conformance
+
+extension Array.Small: Collection.Clearable where Element: ~Copyable {}
+
 // Note: Array.Small cannot conform to Swift.Collection because it is unconditionally
 // ~Copyable (has deinit for inline storage cleanup). Swift.Collection requires Self: Copyable.
 

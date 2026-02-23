@@ -84,6 +84,28 @@ extension Array.Static.Indexed where Element: ~Copyable {
 }
 
 // ============================================================================
+// MARK: - Collection.Protocol Conformance
+// ============================================================================
+
+extension Array.Static.Indexed: Collection.`Protocol` where Element: ~Copyable {
+    @inlinable
+    public var startIndex: Index_Primitives.Index<Element> { storage.startIndex }
+
+    @inlinable
+    public var endIndex: Index_Primitives.Index<Element> { storage.endIndex }
+
+    @inlinable
+    public subscript(_ position: Index_Primitives.Index<Element>) -> Element {
+        _read { yield storage[position] }
+    }
+
+    @inlinable
+    public func index(after i: Index_Primitives.Index<Element>) -> Index_Primitives.Index<Element> {
+        storage.index(after: i)
+    }
+}
+
+// ============================================================================
 // MARK: - Mutating Operations
 // ============================================================================
 
@@ -97,15 +119,15 @@ extension Array.Static.Indexed where Element: ~Copyable {
         try storage.append(element)
     }
 
-    /// Removes and returns the last element, or nil if empty.
+    /// Static primitive for `Collection.Remove.Last`. Use `.remove.last()` at call sites.
     @inlinable
-    public mutating func removeLast() -> Element? {
-        storage.removeLast()
+    public static func removeLast(_ base: inout Self) -> Element? {
+        Array.Static.removeLast(&base.storage)
     }
 
-    /// Removes all elements from the array.
+    /// Static primitive for `Collection.Clearable`. Use `.remove.all()` at call sites.
     @inlinable
-    public mutating func removeAll() {
-        storage.removeAll()
+    public static func removeAll(_ base: inout Self) {
+        Array.Static.removeAll(&base.storage)
     }
 }

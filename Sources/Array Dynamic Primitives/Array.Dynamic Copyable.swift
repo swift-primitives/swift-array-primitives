@@ -71,20 +71,5 @@ extension Array where Element: Copyable {
         _buffer.append(element)
     }
 
-    /// Removes and returns the last element (CoW-aware).
-    @inlinable
-    public mutating func removeLast() -> Element? {
-        guard !_buffer.isEmpty else { return nil }
-        return _buffer.remove.last()
-    }
-
-    /// Removes all elements from the array (CoW-aware).
-    @inlinable
-    public mutating func removeAll(keepingCapacity: Bool = false) {
-        _buffer.remove.all()
-        if !keepingCapacity {
-            _buffer = Buffer<Element>.Linear(minimumCapacity: .zero)
-        }
-    }
 }
 

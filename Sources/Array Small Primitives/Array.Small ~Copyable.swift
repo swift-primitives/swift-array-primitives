@@ -121,11 +121,17 @@ extension Array.Small where Element: ~Copyable {
         _buffer.append(element)
     }
 
-    /// Removes and returns the last element.
+    /// Static primitive for `Collection.Remove.Last`. Use `.remove.last()` at call sites.
     @inlinable
-    public mutating func removeLast() -> Element? {
-        guard !_buffer.isEmpty else { return nil }
-        return _buffer.remove.last()
+    public static func removeLast(_ base: inout Self) -> Element? {
+        guard !base._buffer.isEmpty else { return nil }
+        return base._buffer.remove.last()
+    }
+
+    /// Static primitive for `Collection.Clearable`. Use `.remove.all()` at call sites.
+    @inlinable
+    public static func removeAll(_ base: inout Self) {
+        base._buffer.remove.all(keepingCapacity: false)
     }
 
     /// Removes all elements from the array.

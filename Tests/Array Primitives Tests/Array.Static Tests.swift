@@ -94,17 +94,17 @@ extension ArrayStaticTests.Unit {
         try array.append(1)
         try array.append(2)
 
-        _ = array.removeLast()
+        _ = array.remove.last()
         #expect(array.count == 1)
 
-        _ = array.removeLast()
+        _ = array.remove.last()
         #expect(array.count == 0)
     }
 
     @Test
     func `RemoveLast on empty returns nil`() {
         var array = Array<Int>.Static<8>()
-        #expect(array.removeLast() == nil)
+        #expect(array.remove.last() == nil)
     }
 
     // MARK: - forEach Invariants
@@ -222,7 +222,7 @@ extension ArrayStaticTests.EdgeCase {
         #expect(array.isFull == true)
 
         // Empty
-        array.removeAll()
+        array.remove.all()
         #expect(array.count == 0)
         #expect(array.isFull == false)
 
@@ -246,8 +246,8 @@ extension ArrayStaticTests.EdgeCase {
         try array.append(3)
         try array.append(4)
 
-        _ = array.removeLast()
-        _ = array.removeLast()
+        _ = array.remove.last()
+        _ = array.remove.last()
 
         try array.append(100)
         try array.append(200)
@@ -262,7 +262,7 @@ extension ArrayStaticTests.EdgeCase {
         var array = Array<Int>.Static<5>()
         for i in 0..<5 { try array.append(i) }
 
-        array.removeAll()
+        array.remove.all()
 
         #expect(array.count == 0)
         #expect(array.isEmpty == true)

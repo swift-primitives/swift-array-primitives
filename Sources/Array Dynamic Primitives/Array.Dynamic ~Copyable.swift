@@ -120,19 +120,21 @@ extension Array where Element: ~Copyable {
         _buffer.append(consume element)
     }
 
-    /// Removes and returns the last element, or nil if empty.
-    ///
-    /// - Returns: The removed element, or `nil` if the array is empty.
-    /// - Complexity: O(1).
+    /// Static primitive for `Collection.Remove.Last`. Use `.remove.last()` at call sites.
     @inlinable
-    public mutating func removeLast() -> Element? {
-        guard !_buffer.isEmpty else { return nil }
-        return _buffer.remove.last()
+    public static func removeLast(_ base: inout Self) -> Element? {
+        guard !base._buffer.isEmpty else { return nil }
+        return base._buffer.remove.last()
+    }
+
+    /// Static primitive for `Collection.Clearable`. Use `.remove.all()` at call sites.
+    @inlinable
+    public static func removeAll(_ base: inout Self) {
+        base._buffer.remove.all()
+        base._buffer = Buffer<Element>.Linear(minimumCapacity: .zero)
     }
 
     /// Removes all elements from the array.
-    ///
-    /// - Parameter keepingCapacity: Whether to keep the current capacity.
     @inlinable
     public mutating func removeAll(keepingCapacity: Bool = false) {
         _buffer.remove.all()

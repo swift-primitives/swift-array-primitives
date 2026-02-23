@@ -21,6 +21,14 @@ public import Array_Primitives_Core
 
 extension Array: Collection.Access.Random where Element: Copyable {}
 
+// MARK: Collection.Remove.Last Conformance
+
+extension Array: Collection.Remove.Last where Element: ~Copyable {}
+
+// MARK: Collection.Clearable Conformance
+
+extension Array: Collection.Clearable where Element: ~Copyable {}
+
 // MARK: Swift.Collection Conformances
 // Bridge to Swift standard library collections for interop with stdlib algorithms.
 
