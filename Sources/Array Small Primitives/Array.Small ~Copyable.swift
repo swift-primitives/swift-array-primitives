@@ -14,6 +14,7 @@ public import Collection_Primitives
 public import Index_Primitives
 public import Ordinal_Primitives
 public import Property_Primitives
+public import Buffer_Linear_Small_Primitives
 
 // ============================================================================
 // MARK: - Collection Conformances

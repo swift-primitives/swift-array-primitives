@@ -11,6 +11,7 @@
 
 public import Index_Primitives
 public import Array_Primitives_Core
+public import Buffer_Linear_Small_Primitives
 
 extension Array where Element: ~Copyable {
 

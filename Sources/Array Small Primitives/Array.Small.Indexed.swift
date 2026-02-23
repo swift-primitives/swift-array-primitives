@@ -11,6 +11,7 @@
 
 public import Array_Primitives_Core
 import Index_Primitives
+public import Buffer_Linear_Small_Primitives
 
 // ============================================================================
 // MARK: - Array.Small.Indexed Definition
