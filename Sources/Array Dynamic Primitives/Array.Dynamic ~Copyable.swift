@@ -41,7 +41,7 @@ extension Array: Collection.Bidirectional where Element: ~Copyable {
 
 // MARK: Array.Protocol
 
-extension Array: __ArrayProtocol where Element: ~Copyable {}
+extension Array: Array.`Protocol` where Element: ~Copyable {}
 
 // ============================================================================
 // MARK: - Properties

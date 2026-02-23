@@ -43,7 +43,7 @@ extension Array.Small: Collection.Bidirectional where Element: ~Copyable {
 
 // MARK: Array.Protocol
 
-extension Array.Small: __ArrayProtocol where Element: ~Copyable {}
+extension Array.Small: Array.`Protocol` where Element: ~Copyable {}
 
 // Note: Array.Small cannot conform to Swift.Collection because it is unconditionally
 // ~Copyable (has deinit for inline storage cleanup). Swift.Collection requires Self: Copyable.

@@ -2,8 +2,8 @@
 
 <!--
 ---
-version: 1.0.0
-last_updated: 2026-02-16
+version: 1.1.0
+last_updated: 2026-02-23
 status: RECOMMENDATION
 tier: 7
 ---
@@ -254,3 +254,13 @@ These should be re-tested when Swift gains support for ~Copyable associated type
 - `swift-bit-vector-primitives/Research/bit-vector-protocol-unification.md` — prior art
 - `swift-bit-vector-primitives/Experiments/bit-vector-protocol/` — Bit.Vector experiment
 - `swift-effect-primitives/Sources/Effect Primitives/Effect.Protocol.swift` — hoisted protocol pattern
+
+## Changelog
+
+### v1.1.0 (2026-02-23)
+
+**Phase 4 is now unlocked.** `SuppressedAssociatedTypes` (adopted in sequence-primitives on 2026-02-12) enables `associatedtype Element: ~Copyable`. The current `__ArrayProtocol` already has `associatedtype Element: ~Copyable` and subscript access — the "Negative Results" documented in v1.0.0 are resolved.
+
+The remaining blocker for full hierarchy unification is that `Collection.Protocol: Sequence.Protocol` prevents `__ArrayProtocol` from conforming to `Collection.Protocol`. This is addressed by a separate research document: `swift-primitives/Research/collection-sequence-protocol-detachment.md` (RECOMMENDATION, 2026-02-23), which recommends removing `Sequence.Protocol` inheritance from `Collection.Protocol`.
+
+Once the detachment is implemented, `__ArrayProtocol` can conform to `Collection.Protocol` (or `Collection.Bidirectional`), fully unifying the protocol hierarchy.

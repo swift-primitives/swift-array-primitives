@@ -13,10 +13,10 @@ import Property_Primitives
 
 // MARK: - Default Implementations
 
-extension __ArrayProtocol where Self: ~Copyable {
+extension Array.`Protocol` where Self: ~Copyable {
     /// Calls `body` with each valid index from `startIndex` to `endIndex`.
     @inlinable
-    public func forEachIndex(_ body: (Index) -> Void) {
+    public func forEach(_ body: (Index) -> Void) {
         var i = startIndex
         while i < endIndex {
             body(i)
@@ -34,7 +34,7 @@ extension __ArrayProtocol where Self: ~Copyable {
 // MARK: ForEach: Borrowing Operations on .Typed (~Copyable)
 
 extension Property.View.Typed
-where Tag == Sequence.ForEach, Base: __ArrayProtocol & ~Copyable, Element: ~Copyable {
+where Tag == Sequence.ForEach, Base: Array.`Protocol` & ~Copyable, Element: ~Copyable {
     /// Borrowing iteration: `.forEach { }`
     @inlinable
     public func callAsFunction(_ body: (borrowing Base.Element) -> Void) {

@@ -51,7 +51,7 @@ extension Array.Fixed: Collection.Bidirectional where Element: ~Copyable {
 
 // MARK: Array.Protocol
 
-extension Array.Fixed: __ArrayProtocol where Element: ~Copyable {}
+extension Array.Fixed: Array.`Protocol` where Element: ~Copyable {}
 
 // ============================================================================
 // MARK: - Sequence Protocol Conformances
