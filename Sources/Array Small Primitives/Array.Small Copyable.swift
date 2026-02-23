@@ -58,18 +58,3 @@ extension Array.Small where Element: Copyable {
     }
 }
 
-// ============================================================================
-// MARK: - Property View Operations
-// ============================================================================
-
-extension Property.View.Typed.Valued
-where Tag == Sequence.ForEach, Base == Array<Element>.Small<n>, Element: Copyable {
-    /// Consuming iteration: `.forEach.consuming { }`
-    @_lifetime(&self)
-    @inlinable
-    public mutating func consuming(_ body: (Element) -> Void) {
-        while unsafe !base.pointee._buffer.isEmpty {
-            body(unsafe base.pointee._buffer.removeFirst())
-        }
-    }
-}

@@ -75,31 +75,16 @@ extension Array where Element: Copyable {
     @inlinable
     public mutating func removeLast() -> Element? {
         guard !_buffer.isEmpty else { return nil }
-        return _buffer.removeLast()
+        return _buffer.remove.last()
     }
 
     /// Removes all elements from the array (CoW-aware).
     @inlinable
     public mutating func removeAll(keepingCapacity: Bool = false) {
-        _buffer.removeAll()
+        _buffer.remove.all()
         if !keepingCapacity {
             _buffer = Buffer<Element>.Linear(minimumCapacity: .zero)
         }
     }
 }
 
-// ============================================================================
-// MARK: - Property View Operations
-// ============================================================================
-
-extension Property.View.Typed
-where Tag == Sequence.ForEach, Base == Array<Element>, Element: Copyable {
-    /// Consuming iteration: `.forEach.consuming { }`
-    @_lifetime(&self)
-    @inlinable
-    public mutating func consuming(_ body: (Element) -> Void) {
-        while unsafe !base.pointee._buffer.isEmpty {
-            body(unsafe base.pointee._buffer.removeFirst())
-        }
-    }
-}

@@ -126,14 +126,14 @@ extension Array.Static where Element: ~Copyable {
     @inlinable
     public mutating func removeLast() -> Element? {
         guard !_buffer.isEmpty else { return nil }
-        return _buffer.removeLast()
+        return _buffer.remove.last()
     }
 
     /// Removes all elements from the array.
     @inlinable
     public mutating func removeAll() {
         guard _buffer.count > .zero else { return }
-        _buffer.removeAll()
+        _buffer.remove.all()
     }
 }
 
@@ -166,9 +166,6 @@ extension Array.Static where Element: ~Copyable {
 // MARK: Sequence Tag Enums
 
 extension Array.Static where Element: ~Copyable {
-    public enum ForEach {
-        public typealias View = Property<Sequence.ForEach, Array<Element>.Static<capacity>>.View.Typed<Element>.Valued<capacity>
-    }
     public enum Drain {
         public typealias View = Property<Sequence.Drain, Array<Element>.Static<capacity>>.View.Typed<Element>.Valued<capacity>
     }
@@ -179,31 +176,12 @@ extension Array.Static where Element: ~Copyable {
 extension Array.Static where Element: ~Copyable {
     /// Property view for iteration operations.
     @inlinable
-    public var forEach: ForEach.View {
+    public var forEach: Property<Sequence.ForEach, Self>.View.Typed<Element> {
         mutating _read { yield unsafe .init(&self) }
-        mutating _modify { var view: ForEach.View = unsafe .init(&self); yield &view }
-    }
-}
-
-// MARK: ForEach: Borrowing Operations (~Copyable)
-
-extension Property.View.Typed.Valued
-where Tag == Sequence.ForEach, Base == Array<Element>.Static<n>, Element: ~Copyable {
-    /// Borrowing iteration: `.forEach { }`
-    @inlinable
-    public func callAsFunction(_ body: (borrowing Element) -> Void) {
-        let count = unsafe base.pointee._buffer.count
-        guard count > .zero else { return }
-        for i in 0..<Int(bitPattern: count) {
-            let slot = Index_Primitives.Index<Element>(Ordinal(UInt(i)))
-            body(unsafe base.pointee._buffer[slot])
+        mutating _modify {
+            var view: Property<Sequence.ForEach, Self>.View.Typed<Element> = unsafe .init(&self)
+            yield &view
         }
-    }
-
-    /// Explicit borrowing iteration: `.forEach.borrowing { }`
-    @inlinable
-    public func borrowing(_ body: (borrowing Element) -> Void) {
-        callAsFunction(body)
     }
 }
 
@@ -229,7 +207,7 @@ where Tag == Sequence.Drain, Base == Array<Element>.Static<n>, Element: ~Copyabl
         let count = unsafe base.pointee._buffer.count
         guard count > .zero else { return }
         while unsafe !base.pointee._buffer.isEmpty {
-            body(unsafe base.pointee._buffer.removeFirst())
+            body(unsafe base.pointee._buffer.remove.first())
         }
     }
 }

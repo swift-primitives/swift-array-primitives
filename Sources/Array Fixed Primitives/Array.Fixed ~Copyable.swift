@@ -116,52 +116,6 @@ extension Array.Fixed: Sequence.`Protocol` {
 }
 
 // ============================================================================
-// MARK: - ForEach Property View
-// ============================================================================
-
-extension Array.Fixed where Element: ~Copyable {
-    public enum ForEach {
-        public typealias View = Property<Sequence.ForEach, Array<Element>.Fixed>.View.Typed<Element>
-    }
-}
-
-extension Array.Fixed where Element: ~Copyable {
-    /// Property view for iteration operations.
-    @inlinable
-    public var forEach: ForEach.View {
-        mutating _read {
-            yield unsafe .init(&self)
-        }
-        mutating _modify {
-            var view: ForEach.View = unsafe .init(&self)
-            yield &view
-        }
-    }
-}
-
-// MARK: - ForEach: Borrowing Operations (~Copyable)
-
-extension Property.View.Typed
-where Tag == Sequence.ForEach, Base == Array<Element>.Fixed, Element: ~Copyable {
-    /// Borrowing iteration: `.forEach { }`
-    @inlinable
-    public func callAsFunction(_ body: (borrowing Element) -> Void) {
-        let count = unsafe base.pointee._buffer.count
-        guard count > .zero else { return }
-        for i in 0..<Int(bitPattern: count) {
-            let slot = Index_Primitives.Index<Element>(Ordinal(UInt(i)))
-            body(unsafe base.pointee._buffer[slot])
-        }
-    }
-
-    /// Explicit borrowing iteration: `.forEach.borrowing { }`
-    @inlinable
-    public func borrowing(_ body: (borrowing Element) -> Void) {
-        callAsFunction(body)
-    }
-}
-
-// ============================================================================
 // MARK: - Properties
 // ============================================================================
 
@@ -262,3 +216,22 @@ extension Array.Fixed where Element: ~Copyable {
         }
     }
 }
+
+// ============================================================================
+// MARK: - Property Views
+// ============================================================================
+
+// MARK: ForEach Property View
+
+extension Array.Fixed where Element: ~Copyable {
+    /// Property view for iteration operations.
+    @inlinable
+    public var forEach: Property<Sequence.ForEach, Self>.View.Typed<Element> {
+        mutating _read { yield unsafe .init(&self) }
+        mutating _modify {
+            var view: Property<Sequence.ForEach, Self>.View.Typed<Element> = unsafe .init(&self)
+            yield &view
+        }
+    }
+}
+

@@ -10,9 +10,6 @@
 // ===----------------------------------------------------------------------===//
 
 public import Array_Primitives_Core
-public import Index_Primitives
-public import Property_Primitives
-public import Sequence_Primitives
 
 // ============================================================================
 // MARK: - Subscripts
@@ -87,22 +84,3 @@ extension Array.Static where Element: Copyable {
     }
 }
 
-// ============================================================================
-// MARK: - Property View Operations
-// ============================================================================
-
-extension Property.View.Typed.Valued
-where Tag == Sequence.ForEach, Base == Array<Element>.Static<n>, Element: Copyable {
-    /// Consuming iteration: `.forEach.consuming { }`
-    @_lifetime(&self)
-    @inlinable
-    public mutating func consuming(_ body: (Element) -> Void) {
-        let count = unsafe base.pointee._buffer.count
-        guard count > .zero else { return }
-        for i in 0..<Int(bitPattern: count) {
-            let slot = Index_Primitives.Index<Element>(Ordinal(UInt(i)))
-            body(unsafe base.pointee._buffer[slot])
-        }
-        unsafe base.pointee._buffer.removeAll()
-    }
-}

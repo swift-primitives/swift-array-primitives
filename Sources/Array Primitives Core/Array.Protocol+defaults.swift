@@ -9,6 +9,8 @@
 //
 // ===----------------------------------------------------------------------===//
 
+import Property_Primitives
+
 // MARK: - Default Implementations
 
 extension __ArrayProtocol where Self: ~Copyable {
@@ -28,3 +30,25 @@ extension __ArrayProtocol where Self: ~Copyable {
         body(self[index])
     }
 }
+
+// MARK: ForEach: Borrowing Operations on .Typed (~Copyable)
+
+extension Property.View.Typed
+where Tag == Sequence.ForEach, Base: __ArrayProtocol & ~Copyable, Element: ~Copyable {
+    /// Borrowing iteration: `.forEach { }`
+    @inlinable
+    public func callAsFunction(_ body: (borrowing Base.Element) -> Void) {
+        var i = unsafe base.pointee.startIndex
+        while unsafe i < base.pointee.endIndex {
+            body(unsafe base.pointee[i])
+            i = unsafe base.pointee.index(after: i)
+        }
+    }
+
+    /// Explicit borrowing iteration: `.forEach.borrowing { }`
+    @inlinable
+    public func borrowing(_ body: (borrowing Base.Element) -> Void) {
+        callAsFunction(body)
+    }
+}
+
