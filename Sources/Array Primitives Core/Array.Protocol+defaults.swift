@@ -34,7 +34,7 @@ extension Array.`Protocol` where Self: ~Copyable {
 // MARK: ForEach: Borrowing Operations on .Typed (~Copyable)
 
 extension Property.View.Typed
-where Tag == Sequence.ForEach, Base: Array.`Protocol` & ~Copyable, Element: ~Copyable {
+where Tag == Collection.ForEach, Base: Array.`Protocol` & ~Copyable, Element: ~Copyable {
     /// Borrowing iteration: `.forEach { }`
     @inlinable
     public func callAsFunction(_ body: (borrowing Base.Element) -> Void) {

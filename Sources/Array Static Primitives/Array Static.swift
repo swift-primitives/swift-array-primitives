@@ -18,24 +18,19 @@ import Sequence_Primitives
 // MARK: - Protocol Conformances
 // ============================================================================
 
-// MARK: Collection.Protocol Conformance
-
-extension Array.Static: Collection.`Protocol` {}
+// Collection.Protocol conformance is inherited through Collection.Bidirectional.
 
 // MARK: Collection.Access.Random Conformance
 
-extension Array.Static: Collection.Access.Random {}
-
-// Note: Array.Static cannot conform to Swift.Collection because it is unconditionally
-// ~Copyable (has deinit for inline storage cleanup). Swift.Collection requires Self: Copyable.
+extension Array.Static: Collection.Access.Random where Element: ~Copyable {}
 
 // MARK: Collection.Remove.Last Conformance
 
-extension Array.Static: Collection.Remove.Last {}
+extension Array.Static: Collection.Remove.Last where Element: ~Copyable {}
 
 // MARK: Collection.Clearable Conformance
 
-extension Array.Static: Collection.Clearable {}
+extension Array.Static: Collection.Clearable where Element: ~Copyable {}
 
 // ============================================================================
 // MARK: - Nested Types

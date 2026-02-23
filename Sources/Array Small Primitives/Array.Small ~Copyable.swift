@@ -82,7 +82,7 @@ extension Array.Small where Element: ~Copyable {
     /// - Parameter index: The typed index of the element to access.
     /// - Precondition: `index` must be in bounds.
     @inlinable
-    public subscript(index: Index) -> Element {
+    public subscript(_ index: Index) -> Element {
         _read {
             precondition(index < _buffer.count, "Index out of bounds")
             yield _buffer[index]
@@ -211,10 +211,10 @@ extension Array.Small where Element: ~Copyable {
 extension Array.Small where Element: ~Copyable {
     /// Property view for iteration operations.
     @inlinable
-    public var forEach: Property<Sequence.ForEach, Self>.View.Typed<Element> {
+    public var forEach: Property<Collection.ForEach, Self>.View.Typed<Element> {
         mutating _read { yield unsafe .init(&self) }
         mutating _modify {
-            var view: Property<Sequence.ForEach, Self>.View.Typed<Element> = unsafe .init(&self)
+            var view: Property<Collection.ForEach, Self>.View.Typed<Element> = unsafe .init(&self)
             yield &view
         }
     }

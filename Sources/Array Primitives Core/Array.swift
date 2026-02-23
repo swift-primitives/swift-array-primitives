@@ -223,3 +223,5 @@ extension Array.Bounded: Copyable where Element: Copyable {}
 extension Array.Fixed: @unchecked Sendable where Element: Sendable {}
 extension Array.Static: @unchecked Sendable where Element: Sendable {}
 extension Array.Bounded: @unchecked Sendable where Element: Sendable {}
+
+

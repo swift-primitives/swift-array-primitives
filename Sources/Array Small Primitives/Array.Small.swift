@@ -16,9 +16,7 @@ public import Collection_Primitives
 // MARK: - Protocol Conformances
 // ============================================================================
 
-// MARK: Collection.Protocol Conformance
-
-extension Array.Small: Collection.`Protocol` where Element: Copyable {}
+// Collection.Protocol conformance is inherited through Collection.Bidirectional.
 
 // MARK: Collection.Access.Random Conformance
 

@@ -32,8 +32,8 @@ extension ArrayStaticTests.Unit {
 
     // MARK: - Capacity Invariants
 
-    @Test("Cannot exceed compile-time capacity")
-    func cannotExceedCompileTimeCapacity() throws {
+    @Test
+    func `Cannot exceed compile-time capacity`() throws {
         var array = Array<Int>.Static<3>()
 
         try array.append(1)
@@ -48,8 +48,8 @@ extension ArrayStaticTests.Unit {
         #expect(array.count == 3)
     }
 
-    @Test("isFull returns true at capacity")
-    func isFullReturnsTrueAtCapacity() throws {
+    @Test
+    func `isFull returns true at capacity`() throws {
         var array = Array<Int>.Static<2>()
 
         #expect(array.isFull == false)
@@ -61,8 +61,8 @@ extension ArrayStaticTests.Unit {
         #expect(array.isFull == true)
     }
 
-    @Test("Capacity is compile-time constant")
-    func capacityIsCompileTimeConstant() throws {
+    @Test
+    func `Capacity is compile-time constant`() throws {
         #expect(Array<Int>.Static<1>.capacity == 1)
         #expect(Array<Int>.Static<4>.capacity == 4)
         #expect(Array<Int>.Static<100>.capacity == 100)
@@ -70,15 +70,15 @@ extension ArrayStaticTests.Unit {
 
     // MARK: - Count Invariants
 
-    @Test("Empty array has count zero")
-    func emptyArrayHasCountZero() {
+    @Test
+    func `Empty array has count zero`() {
         let array = Array<Int>.Static<8>()
         #expect(array.count == 0)
         #expect(array.isEmpty == true)
     }
 
-    @Test("Append increments count")
-    func appendIncrementsCount() throws {
+    @Test
+    func `Append increments count`() throws {
         var array = Array<Int>.Static<8>()
 
         try array.append(1)
@@ -88,8 +88,8 @@ extension ArrayStaticTests.Unit {
         #expect(array.count == 2)
     }
 
-    @Test("RemoveLast decrements count")
-    func removeLastDecrementsCount() throws {
+    @Test
+    func `RemoveLast decrements count`() throws {
         var array = Array<Int>.Static<8>()
         try array.append(1)
         try array.append(2)
@@ -101,16 +101,16 @@ extension ArrayStaticTests.Unit {
         #expect(array.count == 0)
     }
 
-    @Test("RemoveLast on empty returns nil")
-    func removeLastOnEmptyReturnsNil() {
+    @Test
+    func `RemoveLast on empty returns nil`() {
         var array = Array<Int>.Static<8>()
         #expect(array.removeLast() == nil)
     }
 
     // MARK: - forEach Invariants
 
-    @Test("forEach yields exactly count elements")
-    func forEachYieldsExactlyCountElements() throws {
+    @Test
+    func `forEach yields exactly count elements`() throws {
         var array = Array<Int>.Static<10>()
         for i in 0..<5 { try array.append(i) }
 
@@ -120,8 +120,8 @@ extension ArrayStaticTests.Unit {
         #expect(iteratedCount == 5)
     }
 
-    @Test("forEach yields elements in insertion order")
-    func forEachYieldsElementsInInsertionOrder() throws {
+    @Test
+    func `forEach yields elements in insertion order`() throws {
         var array = Array<Int>.Static<8>()
         try array.append(10)
         try array.append(20)
@@ -133,8 +133,8 @@ extension ArrayStaticTests.Unit {
         #expect(elements == [10, 20, 30])
     }
 
-    @Test("Empty array forEach yields nothing")
-    func emptyArrayForEachYieldsNothing() {
+    @Test
+    func `Empty array forEach yields nothing`() {
         var array = Array<Int>.Static<8>()
 
         var iteratedCount = 0
@@ -143,8 +143,8 @@ extension ArrayStaticTests.Unit {
         #expect(iteratedCount == 0)
     }
 
-    @Test("forEach matches subscript access")
-    func forEachMatchesSubscriptAccess() throws {
+    @Test
+    func `forEach matches subscript access`() throws {
         var array = Array<Int>.Static<10>()
         for i in 0..<5 { try array.append(i * 7) }
 
@@ -158,8 +158,8 @@ extension ArrayStaticTests.Unit {
         }
     }
 
-    @Test("Full array forEach yields all elements")
-    func fullArrayForEachYieldsAllElements() throws {
+    @Test
+    func `Full array forEach yields all elements`() throws {
         var array = Array<Int>.Static<4>()
         try array.append(1)
         try array.append(2)
@@ -175,8 +175,8 @@ extension ArrayStaticTests.Unit {
 
     // MARK: - Span Invariants
 
-    @Test("withSpan provides correct element access")
-    func withSpanProvidesCorrectElementAccess() throws {
+    @Test
+    func `withSpan provides correct element access`() throws {
         var array = Array<Int>.Static<8>()
         for i in 0..<5 { try array.append(i * 2) }
 
@@ -193,8 +193,8 @@ extension ArrayStaticTests.Unit {
 
 extension ArrayStaticTests.EdgeCase {
 
-    @Test("Single element capacity")
-    func singleElementCapacity() throws {
+    @Test
+    func `Single element capacity`() throws {
         var array = Array<Int>.Static<1>()
 
         try array.append(42)
@@ -211,8 +211,8 @@ extension ArrayStaticTests.EdgeCase {
         #expect(elements == [42])
     }
 
-    @Test("Fill and empty multiple times")
-    func fillAndEmptyMultipleTimes() throws {
+    @Test
+    func `Fill and empty multiple times`() throws {
         var array = Array<Int>.Static<3>()
 
         // First fill
@@ -237,8 +237,8 @@ extension ArrayStaticTests.EdgeCase {
         #expect(elements == [10, 20, 30])
     }
 
-    @Test("Append after partial removeLast")
-    func appendAfterPartialRemoveLast() throws {
+    @Test
+    func `Append after partial removeLast`() throws {
         var array = Array<Int>.Static<4>()
 
         try array.append(1)
@@ -257,8 +257,8 @@ extension ArrayStaticTests.EdgeCase {
         #expect(elements == [1, 2, 100, 200])
     }
 
-    @Test("removeAll clears all elements")
-    func removeAllClearsAllElements() throws {
+    @Test
+    func `removeAll clears all elements`() throws {
         var array = Array<Int>.Static<5>()
         for i in 0..<5 { try array.append(i) }
 
@@ -273,8 +273,8 @@ extension ArrayStaticTests.EdgeCase {
         #expect(iterCount == 0)
     }
 
-    @Test("Large inline capacity")
-    func largeStaticCapacity() throws {
+    @Test
+    func `Large inline capacity`() throws {
         var array = Array<Int>.Static<100>()
 
         for i in 0..<100 {
@@ -298,8 +298,8 @@ extension ArrayStaticTests.EdgeCase {
 
 extension ArrayStaticTests.Integration {
 
-    @Test("forEach and withSpan yield same elements")
-    func forEachAndWithSpanYieldSameElements() throws {
+    @Test
+    func `forEach and withSpan yield same elements`() throws {
         var array = Array<Int>.Static<10>()
         for i in 0..<7 { try array.append(i * 2) }
 

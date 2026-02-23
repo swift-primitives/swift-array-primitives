@@ -33,7 +33,7 @@ extension Array.Fixed where Element: Copyable {
     /// - Parameter index: The typed index of the element to access.
     /// - Precondition: `index` must be in bounds.
     @inlinable
-    public subscript(index: Index) -> Element {
+    public subscript(_ index: Index) -> Element {
         get {
             precondition(index < count, "Index out of bounds")
             return _buffer[index]
