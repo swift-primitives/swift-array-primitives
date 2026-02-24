@@ -40,6 +40,10 @@ let package = Package(
             name: "Array Bounded Primitives",
             targets: ["Array Bounded Primitives"]
         ),
+        .library(
+            name: "Array Primitives Test Support",
+            targets: ["Array Primitives Test Support"]
+        ),
     ],
     dependencies: [
         .package(path: "../swift-standard-library-extensions"),
