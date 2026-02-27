@@ -55,50 +55,26 @@ extension Array {
 // MARK: Iterator
 
 extension Array where Element: Copyable {
-    /// Pointer-based iterator for Array.
-    ///
-    /// Zero-copy iteration using typed `Index<Element>` for position tracking.
-    @safe
+    /// Iterator for Array that delegates to Buffer.Linear.Iterator.
     public struct Iterator: Sequence.Iterator.`Protocol`, IteratorProtocol {
         @usableFromInline
-        let base: UnsafePointer<Element>
+        var _inner: Buffer<Element>.Linear.Iterator
 
         @usableFromInline
-        let end: Index.Count
-
-        @usableFromInline
-        var position: Index
-
-        @usableFromInline
-        var _spanBuffer: [Element] = []
-
-        @usableFromInline @unsafe
-        init(base: UnsafePointer<Element>, count: Index.Count) {
-            unsafe self.base = base
-            self.end = count
-            self.position = .zero
+        init(_inner: Buffer<Element>.Linear.Iterator) {
+            self._inner = _inner
         }
 
         @_lifetime(&self)
         @inlinable
         public mutating func nextSpan(maximumCount: Cardinal) -> Span<Element> {
-            _spanBuffer.removeAll(keepingCapacity: true)
-            var remaining = Int(maximumCount.rawValue)
-            while remaining > 0, position < end {
-                _spanBuffer.append(unsafe base[Int(bitPattern: position)])
-                position = position + Index.Count.one
-                remaining -= 1
-            }
-            return _spanBuffer.span
+            _inner.nextSpan(maximumCount: maximumCount)
         }
 
         @_lifetime(self: immortal)
         @inlinable
         public mutating func next() -> Element? {
-            guard position < end else { return nil }
-            let result = unsafe base[Int(bitPattern: position)]
-            position = position + Index.Count.one
-            return result
+            _inner.next()
         }
     }
 }
@@ -108,16 +84,10 @@ extension Array.Iterator: @unchecked Sendable where Element: Sendable {}
 // MARK: Sequence.Protocol Conformance
 
 extension Array: Sequence.`Protocol` where Element: Copyable {
-    /// Returns a pointer-based iterator over the array elements.
+    /// Returns an iterator over the array elements.
     @inlinable
     public borrowing func makeIterator() -> Iterator {
-        let count = _buffer.count
-        guard count > .zero else {
-            return unsafe Iterator(base: UnsafePointer<Element>(bitPattern: 1)!, count: .zero)
-        }
-        return _buffer.withUnsafeBufferPointer { ubp in
-            unsafe Iterator(base: ubp.baseAddress!, count: count)
-        }
+        Iterator(_inner: _buffer.makeIterator())
     }
 }
 

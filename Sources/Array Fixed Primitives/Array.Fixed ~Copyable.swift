@@ -58,56 +58,26 @@ extension Array.Fixed: Array.`Protocol` where Element: ~Copyable {}
 // MARK: - Iterator
 
 extension Array.Fixed {
-    /// Pointer-based iterator for Array.Fixed.
-    ///
-    /// Zero-copy iteration using typed `Index<Element>` for position tracking.
-    /// The iterator holds a pointer to the storage, not a copy of the elements.
-    ///
-    /// ## Safety
-    ///
-    /// The iterator is only valid while the source array exists and is not mutated.
-    /// This matches the semantics of stdlib's Array.Iterator.
-    @safe
+    /// Iterator for Array.Fixed that delegates to Buffer.Linear.Bounded.Iterator.
     public struct Iterator: Sequence.Iterator.`Protocol`, IteratorProtocol {
         @usableFromInline
-        let base: UnsafePointer<Element>
+        var _inner: Buffer<Element>.Linear.Bounded.Iterator
 
         @usableFromInline
-        let end: Index.Count
-
-        @usableFromInline
-        var index: Index
-
-        @usableFromInline
-        var _spanBuffer: [Element] = []
-
-        @usableFromInline @unsafe
-        init(base: UnsafePointer<Element>, count: Index.Count) {
-            unsafe self.base = base
-            self.end = count
-            self.index = .zero
+        init(_inner: Buffer<Element>.Linear.Bounded.Iterator) {
+            self._inner = _inner
         }
 
         @_lifetime(&self)
         @inlinable
         public mutating func nextSpan(maximumCount: Cardinal) -> Span<Element> {
-            _spanBuffer.removeAll(keepingCapacity: true)
-            var remaining = Int(maximumCount.rawValue)
-            while remaining > 0, index < end {
-                _spanBuffer.append(unsafe base[Int(bitPattern: index)])
-                index = index + Index.Count.one
-                remaining -= 1
-            }
-            return _spanBuffer.span
+            _inner.nextSpan(maximumCount: maximumCount)
         }
 
         @_lifetime(self: immortal)
         @inlinable
         public mutating func next() -> Element? {
-            guard index < end else { return nil }
-            let result = unsafe base[Int(bitPattern: index)]
-            index = index + Index.Count.one
-            return result
+            _inner.next()
         }
     }
 }
@@ -117,16 +87,10 @@ extension Array.Fixed.Iterator: @unchecked Sendable where Element: Sendable {}
 // MARK: - Sequence.Protocol Conformance
 
 extension Array.Fixed: Sequence.`Protocol` {
-    /// Returns a pointer-based iterator over the array elements.
+    /// Returns an iterator over the array elements.
     @inlinable
     public borrowing func makeIterator() -> Array.Fixed.Iterator {
-        let count = _buffer.count
-        guard count > .zero else {
-            return unsafe Iterator(base: UnsafePointer<Element>(bitPattern: 1)!, count: .zero)
-        }
-        return _buffer.withUnsafeBufferPointer { ubp in
-            unsafe Iterator(base: ubp.baseAddress!, count: count)
-        }
+        Iterator(_inner: _buffer.makeIterator())
     }
 }
 
