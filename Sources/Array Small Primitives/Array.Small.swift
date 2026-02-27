@@ -54,6 +54,13 @@ extension Array.Small where Element: Copyable {
             self._inner = _inner
         }
 
+        @_lifetime(&self)
+        @inlinable
+        public mutating func nextSpan(maximumCount: Cardinal) -> Span<Element> {
+            _inner.nextSpan(maximumCount: maximumCount)
+        }
+
+        @_lifetime(self: immortal)
         @inlinable
         public mutating func next() -> Element? {
             _inner.next()

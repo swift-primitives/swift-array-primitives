@@ -78,6 +78,9 @@ extension Array.Fixed {
         @usableFromInline
         var index: Index
 
+        @usableFromInline
+        var _spanBuffer: [Element] = []
+
         @usableFromInline @unsafe
         init(base: UnsafePointer<Element>, count: Index.Count) {
             unsafe self.base = base
@@ -85,6 +88,20 @@ extension Array.Fixed {
             self.index = .zero
         }
 
+        @_lifetime(&self)
+        @inlinable
+        public mutating func nextSpan(maximumCount: Cardinal) -> Span<Element> {
+            _spanBuffer.removeAll(keepingCapacity: true)
+            var remaining = Int(maximumCount.rawValue)
+            while remaining > 0, index < end {
+                _spanBuffer.append(unsafe base[Int(bitPattern: index)])
+                index = index + Index.Count.one
+                remaining -= 1
+            }
+            return _spanBuffer.span
+        }
+
+        @_lifetime(self: immortal)
         @inlinable
         public mutating func next() -> Element? {
             guard index < end else { return nil }
