@@ -9,11 +9,6 @@ applies_to: [swift-array-primitives]
 normative: false
 ---
 -->
-
-@Metadata {
-    @TitleHeading("Array Primitives")
-}
-
 Design decisions, implementation patterns, and lessons learned specific to this package.
 
 ## Overview
@@ -130,8 +125,6 @@ The `Property.View` pattern in swift-property-primitives stores `UnsafeMutablePo
 
 ---
 
-## Topics
+## Related
 
-### Related Documents
-
-- <doc:Array>
+- Array
