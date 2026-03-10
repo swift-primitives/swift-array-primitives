@@ -36,14 +36,25 @@ extension Array where Element: ~Copyable {
         @usableFromInline
         package var _buffer: Buffer<Element>.Linear.Inline<capacity>
 
+        // WORKAROUND: Forces compiler to execute deinit body.
+        // TRACKING: swiftlang/swift #86652 variant (nested ~Copyable deinit chain)
+        // WHEN TO REMOVE: When the compiler correctly destroys ~Copyable structs
+        //      with cross-package value-generic stored properties.
+        private var _deinitWorkaround: AnyObject? = nil
+
         /// Creates an empty inline array.
         @inlinable
         public init() {
             self._buffer = Buffer<Element>.Linear.Inline<capacity>()
         }
 
-        // No explicit deinit needed: Buffer.Linear.Inline contains Storage.Inline,
-        // whose deinit auto-cleans up all initialized elements via _slots bit tracking.
+        deinit {
+            // WORKAROUND: Manually clean up elements via the mutating path.
+            // TRACKING: swiftlang/swift #86652 variant
+            unsafe withUnsafePointer(to: _buffer) { ptr in
+                unsafe UnsafeMutablePointer(mutating: ptr).pointee.remove.all()
+            }
+        }
     }
 }
 
