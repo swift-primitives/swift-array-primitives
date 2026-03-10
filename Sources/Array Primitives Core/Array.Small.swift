@@ -33,10 +33,24 @@ extension Array where Element: ~Copyable {
         @usableFromInline
         package var _buffer: Buffer<Element>.Linear.Small<inlineCapacity>
 
+        // WORKAROUND: Forces compiler to execute deinit body.
+        // TRACKING: swiftlang/swift #86652 variant (nested ~Copyable deinit chain)
+        // WHEN TO REMOVE: When the compiler correctly destroys ~Copyable structs
+        //      with cross-package value-generic stored properties.
+        private var _deinitWorkaround: AnyObject? = nil
+
         /// Creates an empty small array.
         @inlinable
         public init() {
             self._buffer = .init()
+        }
+
+        deinit {
+            // WORKAROUND: Manually clean up elements via the mutating path.
+            // TRACKING: swiftlang/swift #86652 variant
+            unsafe withUnsafePointer(to: _buffer) { ptr in
+                unsafe UnsafeMutablePointer(mutating: ptr).pointee.remove.all()
+            }
         }
     }
 }
