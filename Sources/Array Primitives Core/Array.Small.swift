@@ -22,8 +22,7 @@ extension Array where Element: ~Copyable {
     /// `Array.Small` stores up to `inlineCapacity` elements in inline storage,
     /// then automatically spills to heap storage when that capacity is exceeded.
     ///
-    /// - Note: This type is declared inside `Array` (not in an extension) due to a
-    ///   Swift compiler bug. Public API is in the Array Small Primitives module.
+    /// Public API is in the Array Small Primitives module.
     @safe
     public struct Small<let inlineCapacity: Int>: ~Copyable {
 

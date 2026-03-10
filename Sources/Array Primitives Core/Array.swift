@@ -106,84 +106,6 @@ public struct Array<Element: ~Copyable>: ~Copyable {
         // Note: No deinit needed - Buffer/Storage handles cleanup
     }
 
-    // MARK: - Static (Fixed-Capacity, Inline Storage)
-
-    /// A fixed-capacity vector with inline storage (static_vector / ArrayVec).
-    ///
-    /// `Array.Static` stores elements directly within the struct's memory layout,
-    /// requiring no heap allocation. The capacity is specified as a compile-time
-    /// generic parameter. Count varies from 0 to capacity.
-    ///
-    /// ## Move-Only
-    ///
-    /// `Array.Static` is unconditionally `~Copyable` due to its deinitializer requirement.
-    /// Both the array and its elements can be move-only types.
-    ///
-    /// ## Limitations
-    ///
-    /// - Maximum element stride: 64 bytes (8 Int-sized words)
-    /// - Element alignment must not exceed `MemoryLayout<Int>.alignment`
-    /// - Capacity is fixed at compile time; use `Array.Small` for flexible sizing
-    ///
-    /// - Note: This type is declared inside `Array` (not in an extension) due to a
-    ///   Swift compiler bug where nested types with value generic parameters declared
-    ///   in extensions do not properly inherit `~Copyable` constraints from the outer type.
-    public struct Static<let capacity: Int>: ~Copyable {
-        /// Internal inline linear buffer.
-        @usableFromInline
-        package var _buffer: Buffer<Element>.Linear.Inline<capacity>
-
-        /// Creates an empty inline array.
-        @inlinable
-        public init() {
-            self._buffer = Buffer<Element>.Linear.Inline<capacity>()
-        }
-
-        // No explicit deinit needed: Buffer.Linear.Inline contains Storage.Inline,
-        // whose deinit auto-cleans up all initialized elements via _slots bit tracking.
-    }
-
-    // MARK: - Bounded (Compile-Time Dimensioned, Heap-Allocated)
-
-    /// A fixed-size array with compile-time dimension and `Algebra.Z<N>` indexing.
-    ///
-    /// `Array.Bounded<N>` provides compile-time dimension safety: the index type
-    /// `Algebra.Z<N>` ensures indices are always within `[0, N)`. Once an index
-    /// is constructed (with a bounds check), subscript access is guaranteed safe.
-    ///
-    /// ## Compile-Time Dimension Safety
-    ///
-    /// ```swift
-    /// let arr = Array<Int>.Bounded<3>([1, 2, 3])
-    /// let idx: Array<Int>.Bounded<3>.Index = try! .init(0)  // Bounds-checked
-    /// print(arr[idx])  // Safe — no runtime check needed
-    /// ```
-    ///
-    /// ## Type-Level Index Separation
-    ///
-    /// Indices from different bounded arrays are distinct types:
-    /// `Array<Int>.Bounded<3>.Index` ≠ `Array<Int>.Bounded<5>.Index`.
-    ///
-    /// ## Copy-on-Write
-    ///
-    /// When `Element` is `Copyable`, uses copy-on-write heap storage.
-    ///
-    /// - Note: This type is declared inside `Array` (not in an extension) due to a
-    ///   Swift compiler bug where nested types with value generic parameters declared
-    ///   in extensions do not properly inherit `~Copyable` constraints from the outer type.
-    @safe
-    public struct Bounded<let N: Int>: ~Copyable {
-        /// Internal bounded linear buffer.
-        @usableFromInline
-        package var _buffer: Buffer<Element>.Linear.Bounded
-
-        /// Internal initializer for use by extension modules.
-        @usableFromInline
-        package init(_buffer: consuming Buffer<Element>.Linear.Bounded) {
-            self._buffer = _buffer
-        }
-    }
-
     // MARK: - Inline (Typealias to Swift.InlineArray)
 
     /// Fixed-count inline array (typealias to `Swift.InlineArray`).
@@ -215,13 +137,8 @@ extension Array.Fixed: Copyable where Element: Copyable {}
 extension Array: Copyable where Element: Copyable {}
 extension Array: @unchecked Sendable where Element: Sendable {}
 
-/// `Array.Bounded` is `Copyable` when its elements are `Copyable`.
-extension Array.Bounded: Copyable where Element: Copyable {}
-
 // MARK: - Sendable
 
 extension Array.Fixed: @unchecked Sendable where Element: Sendable {}
-extension Array.Static: @unchecked Sendable where Element: Sendable {}
-extension Array.Bounded: @unchecked Sendable where Element: Sendable {}
 
 
