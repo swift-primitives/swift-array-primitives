@@ -127,6 +127,17 @@ extension Array where Element: ~Copyable {
         return base._buffer.remove.last()
     }
 
+    /// Removes and returns the element at the given index, shifting subsequent elements left.
+    ///
+    /// - Parameter index: The index of the element to remove.
+    /// - Returns: The removed element.
+    /// - Precondition: The index must be in bounds.
+    /// - Complexity: O(n) where n is the distance from `index` to the end.
+    @inlinable
+    public mutating func remove(at index: Index) -> Element {
+        _buffer.remove(at: index)
+    }
+
     /// Static primitive for `Collection.Clearable`. Use `.remove.all()` at call sites.
     @inlinable
     public static func removeAll(_ base: inout Self) {
