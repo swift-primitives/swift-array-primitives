@@ -15,15 +15,11 @@ import Property_Primitives
 
 extension Array.`Protocol` where Self: ~Copyable {
     /// Calls `body` with each valid index from `startIndex` to `endIndex`.
-    ///
-    /// The body's return value is discarded — forEach is a side-effect operation.
-    /// Generic over `R` so that closures containing `withElement` (which propagates
-    /// its inner closure's return type) work without requiring `-> Void` annotation.
     @inlinable
-    public func forEach<R>(_ body: (Index) -> R) {
+    public func forEach(_ body: (Index) -> Void) {
         var i = startIndex
         while i < endIndex {
-            _ = body(i)
+            body(i)
             i = index(after: i)
         }
     }
