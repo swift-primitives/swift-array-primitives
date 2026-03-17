@@ -14,12 +14,16 @@ import Property_Primitives
 // MARK: - Default Implementations
 
 extension Array.`Protocol` where Self: ~Copyable {
-    /// Calls `body` with each valid index from `startIndex` to `endIndex`.
+    /// Borrowing element iteration (non-mutating).
+    ///
+    /// Iterates over each element with borrowing access, matching stdlib's
+    /// `Sequence.forEach` semantics. For index-based iteration, use
+    /// `.forEach.index { }` in mutating contexts.
     @inlinable
-    public func forEach(_ body: (Index) -> Void) {
+    public func forEach(_ body: (borrowing Element) -> Void) {
         var i = startIndex
         while i < endIndex {
-            body(i)
+            body(self[i])
             i = index(after: i)
         }
     }
@@ -49,6 +53,19 @@ where Tag == Collection.ForEach, Base: Array.`Protocol` & ~Copyable, Element: ~C
     @inlinable
     public func borrowing(_ body: (borrowing Base.Element) -> Void) {
         callAsFunction(body)
+    }
+
+    /// Index-based iteration: `.forEach.index { }`
+    ///
+    /// Yields each valid index from `startIndex` to `endIndex`.
+    /// Use when the index is needed (e.g., for mutation or cross-reference).
+    @inlinable
+    public func index(_ body: (Base.Index) -> Void) {
+        var i = unsafe base.pointee.startIndex
+        while unsafe i < base.pointee.endIndex {
+            body(i)
+            i = unsafe base.pointee.index(after: i)
+        }
     }
 }
 

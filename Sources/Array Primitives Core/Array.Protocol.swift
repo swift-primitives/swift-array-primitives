@@ -31,7 +31,7 @@ extension Array where Element: ~Copyable {
     /// with `associatedtype Element: ~Copyable` and subscript access. This enables:
     ///
     /// - Generic functions over any Array variant
-    /// - Default `forEachIndex` and `withElement` for all conformers
+    /// - Default `forEach` (element iteration) and `withElement` for all conformers
     /// - Compile-time API parity enforcement
     ///
     /// ## Hoisted Protocol Pattern
@@ -71,9 +71,7 @@ extension Array where Element: ~Copyable {
     /// func iterate<V: Array.Protocol & ~Copyable>(
     ///     _ v: borrowing V
     /// ) where V.Element == Int {
-    ///     v.forEachIndex { idx in
-    ///         v.withElement(at: idx) { print($0) }
-    ///     }
+    ///     v.forEach { print($0) }
     /// }
     /// ```
     public typealias `Protocol` = __ArrayProtocol
