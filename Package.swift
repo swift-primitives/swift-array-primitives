@@ -57,7 +57,8 @@ let package = Package(
         .package(path: "../swift-hash-primitives"),
     ],
     targets: [
-        // Core types with ~Copyable support (Array, Fixed, Static, Small, Bounded structs)
+
+        // MARK: - Core
         .target(
             name: "Array Primitives Core",
             dependencies: [
@@ -69,30 +70,36 @@ let package = Package(
                 .product(name: "Buffer Linear Small Primitives", package: "swift-buffer-primitives"),
             ]
         ),
-        // Per-variant modules: Swift.Sequence/Collection conformances (Element: Copyable)
-        // Separate modules to avoid constraint poisoning on Core types
+
+        // MARK: - Dynamic
         .target(
-            name: "Array Dynamic Primitives",  // Base Array (growable, heap)
+            name: "Array Dynamic Primitives",
             dependencies: [
                 "Array Primitives Core",
                 .product(name: "Collection Primitives", package: "swift-collection-primitives"),
                 .product(name: "Sequence Primitives", package: "swift-sequence-primitives"),
             ]
         ),
+
+        // MARK: - Fixed
         .target(
-            name: "Array Fixed Primitives",  // Fixed-count heap array
+            name: "Array Fixed Primitives",
             dependencies: [
                 "Array Primitives Core",
                 .product(name: "Collection Primitives", package: "swift-collection-primitives"),
             ]
         ),
+
+        // MARK: - Static
         .target(
-            name: "Array Static Primitives",  // Fixed-capacity inline (was Inline)
+            name: "Array Static Primitives",
             dependencies: [
                 "Array Primitives Core",
                 .product(name: "Collection Primitives", package: "swift-collection-primitives"),
             ]
         ),
+
+        // MARK: - Small
         .target(
             name: "Array Small Primitives",
             dependencies: [
@@ -101,8 +108,10 @@ let package = Package(
                 .product(name: "Buffer Linear Small Primitives", package: "swift-buffer-primitives"),
             ]
         ),
+
+        // MARK: - Bounded
         .target(
-            name: "Array Bounded Primitives",  // Compile-time dimensioned (Algebra.Z<N> indexing)
+            name: "Array Bounded Primitives",
             dependencies: [
                 "Array Primitives Core",
                 .product(name: "Collection Primitives", package: "swift-collection-primitives"),
@@ -111,7 +120,8 @@ let package = Package(
                 .product(name: "Hash Primitives", package: "swift-hash-primitives"),
             ]
         ),
-        // Public: Re-exports Core and all variant modules
+
+        // MARK: - Umbrella
         .target(
             name: "Array Primitives",
             dependencies: [
@@ -123,6 +133,8 @@ let package = Package(
                 "Array Bounded Primitives",
             ]
         ),
+
+        // MARK: - Test Support
         .target(
             name: "Array Primitives Test Support",
             dependencies: [
@@ -131,6 +143,8 @@ let package = Package(
             ],
             path: "Tests/Support"
         ),
+
+        // MARK: - Tests
         .testTarget(
             name: "Array Primitives Tests",
             dependencies: [
