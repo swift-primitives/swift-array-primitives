@@ -76,7 +76,6 @@ let package = Package(
             name: "Array Dynamic Primitives",
             dependencies: [
                 "Array Primitives Core",
-                .product(name: "Collection Primitives", package: "swift-collection-primitives"),
                 .product(name: "Sequence Primitives", package: "swift-sequence-primitives"),
             ]
         ),
@@ -86,7 +85,6 @@ let package = Package(
             name: "Array Fixed Primitives",
             dependencies: [
                 "Array Primitives Core",
-                .product(name: "Collection Primitives", package: "swift-collection-primitives"),
             ]
         ),
 
@@ -95,7 +93,6 @@ let package = Package(
             name: "Array Static Primitives",
             dependencies: [
                 "Array Primitives Core",
-                .product(name: "Collection Primitives", package: "swift-collection-primitives"),
             ]
         ),
 
@@ -104,7 +101,6 @@ let package = Package(
             name: "Array Small Primitives",
             dependencies: [
                 "Array Primitives Core",
-                .product(name: "Collection Primitives", package: "swift-collection-primitives"),
                 .product(name: "Buffer Linear Small Primitives", package: "swift-buffer-primitives"),
             ]
         ),
@@ -114,7 +110,6 @@ let package = Package(
             name: "Array Bounded Primitives",
             dependencies: [
                 "Array Primitives Core",
-                .product(name: "Collection Primitives", package: "swift-collection-primitives"),
                 .product(name: "Algebra Modular Primitives", package: "swift-algebra-modular-primitives"),
                 .product(name: "Equation Primitives", package: "swift-equation-primitives"),
                 .product(name: "Hash Primitives", package: "swift-hash-primitives"),
