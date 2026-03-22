@@ -10,7 +10,7 @@
 // ===----------------------------------------------------------------------===//
 
 public import Array_Primitives_Core
-public import Property_Primitives
+internal import Property_Primitives
 public import Buffer_Linear_Small_Primitives
 
 // ============================================================================

@@ -11,9 +11,9 @@
 
 public import Array_Primitives_Core
 public import Collection_Primitives
-public import Index_Primitives
+internal import Index_Primitives
 public import Ordinal_Primitives
-public import Property_Primitives
+internal import Property_Primitives
 public import Buffer_Linear_Small_Primitives
 
 // ============================================================================

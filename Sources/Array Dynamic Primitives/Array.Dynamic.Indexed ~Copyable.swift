@@ -9,4 +9,4 @@
 //
 // ===----------------------------------------------------------------------===//
 
-public import Array_Primitives_Core
+internal import Array_Primitives_Core
