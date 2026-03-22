@@ -38,7 +38,7 @@ extension Array.Fixed {
             return
         }
 
-        let buffer = Buffer<Element>.Linear.Bounded(
+        let buffer = unsafe Buffer<Element>.Linear.Bounded(
             minimumCapacity: count,
             initializingCount: count,
             with: { ptr in
@@ -77,7 +77,7 @@ extension Array.Fixed {
             return
         }
 
-        let buffer = Buffer<Element>.Linear.Bounded(
+        let buffer = unsafe Buffer<Element>.Linear.Bounded(
             minimumCapacity: count,
             initializingCount: count,
             with: { ptr in

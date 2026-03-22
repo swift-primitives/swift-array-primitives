@@ -159,7 +159,7 @@ extension Array.Fixed where Element: Copyable {
     public func withUnsafeBufferPointer<R, E: Swift.Error>(
         _ body: (UnsafeBufferPointer<Element>) throws(E) -> R
     ) throws(E) -> R {
-        try _buffer.withUnsafeBufferPointer(body)
+        try unsafe _buffer.withUnsafeBufferPointer(body)
     }
 
     /// Provides mutable access to the underlying contiguous storage.
@@ -168,7 +168,7 @@ extension Array.Fixed where Element: Copyable {
     public mutating func withUnsafeMutableBufferPointer<R, E: Swift.Error>(
         _ body: (UnsafeMutableBufferPointer<Element>) throws(E) -> R
     ) throws(E) -> R {
-        try _buffer.withUnsafeMutableBufferPointer(body)
+        try unsafe _buffer.withUnsafeMutableBufferPointer(body)
     }
 }
 
