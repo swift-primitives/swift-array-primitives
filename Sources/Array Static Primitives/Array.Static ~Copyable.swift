@@ -199,7 +199,6 @@ extension Array.Static where Element: ~Copyable {
 extension Property.View.Typed.Valued
 where Tag == Sequence.Drain, Base == Array<Element>.Static<n>, Element: ~Copyable {
     /// Drain iteration: `.drain { }`
-    @_lifetime(&self)
     @inlinable
     public mutating func callAsFunction(_ body: (consuming Element) -> Void) {
         let count = unsafe base.pointee._buffer.count

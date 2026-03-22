@@ -138,13 +138,9 @@ extension Array where Element: ~Copyable {
         _buffer.remove(at: index)
     }
 
-    // WORKAROUND: @_optimize(none) suppresses CopyPropagation false positive
     // on remove.all() + buffer reassignment in deep @inlinable chain.
-    // WHEN TO REMOVE: When swiftlang/swift fixes SIL ownership verification in CopyPropagation.
-    // TRACKING: swift-buffer-primitives/Research/rawlayout-release-crash-investigation.md (Bug 2)
 
     /// Static primitive for `Collection.Clearable`. Use `.remove.all()` at call sites.
-    @_optimize(none)
     @inlinable
     public static func removeAll(_ base: inout Self) {
         base._buffer.remove.all()
@@ -152,7 +148,6 @@ extension Array where Element: ~Copyable {
     }
 
     /// Removes all elements from the array.
-    @_optimize(none)
     @inlinable
     public mutating func removeAll(keepingCapacity: Bool = false) {
         _buffer.remove.all()
@@ -179,7 +174,6 @@ extension Array where Element: ~Copyable {
     /// Mutable span of the array elements.
     @inlinable
     public var mutableSpan: MutableSpan<Element> {
-        @_lifetime(&self)
         mutating get {
             _buffer.mutableSpan
         }
@@ -262,7 +256,6 @@ extension Array where Element: ~Copyable {
 extension Property.View.Typed
 where Tag == Sequence.Drain, Base == Array<Element>, Element: ~Copyable {
     /// Drain iteration: `.drain { }`
-    @_lifetime(&self)
     @inlinable
     public mutating func callAsFunction(_ body: (consuming Element) -> Void) {
         while unsafe !base.pointee._buffer.isEmpty {

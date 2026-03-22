@@ -159,7 +159,6 @@ extension Array.Small where Element: ~Copyable {
 
     /// A mutable view of the array's elements.
     public var mutableSpan: MutableSpan<Element> {
-        @_lifetime(&self)
         @inlinable
         mutating get {
             _buffer.mutableSpan
@@ -243,7 +242,6 @@ extension Array.Small where Element: ~Copyable {
 extension Property.View.Typed.Valued
 where Tag == Sequence.Drain, Base == Array<Element>.Small<n>, Element: ~Copyable {
     /// Drain iteration: `.drain { }`
-    @_lifetime(&self)
     @inlinable
     public mutating func callAsFunction(_ body: (consuming Element) -> Void) {
         while unsafe !base.pointee._buffer.isEmpty {
