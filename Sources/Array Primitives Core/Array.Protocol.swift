@@ -15,9 +15,6 @@
 ///
 /// See ``Array.`Protocol``` for documentation.
 public protocol __ArrayProtocol: Collection.Bidirectional & ~Copyable {
-    /// The type of element stored in the array.
-    associatedtype Element: ~Copyable
-
     /// Accesses the element at the given position.
     subscript(_ position: Index) -> Element { get set }
 }
