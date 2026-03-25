@@ -17,7 +17,7 @@ let package = Package(
                 .enableExperimentalFeature("Lifetimes"),
                 .enableExperimentalFeature("AllowUnsafeAttribute"),
                 .enableExperimentalFeature("AddressableTypes"),
-                .enableExperimentalFeature("InoutLifetimeDependence"),
+                // InoutLifetimeDependence removed — promoted to language feature in Swift 6.3
             ]
         ),
         .testTarget(

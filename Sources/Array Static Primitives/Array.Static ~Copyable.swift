@@ -78,7 +78,6 @@ extension Array.Static where Element: ~Copyable {
     /// - Precondition: `index` must be in bounds.
     @inlinable
     public subscript(_ index: Index) -> Element {
-        @_lifetime(borrow self)
         _read {
             precondition(index < count, "Index out of bounds")
             yield _buffer[index]
