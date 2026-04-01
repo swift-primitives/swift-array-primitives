@@ -22,26 +22,11 @@ extension Array where Element: ~Copyable {
     /// then automatically spills to heap storage when that capacity is exceeded.
     ///
     /// Public API is in the Array Small Primitives module.
+    /// Element cleanup is handled by `Storage.Inline`'s deinit (inline path)
+    /// or `Storage.Heap`'s deinit (spilled path).
     @safe
     public struct Small<let inlineCapacity: Int>: ~Copyable {
-
-        // WORKAROUND: swiftlang/swift#86652 — @_rawLayout triviality misclassification.
-        // Forces compiler to recognize type as non-trivially destructible so deinit executes.
-        // COST: 8 bytes overhead per instance.
-        // REMOVAL TEST: swift-buffer-primitives/Experiments/rawlayout-access-level-trigger/
-        //   Build with `public` access under -O. If it passes, remove this field
-        //   and the manual cleanup in deinit.
-        // TRACKING: swift-buffer-primitives/Research/rawlayout-release-crash-investigation.md
-        //
-        // NOTE: Must be declared BEFORE _buffer. The buffer transitively
-        // contains @_rawLayout storage which must be last in memory layout.
-        // See Storage.Inline for the Swift 6.2.4 IRGen crash details.
-        private var _deinitWorkaround: AnyObject? = nil
-
         /// Internal small linear buffer.
-        ///
-        /// Delegates growth, spill, element lifecycle, and span access
-        /// to `Buffer<Element>.Linear.Small` from buffer-primitives.
         @usableFromInline
         package var _buffer: Buffer<Element>.Linear.Small<inlineCapacity>
 
@@ -49,14 +34,6 @@ extension Array where Element: ~Copyable {
         @inlinable
         public init() {
             self._buffer = .init()
-        }
-
-        deinit {
-            // WORKAROUND: Manually clean up elements via the mutating path.
-            // TRACKING: swiftlang/swift #86652 variant
-            unsafe withUnsafePointer(to: _buffer) { ptr in
-                unsafe UnsafeMutablePointer(mutating: ptr).pointee.remove.all()
-            }
         }
     }
 }
