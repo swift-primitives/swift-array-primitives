@@ -19,8 +19,9 @@ public import Buffer_Linear_Primitives
 /// This is the primary dynamic array type, equivalent to C++'s `std::vector`
 /// or Rust's `Vec<T>`. It supports both copyable and move-only elements.
 ///
-/// This shadows `Swift.Array`. Use `Swift.Array` or `Array_Primitives_Core.Array`
-/// to disambiguate when both are in scope.
+/// This shadows `Swift.Array`. Bare `Array` resolves to this type when any
+/// module in the ecosystem is imported. Use `Swift.Array` or `[T]` syntax
+/// when the stdlib array is needed.
 ///
 /// ## Move-Only Support
 ///

@@ -49,7 +49,7 @@ extension Array: Swift.RandomAccessCollection where Element: Copyable {}
 // MARK: Typealias
 
 extension Array {
-    public typealias Dynamic = Array_Primitives_Core.Array<Element>
+    public typealias Dynamic = Self
 }
 
 // MARK: Iterator
