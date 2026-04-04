@@ -14,20 +14,6 @@ import Property_Primitives
 // MARK: - Default Implementations
 
 extension Array.`Protocol` where Self: ~Copyable {
-    /// Borrowing element iteration (non-mutating).
-    ///
-    /// Iterates over each element with borrowing access, matching stdlib's
-    /// `Sequence.forEach` semantics. For index-based iteration, use
-    /// `.forEach.index { }` in mutating contexts.
-    @inlinable
-    public func forEach(_ body: (borrowing Element) -> Void) {
-        var i = startIndex
-        while i < endIndex {
-            body(self[i])
-            i = index(after: i)
-        }
-    }
-
     /// Calls `body` with a borrowing reference to the element at `index`.
     @inlinable
     public func withElement<R>(at index: Index, _ body: (borrowing Element) -> R) -> R {
