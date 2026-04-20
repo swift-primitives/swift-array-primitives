@@ -14,8 +14,8 @@ struct ConditionalCopyableTests {
 
     // MARK: - Copyable Element Tests
 
-    @Test("Bounded with Copyable elements is Copyable")
-    func boundedWithCopyableElementsIsCopyable() throws {
+    @Test
+    func `Bounded with Copyable elements is Copyable`() throws {
         let original = try ExperimentalArray<Int>.Bounded(count: 5) { $0 * 2 }
 
         // This should compile - proves Bounded is Copyable when Element is Copyable
@@ -31,8 +31,8 @@ struct ConditionalCopyableTests {
         }
     }
 
-    @Test("Sequence conformance works for Copyable elements")
-    func sequenceConformanceWorksForCopyableElements() throws {
+    @Test
+    func `Sequence conformance works for Copyable elements`() throws {
         let array = try ExperimentalArray<Int>.Bounded(count: 4) { $0 + 10 }
 
         // This should compile - proves Sequence conformance
@@ -44,8 +44,8 @@ struct ConditionalCopyableTests {
         #expect(elements == [10, 11, 12, 13])
     }
 
-    @Test("Copy-on-Write semantics work")
-    func copyOnWriteSemanticsWork() throws {
+    @Test
+    func `Copy-on-Write semantics work`() throws {
         var original = try ExperimentalArray<Int>.Bounded(count: 3) { $0 }
         let copy = original
 
@@ -57,8 +57,8 @@ struct ConditionalCopyableTests {
         #expect(copy[0] == 0)
     }
 
-    @Test("Multiple copies are independent")
-    func multipleCopiesAreIndependent() throws {
+    @Test
+    func `Multiple copies are independent`() throws {
         var a = try ExperimentalArray<Int>.Bounded(count: 3) { $0 }
         var b = a
         var c = a
@@ -82,8 +82,8 @@ struct ConditionalCopyableTests {
 
     // MARK: - Non-Copyable Element Tests
 
-    @Test("Bounded with ~Copyable elements works")
-    func boundedWithNonCopyableElementsWorks() throws {
+    @Test
+    func `Bounded with ~Copyable elements works`() throws {
         struct MoveOnly: ~Copyable {
             let value: Int
         }
@@ -108,8 +108,8 @@ struct ConditionalCopyableTests {
 
     // MARK: - Edge Cases
 
-    @Test("Empty array works")
-    func emptyArrayWorks() throws {
+    @Test
+    func `Empty array works`() throws {
         let array = try ExperimentalArray<Int>.Bounded(count: 0) { $0 }
 
         #expect(array.count == 0)
@@ -120,8 +120,8 @@ struct ConditionalCopyableTests {
         #expect(iterCount == 0)
     }
 
-    @Test("Single element array works")
-    func singleElementArrayWorks() throws {
+    @Test
+    func `Single element array works`() throws {
         let array = try ExperimentalArray<Int>.Bounded(count: 1) { _ in 42 }
 
         #expect(array.count == 1)
@@ -132,8 +132,8 @@ struct ConditionalCopyableTests {
         #expect(elements == [42])
     }
 
-    @Test("Large array maintains invariants")
-    func largeArrayMaintainsInvariants() throws {
+    @Test
+    func `Large array maintains invariants`() throws {
         let size = 10_000
         let array = try ExperimentalArray<Int>.Bounded(count: size) { $0 }
 
@@ -150,8 +150,8 @@ struct ConditionalCopyableTests {
         #expect(iterCount == size)
     }
 
-    @Test("Negative count throws error")
-    func negativeCountThrowsError() {
+    @Test
+    func `Negative count throws error`() {
         #expect(throws: ExperimentalArray<Int>.Bounded.Error.self) {
             try ExperimentalArray<Int>.Bounded(count: -1) { $0 }
         }
@@ -159,8 +159,8 @@ struct ConditionalCopyableTests {
 
     // MARK: - Span Tests
 
-    @Test("Span provides correct access")
-    func spanProvidesCorrectAccess() throws {
+    @Test
+    func `Span provides correct access`() throws {
         let array = try ExperimentalArray<Int>.Bounded(count: 5) { $0 * 3 }
         let span = array.span
 
@@ -170,8 +170,8 @@ struct ConditionalCopyableTests {
         }
     }
 
-    @Test("forEach and Sequence yield same elements")
-    func forEachAndSequenceYieldSameElements() throws {
+    @Test
+    func `forEach and Sequence yield same elements`() throws {
         let array = try ExperimentalArray<Int>.Bounded(count: 5) { $0 * 2 }
 
         var forEachElements: [Int] = []
