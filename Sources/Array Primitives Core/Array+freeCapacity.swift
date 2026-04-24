@@ -57,3 +57,20 @@ extension Array.Small where Element: ~Copyable {
         _buffer.capacity.subtract.saturating(_buffer.count)
     }
 }
+
+extension Array.Static where Element: ~Copyable {
+
+    /// The number of additional elements that can be stored before reaching
+    /// the compile-time capacity.
+    ///
+    /// Uses the type-level `capacity` generic parameter directly, bypassing
+    /// `_buffer.capacity` (Buffer.Linear.Inline doesn't expose a runtime
+    /// capacity property — its generic parameter, also named `capacity`,
+    /// would shadow any such addition).
+    ///
+    /// - Complexity: O(1)
+    @inlinable
+    public var freeCapacity: Array.Index.Count {
+        Array.Index.Count(UInt(capacity)).subtract.saturating(_buffer.count)
+    }
+}

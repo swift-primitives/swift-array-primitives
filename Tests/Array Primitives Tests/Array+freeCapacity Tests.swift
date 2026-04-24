@@ -18,6 +18,7 @@ struct ArrayFreeCapacityTests {
     @Suite struct Dynamic {}
     @Suite struct Fixed {}
     @Suite struct Small {}
+    @Suite struct Static {}
 }
 
 // MARK: - Dynamic
@@ -77,5 +78,33 @@ extension ArrayFreeCapacityTests.Small {
         let initial = array.freeCapacity
         array.append(1)
         #expect(array.freeCapacity == initial.subtract.saturating(.one))
+    }
+}
+
+// MARK: - Static
+
+extension ArrayFreeCapacityTests.Static {
+
+    @Test
+    func `empty Array.Static has capacity freeCapacity`() {
+        let array = Array<Int>.Static<5>()
+        #expect(array.freeCapacity == .init(UInt(5)))
+    }
+
+    @Test
+    func `appending to Array.Static decreases freeCapacity`() throws {
+        var array = Array<Int>.Static<4>()
+        try array.append(10)
+        try array.append(20)
+        #expect(array.freeCapacity == .init(UInt(2)))
+    }
+
+    @Test
+    func `full Array.Static has zero freeCapacity`() throws {
+        var array = Array<Int>.Static<3>()
+        try array.append(1)
+        try array.append(2)
+        try array.append(3)
+        #expect(array.freeCapacity == .zero)
     }
 }
