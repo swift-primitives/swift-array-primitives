@@ -28,10 +28,10 @@ where Tag == Collection.ForEach, Base: Array.`Protocol` & ~Copyable, Element: ~C
     /// Borrowing iteration: `.forEach { }`
     @inlinable
     public func callAsFunction(_ body: (borrowing Base.Element) -> Void) {
-        var i = unsafe base.pointee.startIndex
-        while unsafe i < base.pointee.endIndex {
-            body(unsafe base.pointee[i])
-            i = unsafe base.pointee.index(after: i)
+        var i = unsafe base.value.startIndex
+        while unsafe i < base.value.endIndex {
+            body(unsafe base.value[i])
+            i = unsafe base.value.index(after: i)
         }
     }
 
@@ -47,10 +47,10 @@ where Tag == Collection.ForEach, Base: Array.`Protocol` & ~Copyable, Element: ~C
     /// Use when the index is needed (e.g., for mutation or cross-reference).
     @inlinable
     public func index(_ body: (Base.Index) -> Void) {
-        var i = unsafe base.pointee.startIndex
-        while unsafe i < base.pointee.endIndex {
+        var i = unsafe base.value.startIndex
+        while unsafe i < base.value.endIndex {
             body(i)
-            i = unsafe base.pointee.index(after: i)
+            i = unsafe base.value.index(after: i)
         }
     }
 }

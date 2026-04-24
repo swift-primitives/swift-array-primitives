@@ -200,10 +200,10 @@ where Tag == Sequence.Drain, Base == Array<Element>.Static<n>, Element: ~Copyabl
     /// Drain iteration: `.drain { }`
     @inlinable
     public mutating func callAsFunction(_ body: (consuming Element) -> Void) {
-        let count = unsafe base.pointee._buffer.count
+        let count = unsafe base.value._buffer.count
         guard count > .zero else { return }
-        while unsafe !base.pointee._buffer.isEmpty {
-            body(unsafe base.pointee._buffer.remove.first())
+        while unsafe !base.value._buffer.isEmpty {
+            body(unsafe base.value._buffer.remove.first())
         }
     }
 }

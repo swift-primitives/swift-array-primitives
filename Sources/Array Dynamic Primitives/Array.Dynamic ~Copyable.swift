@@ -258,8 +258,8 @@ where Tag == Sequence.Drain, Base == Array<Element>, Element: ~Copyable {
     /// Drain iteration: `.drain { }`
     @inlinable
     public mutating func callAsFunction(_ body: (consuming Element) -> Void) {
-        while unsafe !base.pointee._buffer.isEmpty {
-            body(unsafe base.pointee._buffer.remove.first())
+        while unsafe !base.value._buffer.isEmpty {
+            body(unsafe base.value._buffer.remove.first())
         }
     }
 }
