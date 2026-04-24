@@ -2,7 +2,7 @@
 
 <!--
 ---
-version: 1.3.0
+version: 1.4.0
 last_updated: 2026-04-24
 status: RECOMMENDATION
 tier: 2
@@ -11,6 +11,11 @@ tier: 2
 
 ## Changelog
 
+- **1.4.0 (2026-04-24)** — Adds clone to the landed set. Two new commits:
+  - `swift-buffer-primitives@2cedfdf` — `Buffer.Linear.clone()` and `Buffer.Linear.clone(capacity:)` (Copyable elements). Fresh, independent storage with SE-0527's "just enough capacity" semantics.
+  - `swift-array-primitives@a1dd5a3` — `Array.clone()` and `Array.clone(capacity:)` thin delegations.
+  Also absorbed `swift-array-primitives@df6da40` (`.pointee → .value` migration on 4 Property.View accessor sites, mirroring buffer-primitives `db34b05`), removing the one pre-existing ecosystem-inconsistency.
+  Still deferred (not landed): `reallocate(capacity:)` (needs Buffer-level shrink primitive), and `Array.Bounded`-specific swapAt + freeCapacity (typed-modular `Algebra.Z<N>` index conversion).
 - **1.3.0 (2026-04-24)** — First adoption wave landed. Commits across four packages:
   - `swift-cardinal-primitives@3baf384` — `OutputSpan+Cardinal.swift`: `init(buffer:initializedCount:)`, `removeLast(_:)`, `append(repeating:count:)` on `C: Cardinal.Protocol`
   - `swift-ordinal-primitives@36930fd` — `OutputSpan+Ordinal.swift`: `swapAt(_:_:)` on `I, J: Ordinal.Protocol`
