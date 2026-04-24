@@ -2,7 +2,7 @@
 
 <!--
 ---
-version: 1.5.0
+version: 1.6.0
 last_updated: 2026-04-24
 status: RECOMMENDATION
 tier: 2
@@ -11,6 +11,7 @@ tier: 2
 
 ## Changelog
 
+- **1.6.0 (2026-04-24)** — [API-NAME-002] compliance: `Array.swapAt(_:_:)` renamed to `Array.swap(at:with:)` across all 4 variants in `swift-array-primitives@c9c1083`. `swapAt` is a compound identifier (camelCased); the labeled form is single-word method name + standard argument labels, and also exactly matches the `Buffer.Linear.swap(at:with:)` API one layer down.
 - **1.5.0 (2026-04-24)** — Adds reallocate. Two new commits:
   - `swift-buffer-primitives@2b9d053` — `Buffer.Linear.reallocate(capacity:)` grows OR shrinks by delegating to the existing `_growTo` primitive, gated on a `capacity >= count` precondition. Both ~Copyable and CoW-aware Copyable paths.
   - `swift-array-primitives@b98f721` — `Array.reallocate(capacity:)` thin delegation.
