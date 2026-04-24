@@ -2,7 +2,7 @@
 
 <!--
 ---
-version: 1.2.0
+version: 1.3.0
 last_updated: 2026-04-24
 status: RECOMMENDATION
 tier: 2
@@ -11,6 +11,17 @@ tier: 2
 
 ## Changelog
 
+- **1.3.0 (2026-04-24)** — First adoption wave landed. Commits across four packages:
+  - `swift-cardinal-primitives@3baf384` — `OutputSpan+Cardinal.swift`: `init(buffer:initializedCount:)`, `removeLast(_:)`, `append(repeating:count:)` on `C: Cardinal.Protocol`
+  - `swift-ordinal-primitives@36930fd` — `OutputSpan+Ordinal.swift`: `swapAt(_:_:)` on `I, J: Ordinal.Protocol`
+  - `swift-buffer-primitives@c3f082c` — `Buffer.Linear.Bounded.init(capacity:initializingWith:)`
+  - `swift-array-primitives@2a43b1a` — `Array.Fixed.init(capacity:initializingWith:)` (traps on partial init to preserve the all-initialized invariant)
+  - `swift-buffer-primitives@8d45f6f` — `Buffer.Linear` `init(capacity:)`, `append(addingCapacity:)`, `edit(_:)` with ~Copyable and CoW-aware Copyable paths
+  - `swift-array-primitives@9e94f27` — `Array` `init(capacity:)`, `append(addingCapacity:)`, `edit(_:)` (thin delegation)
+  - `swift-array-primitives@f0cf7f2` — `Array.swapAt(_:_:)` on dynamic, Fixed, Small, Static (Bounded deferred)
+  - `swift-array-primitives@aeda9a6` + `@929836b` — `Array.freeCapacity` on dynamic, Fixed, Small, Static (Bounded deferred)
+  - `swift-array-primitives@309e773` — `Array.reserveCapacity(_:)` on dynamic
+  Still deferred (not landed): `reallocate(capacity:)` (needs Buffer-level shrink primitive), `clone()`/`clone(capacity:)`, `Array.Bounded` swapAt + freeCapacity (typed-modular `Algebra.Z<N>` index conversion). Status remains RECOMMENDATION until SE-0527's review closes (2026-04-27) and a follow-up covers the deferred items.
 - **1.2.0 (2026-04-24)** — Tier-correct home decision for stdlib typed-bridge extensions. Verified that `swift-cardinal-primitives` and `swift-ordinal-primitives` already host Standard Library Integration targets with `Span+Cardinal.swift` / `MutableSpan+Cardinal.swift` / `Span+Tagged.Ordinal.swift` / `MutableSpan+Tagged.Ordinal.swift`. Verified that `Index<Element> = Tagged<Element, Ordinal>` (index-primitives/Index.swift:38), so Index-based extensions decompose to Ordinal-based ones at a strictly lower tier. **New OutputSpan overloads split across cardinal-primitives and ordinal-primitives per the lowest-tier-possible rule**. The existing `Swift.Span+extracting.swift` in sequence-primitives is a tier violation (uses only Cardinal/Ordinal concepts but lives higher in the stack); migrate its contents down — Cardinal-using methods to cardinal-primitives, Ordinal-using methods to ordinal-primitives. **No new index-primitives integration target is needed.** Sequence-primitives retains only genuinely sequence-protocol-related stdlib integrations (`Swift.Span.Iterator`, `Swift.Span.Iterator.Batch`, `Sequence.Protocol+Swift.Sequence`).
 - **1.1.0 (2026-04-18)** — Substrate-gap correction. The v1.0.0 claim that buffer-level uninitialized-tail affordances "already exist internally" was wrong. Direct inspection of `swift-buffer-primitives` confirms no such API is present: `Buffer.Linear.span` / `.mutableSpan` / `.withUnsafeMutableBufferPointer` all cover only `header.count` initialized elements, and `header`/`storage` have `package` access that does not cross SwiftPM-package boundaries. Added §Substrate prerequisites with verified findings and a phased implementation plan. Affected conclusions: items 1 (OutputSpan init/append) and 3 (`edit { }`) in the "Adopt now" ledger are gated on a prerequisite change in `swift-buffer-primitives`. Item 2 (`swapAt`) and items 4–6 are unaffected.
 
