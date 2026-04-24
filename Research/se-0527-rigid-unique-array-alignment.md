@@ -2,8 +2,8 @@
 
 <!--
 ---
-version: 1.1.0
-last_updated: 2026-04-18
+version: 1.2.0
+last_updated: 2026-04-24
 status: RECOMMENDATION
 tier: 2
 ---
@@ -11,6 +11,7 @@ tier: 2
 
 ## Changelog
 
+- **1.2.0 (2026-04-24)** — Tier-correct home decision for stdlib typed-bridge extensions. Verified that `swift-cardinal-primitives` and `swift-ordinal-primitives` already host Standard Library Integration targets with `Span+Cardinal.swift` / `MutableSpan+Cardinal.swift` / `Span+Tagged.Ordinal.swift` / `MutableSpan+Tagged.Ordinal.swift`. Verified that `Index<Element> = Tagged<Element, Ordinal>` (index-primitives/Index.swift:38), so Index-based extensions decompose to Ordinal-based ones at a strictly lower tier. **New OutputSpan overloads split across cardinal-primitives and ordinal-primitives per the lowest-tier-possible rule**. The existing `Swift.Span+extracting.swift` in sequence-primitives is a tier violation (uses only Cardinal/Ordinal concepts but lives higher in the stack); migrate its contents down — Cardinal-using methods to cardinal-primitives, Ordinal-using methods to ordinal-primitives. **No new index-primitives integration target is needed.** Sequence-primitives retains only genuinely sequence-protocol-related stdlib integrations (`Swift.Span.Iterator`, `Swift.Span.Iterator.Batch`, `Sequence.Protocol+Swift.Sequence`).
 - **1.1.0 (2026-04-18)** — Substrate-gap correction. The v1.0.0 claim that buffer-level uninitialized-tail affordances "already exist internally" was wrong. Direct inspection of `swift-buffer-primitives` confirms no such API is present: `Buffer.Linear.span` / `.mutableSpan` / `.withUnsafeMutableBufferPointer` all cover only `header.count` initialized elements, and `header`/`storage` have `package` access that does not cross SwiftPM-package boundaries. Added §Substrate prerequisites with verified findings and a phased implementation plan. Affected conclusions: items 1 (OutputSpan init/append) and 3 (`edit { }`) in the "Adopt now" ledger are gated on a prerequisite change in `swift-buffer-primitives`. Item 2 (`swapAt`) and items 4–6 are unaffected.
 
 ## Context
