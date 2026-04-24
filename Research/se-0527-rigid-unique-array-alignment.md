@@ -2,7 +2,7 @@
 
 <!--
 ---
-version: 1.4.0
+version: 1.5.0
 last_updated: 2026-04-24
 status: RECOMMENDATION
 tier: 2
@@ -11,6 +11,10 @@ tier: 2
 
 ## Changelog
 
+- **1.5.0 (2026-04-24)** — Adds reallocate. Two new commits:
+  - `swift-buffer-primitives@2b9d053` — `Buffer.Linear.reallocate(capacity:)` grows OR shrinks by delegating to the existing `_growTo` primitive, gated on a `capacity >= count` precondition. Both ~Copyable and CoW-aware Copyable paths.
+  - `swift-array-primitives@b98f721` — `Array.reallocate(capacity:)` thin delegation.
+  Only `Array.Bounded`-specific swapAt and freeCapacity remain deferred (tension between type safety and surface completeness; no consumer pressure; decision parked pending a real use case).
 - **1.4.0 (2026-04-24)** — Adds clone to the landed set. Two new commits:
   - `swift-buffer-primitives@2cedfdf` — `Buffer.Linear.clone()` and `Buffer.Linear.clone(capacity:)` (Copyable elements). Fresh, independent storage with SE-0527's "just enough capacity" semantics.
   - `swift-array-primitives@a1dd5a3` — `Array.clone()` and `Array.clone(capacity:)` thin delegations.
