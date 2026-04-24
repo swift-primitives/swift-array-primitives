@@ -25,8 +25,8 @@
       "date": "2026-01-22",
       "toolchain": "Swift 6.2",
       "status": "CONFIRMED",
-      "statusDetail": "→ IMPLEMENTED",
-      "statusRaw": "CONFIRMED → IMPLEMENTED",
+      "statusDetail": "\u2192 IMPLEMENTED",
+      "statusRaw": "CONFIRMED \u2192 IMPLEMENTED",
       "supersededBy": null,
       "crossRefs": []
     },
@@ -34,6 +34,17 @@
       "directory": "span-based-iterator",
       "displayName": "span-based-iterator",
       "purpose": "Test span-based iterators for array types",
+      "date": "2026-01-22",
+      "toolchain": "Swift 6.2",
+      "status": "CONFIRMED",
+      "statusDetail": null,
+      "statusRaw": "CONFIRMED",
+      "supersededBy": null,
+      "crossRefs": []
+    },
+    {
+      "directory": "indexed-storage-wrapper",
+      "purpose": "Phantom-typed array indexing without protocols",
       "date": "2026-01-22",
       "toolchain": "Swift 6.2",
       "status": "CONFIRMED",
