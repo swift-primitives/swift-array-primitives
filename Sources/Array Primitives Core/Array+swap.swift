@@ -14,11 +14,12 @@ public import Buffer_Linear_Primitives
 public import Buffer_Linear_Inline_Primitives
 public import Buffer_Linear_Small_Primitives
 
-// MARK: - swapAt across Array variants
+// MARK: - swap across Array variants
 //
 // Each variant delegates to the underlying Buffer.Linear* variant's
-// `swap(at:with:)`. The stdlib-aligned `swapAt(_:_:)` name (two unlabeled
-// positional arguments) matches SE-0527 and Swift.Array's existing convention.
+// `swap(at:with:)`. Labeled form (`swap(at:with:)`) matches the Buffer.Linear
+// API one layer down and complies with [API-NAME-002] (the method name is
+// `swap`, a single word; `at:` / `with:` are standard argument labels).
 
 extension Array where Element: ~Copyable {
 
@@ -29,7 +30,7 @@ extension Array where Element: ~Copyable {
     ///
     /// - Complexity: O(1)
     @inlinable
-    public mutating func swapAt(_ i: Array.Index, _ j: Array.Index) {
+    public mutating func swap(at i: Array.Index, with j: Array.Index) {
         _buffer.swap(at: i, with: j)
     }
 }
@@ -40,7 +41,7 @@ extension Array.Fixed where Element: ~Copyable {
     ///
     /// - Complexity: O(1)
     @inlinable
-    public mutating func swapAt(_ i: Array.Index, _ j: Array.Index) {
+    public mutating func swap(at i: Array.Index, with j: Array.Index) {
         _buffer.swap(at: i, with: j)
     }
 }
@@ -51,7 +52,7 @@ extension Array.Small where Element: ~Copyable {
     ///
     /// - Complexity: O(1)
     @inlinable
-    public mutating func swapAt(_ i: Array.Index, _ j: Array.Index) {
+    public mutating func swap(at i: Array.Index, with j: Array.Index) {
         _buffer.swap(at: i, with: j)
     }
 }
@@ -62,7 +63,7 @@ extension Array.Static where Element: ~Copyable {
     ///
     /// - Complexity: O(1)
     @inlinable
-    public mutating func swapAt(_ i: Array.Index, _ j: Array.Index) {
+    public mutating func swap(at i: Array.Index, with j: Array.Index) {
         _buffer.swap(at: i, with: j)
     }
 }

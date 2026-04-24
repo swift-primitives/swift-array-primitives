@@ -13,8 +13,8 @@ import Testing
 @testable import Array_Primitives
 import Array_Primitives_Test_Support
 
-@Suite("Array swapAt")
-struct ArraySwapAtTests {
+@Suite("Array swap")
+struct ArraySwapTests {
     @Suite struct Dynamic {}
     @Suite struct Fixed {}
     @Suite struct Small {}
@@ -24,10 +24,10 @@ struct ArraySwapAtTests {
 
 // MARK: - Dynamic Array
 
-extension ArraySwapAtTests.Dynamic {
+extension ArraySwapTests.Dynamic {
 
     @Test
-    func `swapAt exchanges two elements`() throws {
+    func `swap exchanges two elements`() throws {
         var array: Array<Int> = []
         array.append(10)
         array.append(20)
@@ -35,7 +35,7 @@ extension ArraySwapAtTests.Dynamic {
 
         let i = Array<Int>.Index(Ordinal(0))
         let j = Array<Int>.Index(Ordinal(2))
-        array.swapAt(i, j)
+        array.swap(at: i, with: j)
 
         let first = array.withElement(at: i) { $0 }
         let third = array.withElement(at: j) { $0 }
@@ -46,17 +46,17 @@ extension ArraySwapAtTests.Dynamic {
 
 // MARK: - Array.Fixed
 
-extension ArraySwapAtTests.Fixed {
+extension ArraySwapTests.Fixed {
 
     @Test
-    func `swapAt on Array.Fixed`() throws {
+    func `swap on Array.Fixed`() throws {
         var array = try Array<Int>.Fixed(count: .init(3)) { idx in
             Int(idx.ordinal.rawValue) * 10
         }
 
         let i = Array<Int>.Index(Ordinal(0))
         let j = Array<Int>.Index(Ordinal(2))
-        array.swapAt(i, j)
+        array.swap(at: i, with: j)
 
         let first = array.withElement(at: i) { $0 }
         let third = array.withElement(at: j) { $0 }
@@ -67,10 +67,10 @@ extension ArraySwapAtTests.Fixed {
 
 // MARK: - Array.Small
 
-extension ArraySwapAtTests.Small {
+extension ArraySwapTests.Small {
 
     @Test
-    func `swapAt on Array.Small`() throws {
+    func `swap on Array.Small`() throws {
         var array = Array<Int>.Small<4>()
         array.append(10)
         array.append(20)
@@ -78,7 +78,7 @@ extension ArraySwapAtTests.Small {
 
         let i = Array<Int>.Index(Ordinal(0))
         let j = Array<Int>.Index(Ordinal(2))
-        array.swapAt(i, j)
+        array.swap(at: i, with: j)
 
         #expect(array.count == 3)
         // Can't easily read elements via subscript on Small without detailed API;
@@ -88,10 +88,10 @@ extension ArraySwapAtTests.Small {
 
 // MARK: - Array.Static
 
-extension ArraySwapAtTests.Static {
+extension ArraySwapTests.Static {
 
     @Test
-    func `swapAt on Array.Static`() throws {
+    func `swap on Array.Static`() throws {
         var array = Array<Int>.Static<4>()
         try array.append(10)
         try array.append(20)
@@ -99,7 +99,7 @@ extension ArraySwapAtTests.Static {
 
         let i = Array<Int>.Index(Ordinal(0))
         let j = Array<Int>.Index(Ordinal(2))
-        array.swapAt(i, j)
+        array.swap(at: i, with: j)
 
         #expect(array.count == 3)
     }
@@ -107,16 +107,16 @@ extension ArraySwapAtTests.Static {
 
 // MARK: - Edge cases
 
-extension ArraySwapAtTests.EdgeCases {
+extension ArraySwapTests.EdgeCases {
 
     @Test
-    func `swapAt with same index is a noop`() throws {
+    func `swap with same index is a noop`() throws {
         var array: Array<Int> = []
         array.append(100)
         array.append(200)
 
         let i = Array<Int>.Index(Ordinal(0))
-        array.swapAt(i, i)
+        array.swap(at: i, with: i)
 
         let first = array.withElement(at: i) { $0 }
         #expect(first == 100)
