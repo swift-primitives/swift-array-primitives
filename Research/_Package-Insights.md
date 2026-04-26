@@ -125,6 +125,52 @@ The `Property.View` pattern in swift-property-primitives stores `UnsafeMutablePo
 
 ---
 
+## Value-Generic Parameter Name Shadows Runtime Properties
+
+**Date**: 2026-04-26 (incident 2026-04-24)
+
+**Context**: `Array.Static<let capacity: Int>` declares its value-generic parameter as `capacity`. Inside any extension on `Array.Static`, bare `capacity` resolves to the type-level `Int` generic parameter, NOT to a (hypothetical) runtime instance property of the same name. This means the type cannot expose a public `var capacity: Index.Count` without name collision.
+
+### The Hazard
+
+The 2026-04-24 SE-0527 OutputSpan adoption session attempted to add `Array.Static.freeCapacity`. Initial implementation referenced a runtime `capacity` property; this conflicted with the shadowed generic parameter. The first-cut "fix" was to remove `Array.Static` from the `freeCapacity` extension (`array-primitives@aeda9a6`) — the user caught it post-commit and asked "why was this removed?", which prompted the actual fix.
+
+### The Workaround
+
+`Array.Static.freeCapacity` computes from the type's own generic parameter directly, not through a runtime `capacity` accessor:
+
+```swift
+extension Array.Static {
+    public var freeCapacity: Index.Count {
+        // `capacity` here resolves to the type-level Int generic parameter
+        let total = Array.Index.Count(UInt(capacity))
+        return total - count
+    }
+}
+```
+
+The `UInt(capacity)` conversion is required because the generic parameter is `Int` but `Index.Count` is `UInt`-backed. The conversion is non-throwing because the type-level `Int` value is bounded by the generic constraint and cannot be negative at this site.
+
+Restored in `array-primitives@929836b` (2026-04-24).
+
+### Ecosystem-Level Note
+
+The shadowing hazard recurs in any value-generic-parameterized type using `capacity` as the parameter name. Affected types include:
+- `Array.Static<let capacity: Int>`
+- `Buffer.Linear.Inline<let capacity: Int>`
+
+Types using single-letter conventions (`Array.Bounded<let N: Int>`) or scope-disambiguated names (`Array.Small<let inlineCapacity: Int>`) avoid the hazard by construction.
+
+A cross-package research investigation into value-generic parameter naming convention is at `swift-institute/Research/value-generic-parameter-naming-convention.md` (2026-04-26 IN_PROGRESS, Tier 2). The recommendation will likely converge on stdlib-aligned `<let N: Int>` for new types; migration of existing `<let capacity: Int>` types is a breaking change and warrants explicit gate.
+
+**Applies to**: `Array.Static`, `Buffer.Linear.Inline` (`Buffer.Linear.Inline` is in `swift-buffer-primitives`); future Array variants should adopt `<let N: Int>` per the pending convention.
+
+**Related documentation**:
+- Reflection: `swift-institute/Research/Reflections/2026-04-24-se-0527-outputspan-adoption-wave.md` (Pattern 2 — origin)
+- Cross-package research: `swift-institute/Research/value-generic-parameter-naming-convention.md` (convention selection)
+
+---
+
 ## Related
 
 - Array
