@@ -12,6 +12,7 @@
 // - We want `Storage(minimumCapacity: 10)` instead of `Storage.create(...)`
 //
 // Result: [TO BE FILLED]
+// Revalidated: Swift 6.3.1 (2026-04-30) — PASSES
 // ===----------------------------------------------------------------------===//
 
 // MARK: - V1: Test unsafeDowncast with subclass

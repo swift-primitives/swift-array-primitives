@@ -4,6 +4,7 @@
 // constraint poisoning, but Array.Bounded cannot. Find the structural difference.
 //
 // Status: RESOLVED ✓ (Pattern incompatibility confirmed, keeping double implementation)
+// Revalidated: Swift 6.3.1 (2026-04-30) — PASSES
 // Methodology: [EXP-004a] Incremental Construction
 //
 // ROOT CAUSE IDENTIFIED:

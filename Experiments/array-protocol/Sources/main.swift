@@ -13,6 +13,7 @@
 // Feature flag: SuppressedAssociatedTypes
 //
 // Result: CONFIRMED — all 13 variants pass
+// Revalidated: Swift 6.3.1 (2026-04-30) — PASSES
 // Date: 2026-02-16
 //
 // Evidence: Build Succeeded, all assertions pass at runtime.

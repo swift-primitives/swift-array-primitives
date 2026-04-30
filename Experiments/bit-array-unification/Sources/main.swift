@@ -12,6 +12,7 @@
 // Platform: macOS 26.0 (arm64)
 //
 // Result: CONFIRMED - All 6 variants pass. Unification is feasible.
+// Revalidated: Swift 6.3.1 (2026-04-30) — PASSES
 // Date: 2026-01-21
 //
 // Evidence:

@@ -316,6 +316,7 @@ struct StorageV6<let N: Int>: ~Copyable {
 // MARK: - Variant 7: Closure-based access only (SAFEST)
 // Hypothesis: Per [MEM-SAFE-014], closure-scoped access is the safest pattern
 // Result: CONFIRMED - works, zero pointer escape, fully compliant
+// Revalidated: Swift 6.3.1 (2026-04-30) — STILL PRESENT
 // Output: Read via withElement, modify via withMutableElement or subscript _modify
 // Note: Follows [MEM-SAFE-014] - closures enforce lifetime bounds
 // Advantage: No UB risk, compiler-enforced safety, no experimental features needed
