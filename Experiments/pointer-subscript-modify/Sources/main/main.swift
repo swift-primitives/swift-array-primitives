@@ -1,4 +1,5 @@
 // Status: SUPERSEDED -- compiler-limitation finding stable; production uses .position.rawValue workaround per [COPY-FIX-*]. (Phase 1b stale-triage 2026-04-30)
+// Revalidated: Swift 6.3.1 (2026-04-30) — SUPERSEDED (per existing Status line; not re-run)
 // ============================================================================
 // EXPERIMENT: pointer-subscript-modify
 // ============================================================================

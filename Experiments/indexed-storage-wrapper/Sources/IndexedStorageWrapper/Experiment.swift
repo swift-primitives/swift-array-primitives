@@ -3,6 +3,8 @@
 // Constraint: No protocols allowed
 //
 // Toolchain: swift-6.2-RELEASE
+// Status: SUPERSEDED 2026-04-30 — Array.Unbounded namespace member removed; experiment relied on Array<Element>.Unbounded shape that no longer exists
+// Revalidated: Swift 6.3.1 (2026-04-30) — STILL PRESENT (deep API drift; SUPERSEDED per [META-007])
 // Result: CONFIRMED — Array variants should use nested Indexed<Tag> type
 //   (~15 lines each) for phantom-typed index access without protocols.
 //   Property.Typed pattern works.

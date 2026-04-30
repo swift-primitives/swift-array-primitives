@@ -38,6 +38,8 @@
 //    → This is what we already have
 //
 // Result: CONFIRMED - Pointer-based iterator with typed Index is the solution
+// Status: SUPERSEDED 2026-04-30 — Array subscript surface changed; experiment's call shape no longer matches
+// Revalidated: Swift 6.3.1 (2026-04-30) — STILL PRESENT (deep API drift; SUPERSEDED per [META-007])
 // ============================================================================
 
 import Index_Primitives

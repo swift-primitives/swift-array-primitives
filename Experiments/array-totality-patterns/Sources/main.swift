@@ -6,6 +6,8 @@
 //              This file explores what Array.Inline, Array.Bounded, etc. should do.
 //
 // Toolchain: swift-6.2-RELEASE
+// Status: SUPERSEDED 2026-04-30 — Multi-line string literal indentation rule tightened; experiment string-content authoring needs adjustment
+// Revalidated: Swift 6.3.1 (2026-04-30) — STILL PRESENT (deep API drift; SUPERSEDED per [META-007])
 // Result: CONFIRMED — Array totality requires hybrid approach: keep preconditioned for stdlib compat, add Bounded<N> (no precondition when full), add element(at:) throws(AccessError) for total alternative.
 // Date: 2026-01-22
 

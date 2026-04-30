@@ -1,4 +1,5 @@
 // Status: SUPERSEDED -- Property<Tag,Base>.View.Typed<Element> pattern shipped in swift-property-primitives. (Phase 1b stale-triage 2026-04-30)
+// Revalidated: Swift 6.3.1 (2026-04-30) — SUPERSEDED (per existing Status line; not re-run)
 // ============================================================================
 // EXPERIMENT: forEach Property.View with ~Copyable Elements
 // ============================================================================
