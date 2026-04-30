@@ -95,9 +95,9 @@
       "purpose": "(Phase 1b backfill) compiler-crash investigation; details in main.swift header",
       "date": "2026-01-22",
       "toolchain": "Apple Swift 6.2.x",
-      "status": "DEFERRED",
-      "statusDetail": "compiler crash investigation: synthesized Equatable for nested type with constraint extension on ~Copyable Outer, ACTUAL: TBD in original header; resumption: revalidate on each new Swift toolchain per [META-006]; capture FIXED verdict if compiler accepts the original repro per [EXP-006] (Phase 1b stale-triage 2026-04-30)",
-      "statusRaw": "DEFERRED (Phase 1b stale-triage 2026-04-30)",
+      "status": "FIXED",
+      "statusDetail": "original compiler-crash hypothesis does NOT reproduce on Swift 6.3.1 (swift build debug + release: clean; swift run output: SUCCESS). (Phase 1b stale-triage revalidation 2026-04-30)",
+      "statusRaw": "DEFERRED (Phase 1b stale-triage 2026-04-30) -> FIXED (Phase 1b 2026-04-30)",
       "supersededBy": null,
       "crossRefs": []
     }

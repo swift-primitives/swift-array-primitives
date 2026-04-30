@@ -1,5 +1,6 @@
-// Status: DEFERRED -- compiler crash investigation: synthesized Equatable for nested type with constraint extension on ~Copyable Outer, ACTUAL: TBD in original header.
-// Revalidated: resumption -- revalidate on each new Swift toolchain per [META-006]; capture FIXED verdict if compiler accepts the original repro per [EXP-006]. (Phase 1b stale-triage 2026-04-30)
+// Status: FIXED -- original compiler-crash hypothesis (synthesized Equatable for nested type with constraint extension on ~Copyable Outer) does NOT reproduce on Swift 6.3.1.
+// Toolchain: Apple Swift 6.3.1 (swiftlang-6.3.1.1.2 clang-2100.0.123.102)
+// Revalidated: Swift 6.3.1 (2026-04-30) -- FIXED. swift build (debug): clean compile (0.62s); swift build -c release: clean compile (0.55s); swift run output: "SUCCESS: Equatable and Hashable conformances work". (Phase 1b stale-triage 2026-04-30)
 // ===----------------------------------------------------------------------===//
 // Experiment: Equatable Conformance Crash in Nested Types
 // ===----------------------------------------------------------------------===//
