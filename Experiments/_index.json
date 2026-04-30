@@ -7,6 +7,17 @@
   "scope": "swift-array-primitives (swift-primitives)",
   "experiments": [
     {
+      "directory": "array-totality-patterns",
+      "purpose": "Design subscript patterns that achieve totality for Array types",
+      "date": "2026-01-22",
+      "toolchain": "swift-6.2-RELEASE",
+      "status": "SUPERSEDED",
+      "statusDetail": "API/package drift; experiment premise no longer expressible against current toolchain or peer-package API",
+      "statusRaw": "SUPERSEDED (Phase 7a 2026-04-30)",
+      "supersededBy": null,
+      "crossRefs": []
+    },
+    {
       "directory": "bit-array-unification",
       "displayName": "bit-array-unification",
       "purpose": "Test unifying Bit.Array with Array<Bit>.Packed",
@@ -31,25 +42,14 @@
       "crossRefs": []
     },
     {
-      "directory": "span-based-iterator",
-      "displayName": "span-based-iterator",
-      "purpose": "Test span-based iterators for array types",
+      "directory": "equatable-crash",
+      "displayName": "equatable-crash",
+      "purpose": "(Phase 1b backfill) compiler-crash investigation; details in main.swift header",
       "date": "2026-01-22",
-      "toolchain": "Swift 6.2",
-      "status": "CONFIRMED",
-      "statusDetail": null,
-      "statusRaw": "CONFIRMED",
-      "supersededBy": null,
-      "crossRefs": []
-    },
-    {
-      "directory": "indexed-storage-wrapper",
-      "purpose": "Phantom-typed array indexing without protocols",
-      "date": "2026-01-22",
-      "toolchain": "Swift 6.2",
-      "status": "CONFIRMED",
-      "statusDetail": null,
-      "statusRaw": "CONFIRMED",
+      "toolchain": "Apple Swift 6.2.x",
+      "status": "FIXED",
+      "statusDetail": "original compiler-crash hypothesis does NOT reproduce on Swift 6.3.1 (swift build debug + release: clean; swift run output: SUCCESS). (Phase 1b stale-triage revalidation 2026-04-30)",
+      "statusRaw": "DEFERRED (Phase 1b stale-triage 2026-04-30) -> FIXED (Phase 1b 2026-04-30)",
       "supersededBy": null,
       "crossRefs": []
     },
@@ -66,15 +66,14 @@
       "crossRefs": []
     },
     {
-      "directory": "property-view-value-generics",
-      "displayName": "property-view-value-generics",
-      "purpose": "(Phase 1b backfill) ~Copyable/borrowing investigation; details in main.swift header",
+      "directory": "indexed-storage-wrapper",
+      "purpose": "Phantom-typed array indexing without protocols",
       "date": "2026-01-22",
-      "toolchain": "Apple Swift 6.2.x",
+      "toolchain": "Swift 6.2",
       "status": "SUPERSEDED",
-      "statusDetail": "Property.View.Typed.Valued shipped in swift-property-primitives (Phase 1b stale-triage 2026-04-30)",
-      "statusRaw": "CONFIRMED -> SUPERSEDED (Phase 1b stale-triage 2026-04-30)",
-      "supersededBy": "Property.View.Typed.Valued shipped in swift-property-primitives",
+      "statusDetail": "API/package drift; experiment premise no longer expressible against current toolchain or peer-package API",
+      "statusRaw": "SUPERSEDED (Phase 7a 2026-04-30; previously CONFIRMED)",
+      "supersededBy": null,
       "crossRefs": []
     },
     {
@@ -90,14 +89,26 @@
       "crossRefs": []
     },
     {
-      "directory": "equatable-crash",
-      "displayName": "equatable-crash",
-      "purpose": "(Phase 1b backfill) compiler-crash investigation; details in main.swift header",
+      "directory": "property-view-value-generics",
+      "displayName": "property-view-value-generics",
+      "purpose": "(Phase 1b backfill) ~Copyable/borrowing investigation; details in main.swift header",
       "date": "2026-01-22",
       "toolchain": "Apple Swift 6.2.x",
-      "status": "FIXED",
-      "statusDetail": "original compiler-crash hypothesis does NOT reproduce on Swift 6.3.1 (swift build debug + release: clean; swift run output: SUCCESS). (Phase 1b stale-triage revalidation 2026-04-30)",
-      "statusRaw": "DEFERRED (Phase 1b stale-triage 2026-04-30) -> FIXED (Phase 1b 2026-04-30)",
+      "status": "SUPERSEDED",
+      "statusDetail": "Property.View.Typed.Valued shipped in swift-property-primitives (Phase 1b stale-triage 2026-04-30)",
+      "statusRaw": "CONFIRMED -> SUPERSEDED (Phase 1b stale-triage 2026-04-30)",
+      "supersededBy": "Property.View.Typed.Valued shipped in swift-property-primitives",
+      "crossRefs": []
+    },
+    {
+      "directory": "span-based-iterator",
+      "displayName": "span-based-iterator",
+      "purpose": "Test span-based iterators for array types",
+      "date": "2026-01-22",
+      "toolchain": "Swift 6.2",
+      "status": "SUPERSEDED",
+      "statusDetail": "API/package drift; experiment premise no longer expressible against current toolchain or peer-package API",
+      "statusRaw": "SUPERSEDED (Phase 7a 2026-04-30; previously CONFIRMED)",
       "supersededBy": null,
       "crossRefs": []
     }
