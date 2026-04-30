@@ -1,4 +1,4 @@
-// Status: SUPERSEDED -- compiler-limitation finding stable; production uses .position.rawValue workaround per [PATTERN-009-053]. (Phase 1b stale-triage 2026-04-30)
+// Status: SUPERSEDED -- compiler-limitation finding stable; production uses .position.rawValue workaround per [COPY-FIX-*]. (Phase 1b stale-triage 2026-04-30)
 // ============================================================================
 // EXPERIMENT: pointer-subscript-modify
 // ============================================================================

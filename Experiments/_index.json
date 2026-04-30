@@ -84,9 +84,9 @@
       "date": "2026-01-22",
       "toolchain": "Apple Swift 6.2.x",
       "status": "SUPERSEDED",
-      "statusDetail": "compiler-limitation finding stable; production uses .position.rawValue workaround per [PATTERN-009-053] (Phase 1b stale-triage 2026-04-30)",
+      "statusDetail": "compiler-limitation finding stable; production uses .position.rawValue workaround per [COPY-FIX-*] (Phase 1b stale-triage 2026-04-30)",
       "statusRaw": "CONFIRMED -> SUPERSEDED (Phase 1b stale-triage 2026-04-30)",
-      "supersededBy": "compiler-limitation finding stable; production uses .position.rawValue workaround per [PATTERN-009-053]",
+      "supersededBy": "compiler-limitation finding stable; production uses .position.rawValue workaround per [COPY-FIX-*]",
       "crossRefs": []
     },
     {
