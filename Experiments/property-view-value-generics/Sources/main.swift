@@ -1,3 +1,4 @@
+// Status: SUPERSEDED -- Property.View.Typed.Valued shipped in swift-property-primitives. (Phase 1b stale-triage 2026-04-30)
 // ============================================================================
 // EXPERIMENT: Property.View.Typed.Valued
 // ============================================================================

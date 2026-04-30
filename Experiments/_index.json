@@ -1,7 +1,7 @@
 {
   "$schema": "https://swift-institute.org/schemas/experiments-index-v1.json",
   "schemaVersion": "1.0.0",
-  "generatedAt": "2026-04-18",
+  "generatedAt": "2026-04-30",
   "title": "Experiments Index",
   "blurb": "",
   "scope": "swift-array-primitives (swift-primitives)",
@@ -25,8 +25,8 @@
       "date": "2026-01-22",
       "toolchain": "Swift 6.2",
       "status": "CONFIRMED",
-      "statusDetail": "\u2192 IMPLEMENTED",
-      "statusRaw": "CONFIRMED \u2192 IMPLEMENTED",
+      "statusDetail": "→ IMPLEMENTED",
+      "statusRaw": "CONFIRMED → IMPLEMENTED",
       "supersededBy": null,
       "crossRefs": []
     },
@@ -50,6 +50,54 @@
       "status": "CONFIRMED",
       "statusDetail": null,
       "statusRaw": "CONFIRMED",
+      "supersededBy": null,
+      "crossRefs": []
+    },
+    {
+      "directory": "foreach-noncopyable-property-view",
+      "displayName": "foreach-noncopyable-property-view",
+      "purpose": "(Phase 1b backfill) ~Copyable/borrowing investigation; details in main.swift header",
+      "date": "2026-01-22",
+      "toolchain": "Apple Swift 6.2.x",
+      "status": "SUPERSEDED",
+      "statusDetail": "Property<Tag,Base>.View.Typed<Element> pattern shipped in swift-property-primitives (Phase 1b stale-triage 2026-04-30)",
+      "statusRaw": "CONFIRMED -> SUPERSEDED (Phase 1b stale-triage 2026-04-30)",
+      "supersededBy": "Property<Tag,Base>.View.Typed<Element> pattern shipped in swift-property-primitives",
+      "crossRefs": []
+    },
+    {
+      "directory": "property-view-value-generics",
+      "displayName": "property-view-value-generics",
+      "purpose": "(Phase 1b backfill) ~Copyable/borrowing investigation; details in main.swift header",
+      "date": "2026-01-22",
+      "toolchain": "Apple Swift 6.2.x",
+      "status": "SUPERSEDED",
+      "statusDetail": "Property.View.Typed.Valued shipped in swift-property-primitives (Phase 1b stale-triage 2026-04-30)",
+      "statusRaw": "CONFIRMED -> SUPERSEDED (Phase 1b stale-triage 2026-04-30)",
+      "supersededBy": "Property.View.Typed.Valued shipped in swift-property-primitives",
+      "crossRefs": []
+    },
+    {
+      "directory": "pointer-subscript-modify",
+      "displayName": "pointer-subscript-modify",
+      "purpose": "(Phase 1b backfill) ~Copyable/borrowing investigation; details in main.swift header",
+      "date": "2026-01-22",
+      "toolchain": "Apple Swift 6.2.x",
+      "status": "SUPERSEDED",
+      "statusDetail": "compiler-limitation finding stable; production uses .position.rawValue workaround per [PATTERN-009-053] (Phase 1b stale-triage 2026-04-30)",
+      "statusRaw": "CONFIRMED -> SUPERSEDED (Phase 1b stale-triage 2026-04-30)",
+      "supersededBy": "compiler-limitation finding stable; production uses .position.rawValue workaround per [PATTERN-009-053]",
+      "crossRefs": []
+    },
+    {
+      "directory": "equatable-crash",
+      "displayName": "equatable-crash",
+      "purpose": "(Phase 1b backfill) compiler-crash investigation; details in main.swift header",
+      "date": "2026-01-22",
+      "toolchain": "Apple Swift 6.2.x",
+      "status": "DEFERRED",
+      "statusDetail": "compiler crash investigation: synthesized Equatable for nested type with constraint extension on ~Copyable Outer, ACTUAL: TBD in original header; resumption: revalidate on each new Swift toolchain per [META-006]; capture FIXED verdict if compiler accepts the original repro per [EXP-006] (Phase 1b stale-triage 2026-04-30)",
+      "statusRaw": "DEFERRED (Phase 1b stale-triage 2026-04-30)",
       "supersededBy": null,
       "crossRefs": []
     }

@@ -1,3 +1,5 @@
+// Status: DEFERRED -- compiler crash investigation: synthesized Equatable for nested type with constraint extension on ~Copyable Outer, ACTUAL: TBD in original header.
+// Revalidated: resumption -- revalidate on each new Swift toolchain per [META-006]; capture FIXED verdict if compiler accepts the original repro per [EXP-006]. (Phase 1b stale-triage 2026-04-30)
 // ===----------------------------------------------------------------------===//
 // Experiment: Equatable Conformance Crash in Nested Types
 // ===----------------------------------------------------------------------===//
