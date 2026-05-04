@@ -27,11 +27,6 @@ jobs:
   docs:
     uses: swift-institute/.github/.github/workflows/swift-docs.yml@main
     with:
-      umbrella-module: Array_Primitives
-      umbrella-display-name: "Array Primitives"
-      umbrella-bundle-id: "swift-array-primitives.Array-Primitives"
-      umbrella-docc-path: "Sources/Array Primitives/Array Primitives.docc"
-      exclude-modules: "Array_Primitives_Test_Support"
       enable-private-repos: true
     secrets:
       PRIVATE_REPO_TOKEN: ${{ secrets.PRIVATE_REPO_TOKEN }}
