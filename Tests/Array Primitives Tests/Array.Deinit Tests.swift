@@ -10,6 +10,7 @@
 // ===----------------------------------------------------------------------===//
 
 import Testing
+
 @testable import Array_Primitives
 
 @Suite("Array - Deinit")
@@ -25,7 +26,10 @@ struct ArrayDeinitTests {
     struct TrackedElement: ~Copyable {
         let id: Int
         let tracker: Tracker
-        init(_ id: Int, tracker: Tracker) { self.id = id; self.tracker = tracker }
+        init(_ id: Int, tracker: Tracker) {
+            self.id = id
+            self.tracker = tracker
+        }
         deinit { tracker.append(id) }
     }
 

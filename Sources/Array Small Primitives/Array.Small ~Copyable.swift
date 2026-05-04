@@ -10,11 +10,11 @@
 // ===----------------------------------------------------------------------===//
 
 public import Array_Primitives_Core
+public import Buffer_Linear_Small_Primitives
 public import Collection_Primitives
 internal import Index_Primitives
 public import Ordinal_Primitives
 internal import Property_Primitives
-public import Buffer_Linear_Small_Primitives
 
 // ============================================================================
 // MARK: - Collection Conformances
@@ -233,7 +233,10 @@ extension Array.Small where Element: ~Copyable {
     @inlinable
     public var drain: Drain.View {
         mutating _read { yield unsafe .init(&self) }
-        mutating _modify { var view: Drain.View = unsafe .init(&self); yield &view }
+        mutating _modify {
+            var view: Drain.View = unsafe .init(&self)
+            yield &view
+        }
     }
 }
 

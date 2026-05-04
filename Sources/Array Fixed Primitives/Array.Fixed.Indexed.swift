@@ -9,8 +9,8 @@
 //
 // ===----------------------------------------------------------------------===//
 
-public import Index_Primitives
 public import Array_Primitives_Core
+public import Index_Primitives
 
 // MARK: - Array.Fixed.Indexed
 

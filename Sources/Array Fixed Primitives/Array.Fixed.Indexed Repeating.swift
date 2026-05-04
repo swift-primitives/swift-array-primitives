@@ -9,8 +9,8 @@
 //
 // ===----------------------------------------------------------------------===//
 
-public import Index_Primitives
 public import Array_Primitives_Core
+public import Index_Primitives
 
 // TODO: Should derive from protocol-level `init(repeating:count:)` default.
 // See Array.Fixed Repeating.swift for design notes.

@@ -9,8 +9,8 @@
 //
 // ===----------------------------------------------------------------------===//
 
-public import Index_Primitives
 public import Buffer_Linear_Primitives
+public import Index_Primitives
 
 // MARK: - Array (Growable, Heap-Allocated)
 
@@ -124,7 +124,6 @@ public struct Array<Element: ~Copyable>: ~Copyable {
     public typealias Inline<let N: Int> = Swift.InlineArray<N, Element>
 }
 
-
 // MARK: - Conditional Copyable
 
 /// `Array.Fixed` is `Copyable` when its elements are `Copyable`.
@@ -141,5 +140,3 @@ extension Array: @unchecked Sendable where Element: Sendable {}
 // MARK: - Sendable
 
 extension Array.Fixed: @unchecked Sendable where Element: Sendable {}
-
-

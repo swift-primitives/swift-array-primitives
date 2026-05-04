@@ -9,16 +9,17 @@
 //
 // ===----------------------------------------------------------------------===//
 
-import Testing
-@testable import Array_Primitives
 import Array_Primitives_Test_Support
+import Testing
+
+@testable import Array_Primitives
 
 @Suite("Array reallocate")
 struct ArrayReallocateTests {
 
     @Test
     func `reallocate can grow`() {
-        var array = Array<Int>()
+        var array = [Int]()
         array.append(1)
         array.append(2)
         array.reallocate(capacity: 100)
@@ -28,7 +29,7 @@ struct ArrayReallocateTests {
 
     @Test
     func `reallocate can shrink`() {
-        var array = Array<Int>()
+        var array = [Int]()
         array.reserveCapacity(100)
         array.append(10)
         array.append(20)
@@ -40,7 +41,7 @@ struct ArrayReallocateTests {
 
     @Test
     func `reallocate preserves elements`() {
-        var array: Array<Int> = []
+        var array: [Int] = []
         array.append(100)
         array.append(200)
         array.append(300)
@@ -56,7 +57,7 @@ struct ArrayReallocateTests {
 
     @Test
     func `reallocate on shared copy does not affect original`() {
-        var original: Array<Int> = []
+        var original: [Int] = []
         original.reserveCapacity(100)
         original.append(1)
         original.append(2)

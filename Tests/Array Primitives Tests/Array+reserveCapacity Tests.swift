@@ -9,16 +9,17 @@
 //
 // ===----------------------------------------------------------------------===//
 
-import Testing
-@testable import Array_Primitives
 import Array_Primitives_Test_Support
+import Testing
+
+@testable import Array_Primitives
 
 @Suite("Array reserveCapacity")
 struct ArrayReserveCapacityTests {
 
     @Test
     func `reserveCapacity grows when needed`() {
-        var array = Array<Int>()
+        var array = [Int]()
         array.reserveCapacity(100)
         #expect(array.capacity >= 100)
         #expect(array.isEmpty)
@@ -26,7 +27,7 @@ struct ArrayReserveCapacityTests {
 
     @Test
     func `reserveCapacity less than current is noop`() {
-        var array = Array<Int>(initialCapacity: 50)
+        var array = [Int](initialCapacity: 50)
         let initial = array.capacity
         array.reserveCapacity(10)
         #expect(array.capacity == initial)
@@ -34,7 +35,7 @@ struct ArrayReserveCapacityTests {
 
     @Test
     func `reserveCapacity preserves existing elements`() {
-        var array = Array<Int>()
+        var array = [Int]()
         array.append(1)
         array.append(2)
         array.append(3)
@@ -45,7 +46,7 @@ struct ArrayReserveCapacityTests {
 
     @Test
     func `reserveCapacity with CoW makes copy before growing`() {
-        var original: Array<Int> = []
+        var original: [Int] = []
         original.append(1)
         original.append(2)
 

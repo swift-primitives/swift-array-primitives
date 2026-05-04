@@ -212,4 +212,3 @@ extension Array.Fixed where Element: ~Copyable {
         }
     }
 }
-

@@ -9,9 +9,10 @@
 //
 // ===----------------------------------------------------------------------===//
 
-import Testing
-@testable import Array_Primitives
 import Array_Primitives_Test_Support
+import Testing
+
+@testable import Array_Primitives
 
 @Suite("Array.Fixed + OutputSpan")
 struct ArrayFixedOutputSpanTests {
@@ -22,12 +23,12 @@ struct ArrayFixedOutputSpanTests {
 
 // MARK: - Test fixtures
 
-fileprivate struct MoveOnly: ~Copyable {
+private struct MoveOnly: ~Copyable {
     let value: Int
     init(_ value: Int) { self.value = value }
 }
 
-fileprivate enum FixtureError: Swift.Error, Equatable {
+private enum FixtureError: Swift.Error, Equatable {
     case deliberate
 }
 

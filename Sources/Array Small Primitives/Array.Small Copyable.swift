@@ -10,8 +10,8 @@
 // ===----------------------------------------------------------------------===//
 
 public import Array_Primitives_Core
-internal import Property_Primitives
 public import Buffer_Linear_Small_Primitives
+internal import Property_Primitives
 
 // ============================================================================
 // MARK: - Subscripts
@@ -58,4 +58,3 @@ extension Array.Small where Element: Copyable {
         return _buffer[newIndex]
     }
 }
-

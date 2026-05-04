@@ -9,8 +9,8 @@
 //
 // ===----------------------------------------------------------------------===//
 
-public import Collection_Primitives
 public import Array_Primitives_Core
+public import Collection_Primitives
 import Index_Primitives
 
 // MARK: - Swift.Sequence Conformance

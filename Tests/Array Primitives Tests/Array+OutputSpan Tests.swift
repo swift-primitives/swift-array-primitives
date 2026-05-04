@@ -9,9 +9,10 @@
 //
 // ===----------------------------------------------------------------------===//
 
-import Testing
-@testable import Array_Primitives
 import Array_Primitives_Test_Support
+import Testing
+
+@testable import Array_Primitives
 
 @Suite("Array + OutputSpan")
 struct ArrayOutputSpanTests {
@@ -25,12 +26,12 @@ struct ArrayOutputSpanTests {
 
 // MARK: - Test fixtures
 
-fileprivate struct MoveOnly: ~Copyable {
+private struct MoveOnly: ~Copyable {
     let value: Int
     init(_ value: Int) { self.value = value }
 }
 
-fileprivate enum FixtureError: Swift.Error, Equatable {
+private enum FixtureError: Swift.Error, Equatable {
     case deliberate
 }
 
@@ -40,7 +41,7 @@ extension ArrayOutputSpanTests.Init {
 
     @Test
     func `init with full population`() throws {
-        let array = try Array<Int>(capacity: 4) { span in
+        let array = try [Int](capacity: 4) { span in
             span.append(10)
             span.append(20)
             span.append(30)
@@ -51,7 +52,7 @@ extension ArrayOutputSpanTests.Init {
 
     @Test
     func `init with partial population`() throws {
-        let array = try Array<Int>(capacity: 10) { span in
+        let array = try [Int](capacity: 10) { span in
             for i in 0..<3 { span.append(i) }
         }
         #expect(array.count == 3)
@@ -59,13 +60,13 @@ extension ArrayOutputSpanTests.Init {
 
     @Test
     func `init with empty closure`() throws {
-        let array = try Array<Int>(capacity: 4) { _ in }
+        let array = try [Int](capacity: 4) { _ in }
         #expect(array.isEmpty)
     }
 
     @Test
     func `init with zero capacity`() throws {
-        let array = try Array<Int>(capacity: 0) { _ in }
+        let array = try [Int](capacity: 0) { _ in }
         #expect(array.isEmpty)
     }
 }
@@ -76,7 +77,7 @@ extension ArrayOutputSpanTests.Append {
 
     @Test
     func `append adds to existing array`() throws {
-        var array = Array<Int>(initialCapacity: 2)
+        var array = [Int](initialCapacity: 2)
         array.append(1)
         array.append(2)
 
@@ -90,7 +91,7 @@ extension ArrayOutputSpanTests.Append {
 
     @Test
     func `append triggers growth`() throws {
-        var array = Array<Int>()
+        var array = [Int]()
         try array.append(addingCapacity: 100) { span in
             for i in 0..<100 { span.append(i) }
         }
@@ -99,7 +100,7 @@ extension ArrayOutputSpanTests.Append {
 
     @Test
     func `append with partial population`() throws {
-        var array = Array<Int>()
+        var array = [Int]()
         array.append(1)
 
         try array.append(addingCapacity: 10) { span in
@@ -116,7 +117,7 @@ extension ArrayOutputSpanTests.Edit {
 
     @Test
     func `edit can append and remove`() throws {
-        var array = Array<Int>(initialCapacity: 10)
+        var array = [Int](initialCapacity: 10)
         array.append(1)
         array.append(2)
         array.append(3)
@@ -131,7 +132,7 @@ extension ArrayOutputSpanTests.Edit {
 
     @Test
     func `edit returns closure result`() throws {
-        var array: Array<Int> = []
+        var array: [Int] = []
         array.append(42)
 
         let doubled: Int = try array.edit { span in
@@ -147,7 +148,7 @@ extension ArrayOutputSpanTests.NonCopyable {
 
     @Test
     func `init with noncopyable elements`() throws {
-        let array = try Array<MoveOnly>(capacity: 3) { span in
+        let array = try [MoveOnly](capacity: 3) { span in
             span.append(MoveOnly(1))
             span.append(MoveOnly(2))
             span.append(MoveOnly(3))
@@ -157,7 +158,7 @@ extension ArrayOutputSpanTests.NonCopyable {
 
     @Test
     func `append noncopyable elements triggering growth`() throws {
-        var array = Array<MoveOnly>(initialCapacity: 1)
+        var array = [MoveOnly](initialCapacity: 1)
         array.append(MoveOnly(0))
         try array.append(addingCapacity: 5) { span in
             for i in 1...5 { span.append(MoveOnly(i)) }
@@ -173,7 +174,7 @@ extension ArrayOutputSpanTests.Throwing {
     @Test
     func `init throw destroys partial state`() {
         #expect(throws: FixtureError.deliberate) {
-            _ = try Array<Int>(capacity: 4) { span throws(FixtureError) in
+            _ = try [Int](capacity: 4) { span throws(FixtureError) in
                 span.append(1)
                 throw FixtureError.deliberate
             }
@@ -182,7 +183,7 @@ extension ArrayOutputSpanTests.Throwing {
 
     @Test
     func `append throw preserves partial commits`() throws {
-        var array = Array<Int>()
+        var array = [Int]()
         array.append(1)
 
         do {
@@ -208,7 +209,7 @@ extension ArrayOutputSpanTests.CoW {
 
     @Test
     func `append on copy leaves original untouched`() throws {
-        var original: Array<Int> = []
+        var original: [Int] = []
         original.append(1)
         original.append(2)
         original.append(3)

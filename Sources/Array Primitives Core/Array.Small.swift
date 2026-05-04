@@ -9,8 +9,8 @@
 //
 // ===----------------------------------------------------------------------===//
 
-internal import Index_Primitives
 public import Buffer_Linear_Small_Primitives
+internal import Index_Primitives
 
 extension Array where Element: ~Copyable {
 

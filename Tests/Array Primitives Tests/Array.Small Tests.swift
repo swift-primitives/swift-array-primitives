@@ -9,9 +9,10 @@
 //
 // ===----------------------------------------------------------------------===//
 
-import Testing
-@testable import Array_Primitives
 import Array_Primitives_Test_Support
+import Testing
+
+@testable import Array_Primitives
 
 // MARK: - Test Suite Structure
 
@@ -37,7 +38,7 @@ extension ArraySmallTests.Unit {
         var array = Array<Int>.Small<4>()
 
         array.append(1)
-        
+
         #expect(array.capacity.rawValue.rawValue == Array<Int>.Small<4>.inlineCapacity)
 
         array.append(2)
@@ -236,7 +237,7 @@ extension ArraySmallTests.Unit {
     func `Behavior identical regardless of storage mode`() {
         // Test that operations work the same in both modes
         var inlineArray = try! Array<Int>.Small<100>()  // Will stay inline
-        var spilledArray = try! Array<Int>.Small<2>()   // Will spill
+        var spilledArray = try! Array<Int>.Small<2>()  // Will spill
 
         // Add same elements
         for i in 0..<10 {
@@ -307,7 +308,6 @@ extension ArraySmallTests.Unit {
         var array = Array<Int>.Small<2>()
         for i in 0..<5 { array.append(i * 2) }
 
-        
         #expect(array.span.count == 5)
         for i in 0..<5 {
             #expect(array.span[i] == i * 2)

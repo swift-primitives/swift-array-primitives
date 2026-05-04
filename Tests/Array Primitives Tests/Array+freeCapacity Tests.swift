@@ -9,9 +9,10 @@
 //
 // ===----------------------------------------------------------------------===//
 
-import Testing
-@testable import Array_Primitives
 import Array_Primitives_Test_Support
+import Testing
+
+@testable import Array_Primitives
 
 @Suite("Array freeCapacity")
 struct ArrayFreeCapacityTests {
@@ -27,13 +28,13 @@ extension ArrayFreeCapacityTests.Dynamic {
 
     @Test
     func `empty array freeCapacity matches capacity`() {
-        let array: Array<Int> = Array(initialCapacity: 10)
+        let array: [Int] = Array(initialCapacity: 10)
         #expect(array.freeCapacity == array.capacity)
     }
 
     @Test
     func `appending decreases freeCapacity`() {
-        var array = Array<Int>(initialCapacity: 5)
+        var array = [Int](initialCapacity: 5)
         let initial = array.freeCapacity
         array.append(42)
         #expect(array.freeCapacity == initial.subtract.saturating(.one))
@@ -41,7 +42,7 @@ extension ArrayFreeCapacityTests.Dynamic {
 
     @Test
     func `full array has zero freeCapacity`() {
-        var array = Array<Int>(initialCapacity: 3)
+        var array = [Int](initialCapacity: 3)
         array.append(1)
         array.append(2)
         array.append(3)

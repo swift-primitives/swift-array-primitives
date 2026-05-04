@@ -11,7 +11,7 @@
 
 // Re-export test support dependencies for consumers.
 
+@_exported public import Affine_Primitives_Test_Support
 @_exported public import Array_Primitives
 @_exported public import Buffer_Primitives_Test_Support
 @_exported public import Ordinal_Primitives_Test_Support
-@_exported public import Affine_Primitives_Test_Support

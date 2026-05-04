@@ -9,9 +9,9 @@
 //
 // ===----------------------------------------------------------------------===//
 
-import Index_Primitives
 internal import Array_Primitives_Core
 internal import Collection_Primitives
+import Index_Primitives
 
 // ============================================================================
 // MARK: - Sendable Conformance

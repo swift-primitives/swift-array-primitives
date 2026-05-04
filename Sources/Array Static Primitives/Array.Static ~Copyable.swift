@@ -189,7 +189,10 @@ extension Array.Static where Element: ~Copyable {
     @inlinable
     public var drain: Drain.View {
         mutating _read { yield unsafe .init(&self) }
-        mutating _modify { var view: Drain.View = unsafe .init(&self); yield &view }
+        mutating _modify {
+            var view: Drain.View = unsafe .init(&self)
+            yield &view
+        }
     }
 }
 

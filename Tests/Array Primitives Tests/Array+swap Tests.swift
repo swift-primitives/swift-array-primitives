@@ -9,9 +9,10 @@
 //
 // ===----------------------------------------------------------------------===//
 
-import Testing
-@testable import Array_Primitives
 import Array_Primitives_Test_Support
+import Testing
+
+@testable import Array_Primitives
 
 @Suite("Array swap")
 struct ArraySwapTests {
@@ -28,7 +29,7 @@ extension ArraySwapTests.Dynamic {
 
     @Test
     func `swap exchanges two elements`() throws {
-        var array: Array<Int> = []
+        var array: [Int] = []
         array.append(10)
         array.append(20)
         array.append(30)
@@ -111,7 +112,7 @@ extension ArraySwapTests.EdgeCases {
 
     @Test
     func `swap with same index is a noop`() throws {
-        var array: Array<Int> = []
+        var array: [Int] = []
         array.append(100)
         array.append(200)
 

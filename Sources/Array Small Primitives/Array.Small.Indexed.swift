@@ -10,8 +10,8 @@
 // ===----------------------------------------------------------------------===//
 
 public import Array_Primitives_Core
-import Index_Primitives
 internal import Buffer_Linear_Small_Primitives
+import Index_Primitives
 
 // ============================================================================
 // MARK: - Array.Small.Indexed Definition

@@ -26,4 +26,3 @@ extension Array where Element: ~Copyable {
     /// ```
     public typealias Index = Index_Primitives.Index<Element>
 }
-

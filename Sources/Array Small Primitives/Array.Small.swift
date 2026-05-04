@@ -10,8 +10,8 @@
 // ===----------------------------------------------------------------------===//
 
 public import Array_Primitives_Core
-public import Collection_Primitives
 public import Buffer_Linear_Small_Primitives
+public import Collection_Primitives
 
 // ============================================================================
 // MARK: - Protocol Conformances

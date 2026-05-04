@@ -233,7 +233,7 @@ extension Array where Element: ~Copyable {
 
 extension Array where Element: ~Copyable {
     public enum Drain {
-        public typealias View = Property<Sequence.Drain, Array<Element>>.View.Typed<Element>
+        public typealias View = Property<Sequence.Drain, [Element]>.View.Typed<Element>
     }
 }
 
@@ -254,7 +254,7 @@ extension Array where Element: ~Copyable {
 // MARK: Drain: Operations (~Copyable)
 
 extension Property.View.Typed
-where Tag == Sequence.Drain, Base == Array<Element>, Element: ~Copyable {
+where Tag == Sequence.Drain, Base == [Element], Element: ~Copyable {
     /// Drain iteration: `.drain { }`
     @inlinable
     public mutating func callAsFunction(_ body: (consuming Element) -> Void) {
