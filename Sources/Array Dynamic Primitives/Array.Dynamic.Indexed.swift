@@ -24,13 +24,13 @@ extension Array {
     /// indexing where the phantom type differs from the element type.
     public struct Indexed<Tag: Copyable>: Copyable, @unchecked Sendable {
         @usableFromInline
-        var _storage: [Element]
+        var _storage: Array<Element>
 
         public typealias Index = Array<Tag>.Index
 
         /// Creates an indexed wrapper around the given storage.
         @inlinable
-        public init(_ storage: consuming [Element]) {
+        public init(_ storage: consuming Array<Element>) {
             self._storage = storage
         }
     }

@@ -35,14 +35,14 @@ extension ArrayTests.Unit {
 
     @Test
     func `Empty array has count zero`() {
-        let array = [Int]()
+        let array = Array<Int>()
         #expect(array.count == 0)
         #expect(array.isEmpty == true)
     }
 
     @Test
     func `Append increments count`() {
-        var array = [Int]()
+        var array = Array<Int>()
 
         array.append(1)
         #expect(array.count == 1)
@@ -56,7 +56,7 @@ extension ArrayTests.Unit {
 
     @Test
     func `RemoveLast decrements count`() {
-        var array = [Int]()
+        var array = Array<Int>()
         array.append(1)
         array.append(2)
         array.append(3)
@@ -73,7 +73,7 @@ extension ArrayTests.Unit {
 
     @Test
     func `RemoveLast on empty returns nil`() {
-        var array = [Int]()
+        var array = Array<Int>()
         #expect(array.remove.last() == nil)
         #expect(array.count == 0)
     }
@@ -82,7 +82,7 @@ extension ArrayTests.Unit {
 
     @Test
     func `forEach yields exactly count elements`() {
-        var array = [Int]()
+        var array = Array<Int>()
         for i in 0..<10 { array.append(i) }
 
         var iteratedCount = 0
@@ -93,7 +93,7 @@ extension ArrayTests.Unit {
 
     @Test
     func `forEach yields elements in insertion order`() {
-        var array = [Int]()
+        var array = Array<Int>()
         array.append(10)
         array.append(20)
         array.append(30)
@@ -107,7 +107,7 @@ extension ArrayTests.Unit {
 
     @Test
     func `Empty array forEach yields nothing`() {
-        var array = [Int]()
+        var array = Array<Int>()
 
         var iteratedCount = 0
         array.forEach { _ in iteratedCount += 1 }
@@ -117,7 +117,7 @@ extension ArrayTests.Unit {
 
     @Test
     func `forEach matches subscript access`() {
-        var array = [Int]()
+        var array = Array<Int>()
         for i in 0..<20 { array.append(i * 5) }
 
         // Capture expected values first to avoid exclusivity violation
@@ -134,7 +134,7 @@ extension ArrayTests.Unit {
 
     @Test
     func `CoW: Copy shares storage initially`() {
-        var original = [Int]()
+        var original = Array<Int>()
         original.append(1)
         original.append(2)
         original.append(3)
@@ -153,7 +153,7 @@ extension ArrayTests.Unit {
 
     @Test
     func `CoW: Mutation of copy does not affect original`() {
-        var original = [Int]()
+        var original = Array<Int>()
         original.append(1)
         original.append(2)
         original.append(3)
@@ -178,7 +178,7 @@ extension ArrayTests.Unit {
 
     @Test
     func `CoW: Mutation of original does not affect copy`() {
-        var original = [Int]()
+        var original = Array<Int>()
         original.append(1)
         original.append(2)
         original.append(3)
@@ -198,7 +198,7 @@ extension ArrayTests.Unit {
 
     @Test
     func `CoW: Multiple copies are independent`() {
-        var original = [Int]()
+        var original = Array<Int>()
         original.append(1)
         original.append(2)
 
@@ -218,7 +218,7 @@ extension ArrayTests.Unit {
 
     @Test
     func `Capacity grows to accommodate elements`() {
-        var array = [Int]()
+        var array = Array<Int>()
 
         // Add elements beyond initial capacity hint
         for i in 0..<100 {
@@ -236,7 +236,7 @@ extension ArrayTests.Unit {
 
     @Test
     func `forEach visits all elements in order`() {
-        var array = [Int]()
+        var array = Array<Int>()
         array.append(10)
         array.append(20)
         array.append(30)
@@ -249,7 +249,7 @@ extension ArrayTests.Unit {
 
     @Test
     func `forEach visits count elements`() {
-        var array = [Int]()
+        var array = Array<Int>()
         for i in 0..<50 { array.append(i) }
 
         var visitCount = 0
@@ -262,7 +262,7 @@ extension ArrayTests.Unit {
 
     @Test
     func `Span count matches array count`() {
-        var array = [Int]()
+        var array = Array<Int>()
         for i in 0..<10 { array.append(i) }
 
         #expect(array.span.count == 10)
@@ -270,7 +270,7 @@ extension ArrayTests.Unit {
 
     @Test
     func `Span elements match subscript access`() {
-        var array = [Int]()
+        var array = Array<Int>()
         for i in 0..<5 { array.append(i * 7) }
 
         let span = array.span
@@ -286,7 +286,7 @@ extension ArrayTests.EdgeCase {
 
     @Test
     func `Single element operations`() {
-        var array = [Int]()
+        var array = Array<Int>()
 
         array.append(42)
         #expect(array.count == 1)
@@ -303,7 +303,7 @@ extension ArrayTests.EdgeCase {
 
     @Test
     func `Growth beyond initial capacity preserves elements`() {
-        var array = [Int]()  // Small initial capacity
+        var array = Array<Int>()  // Small initial capacity
 
         // Add many elements
         for i in 0..<1000 {
@@ -328,7 +328,7 @@ extension ArrayTests.EdgeCase {
 
     @Test
     func `RemoveAll clears count`() {
-        var array = [Int]()
+        var array = Array<Int>()
         for i in 0..<10 { array.append(i) }
 
         array.remove.all()
@@ -343,7 +343,7 @@ extension ArrayTests.EdgeCase {
 
     @Test
     func `Append after removeAll works`() {
-        var array = [Int]()
+        var array = Array<Int>()
         array.append(1)
         array.append(2)
 
@@ -364,7 +364,7 @@ extension ArrayTests.Integration {
 
     @Test
     func `forEach and withSpan yield same elements`() {
-        var array = [Int]()
+        var array = Array<Int>()
         for i in 0..<10 { array.append(i * 2) }
 
         var forEachElements: [Int] = []
@@ -381,7 +381,7 @@ extension ArrayTests.Integration {
 
     @Test
     func `CoW preserves forEach correctness after copy mutation`() {
-        var original = [Int]()
+        var original = Array<Int>()
         for i in 0..<5 { original.append(i) }
 
         var copy = original

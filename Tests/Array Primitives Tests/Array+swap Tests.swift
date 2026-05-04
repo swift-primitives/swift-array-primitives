@@ -29,7 +29,7 @@ extension ArraySwapTests.Dynamic {
 
     @Test
     func `swap exchanges two elements`() throws {
-        var array: [Int] = []
+        var array: Array<Int> = []
         array.append(10)
         array.append(20)
         array.append(30)
@@ -112,7 +112,7 @@ extension ArraySwapTests.EdgeCases {
 
     @Test
     func `swap with same index is a noop`() throws {
-        var array: [Int] = []
+        var array: Array<Int> = []
         array.append(100)
         array.append(200)
 

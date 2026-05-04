@@ -19,7 +19,7 @@ struct ArrayCloneTests {
 
     @Test
     func `clone produces independent storage`() {
-        var original: [Int] = []
+        var original: Array<Int> = []
         original.append(1)
         original.append(2)
         original.append(3)
@@ -34,7 +34,7 @@ struct ArrayCloneTests {
 
     @Test
     func `clone sizes capacity to count`() {
-        var source = [Int](initialCapacity: 100)
+        var source = Array<Int>(initialCapacity: 100)
         source.append(1)
         source.append(2)
 
@@ -46,14 +46,14 @@ struct ArrayCloneTests {
 
     @Test
     func `clone of empty array`() {
-        let source = [Int]()
+        let source = Array<Int>()
         let cloned = source.clone()
         #expect(cloned.isEmpty)
     }
 
     @Test
     func `clone with explicit capacity`() {
-        var source: [Int] = []
+        var source: Array<Int> = []
         source.append(10)
         source.append(20)
 
@@ -68,7 +68,7 @@ struct ArrayCloneTests {
 
     @Test
     func `clone contents match original`() {
-        var source: [Int] = []
+        var source: Array<Int> = []
         source.append(100)
         source.append(200)
         source.append(300)

@@ -19,7 +19,7 @@ struct ArrayReallocateTests {
 
     @Test
     func `reallocate can grow`() {
-        var array = [Int]()
+        var array = Array<Int>()
         array.append(1)
         array.append(2)
         array.reallocate(capacity: 100)
@@ -29,7 +29,7 @@ struct ArrayReallocateTests {
 
     @Test
     func `reallocate can shrink`() {
-        var array = [Int]()
+        var array = Array<Int>()
         array.reserveCapacity(100)
         array.append(10)
         array.append(20)
@@ -41,7 +41,7 @@ struct ArrayReallocateTests {
 
     @Test
     func `reallocate preserves elements`() {
-        var array: [Int] = []
+        var array: Array<Int> = []
         array.append(100)
         array.append(200)
         array.append(300)
@@ -57,7 +57,7 @@ struct ArrayReallocateTests {
 
     @Test
     func `reallocate on shared copy does not affect original`() {
-        var original: [Int] = []
+        var original: Array<Int> = []
         original.reserveCapacity(100)
         original.append(1)
         original.append(2)
