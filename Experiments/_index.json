@@ -101,6 +101,22 @@
       "crossRefs": []
     },
     {
+      "directory": "shorthand-syntax-with-shadowing",
+      "displayName": "shorthand-syntax-with-shadowing",
+      "purpose": "Verify whether Swift shorthand `[T]` / `[K:V]` syntax can resolve to user-defined Array/Dictionary types that shadow stdlib, or whether the shorthand is hardcoded to Swift.Array / Swift.Dictionary",
+      "date": "2026-05-04",
+      "toolchain": "Apple Swift 6.3.1 (Xcode 26.4) + swift:6.3 docker",
+      "status": "CONFIRMED",
+      "statusDetail": "Shorthand `[T]` always means Swift.Array<T>; cannot resolve to a shadowing custom Array. Verified via 5 variants + Swift compiler source (KnownStdlibTypes.def line 51, TypeCheckType.cpp resolveArrayType:5584). Same hardcoding for Dictionary (`[K:V]`) and Optional (`T?`).",
+      "statusRaw": "CONFIRMED",
+      "supersededBy": null,
+      "crossRefs": [
+        "[EXP-001]",
+        "[EXP-009]",
+        "swiftlang/swift @ 6f265bdcad8ff5ff1e6e9e287a882c09de969a08"
+      ]
+    },
+    {
       "directory": "span-based-iterator",
       "displayName": "span-based-iterator",
       "purpose": "Test span-based iterators for array types",
