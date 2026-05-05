@@ -164,7 +164,7 @@ extension Array.Static where Element: ~Copyable {
 
 extension Array.Static where Element: ~Copyable {
     public enum Drain {
-        public typealias View = Property<Sequence.Drain, Array<Element>.Static<capacity>>.View.Typed<Element>.Valued<capacity>
+        public typealias View = Property<Sequence.Drain, Array<Element>.Static<capacity>>.Inout.Typed<Element>.Valued<capacity>
     }
 }
 
@@ -173,10 +173,10 @@ extension Array.Static where Element: ~Copyable {
 extension Array.Static where Element: ~Copyable {
     /// Property view for iteration operations.
     @inlinable
-    public var forEach: Property<Collection.ForEach, Self>.View.Typed<Element> {
+    public var forEach: Property<Collection.ForEach, Self>.Inout.Typed<Element> {
         mutating _read { yield unsafe .init(&self) }
         mutating _modify {
-            var view: Property<Collection.ForEach, Self>.View.Typed<Element> = unsafe .init(&self)
+            var view: Property<Collection.ForEach, Self>.Inout.Typed<Element> = unsafe .init(&self)
             yield &view
         }
     }
@@ -198,15 +198,15 @@ extension Array.Static where Element: ~Copyable {
 
 // MARK: Drain: Operations (~Copyable)
 
-extension Property.View.Typed.Valued
+extension Property.Inout.Typed.Valued
 where Tag == Sequence.Drain, Base == Array<Element>.Static<n>, Element: ~Copyable {
     /// Drain iteration: `.drain { }`
     @inlinable
     public mutating func callAsFunction(_ body: (consuming Element) -> Void) {
-        let count = unsafe base.value._buffer.count
+        let count = base.value._buffer.count
         guard count > .zero else { return }
         while unsafe !base.value._buffer.isEmpty {
-            body(unsafe base.value._buffer.remove.first())
+            body(base.value._buffer.remove.first())
         }
     }
 }

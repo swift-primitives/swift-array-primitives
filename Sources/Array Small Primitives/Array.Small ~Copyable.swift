@@ -208,7 +208,7 @@ extension Array.Small where Element: Copyable {
 
 extension Array.Small where Element: ~Copyable {
     public enum Drain {
-        public typealias View = Property<Sequence.Drain, Array<Element>.Small<inlineCapacity>>.View.Typed<Element>.Valued<inlineCapacity>
+        public typealias View = Property<Sequence.Drain, Array<Element>.Small<inlineCapacity>>.Inout.Typed<Element>.Valued<inlineCapacity>
     }
 }
 
@@ -217,10 +217,10 @@ extension Array.Small where Element: ~Copyable {
 extension Array.Small where Element: ~Copyable {
     /// Property view for iteration operations.
     @inlinable
-    public var forEach: Property<Collection.ForEach, Self>.View.Typed<Element> {
+    public var forEach: Property<Collection.ForEach, Self>.Inout.Typed<Element> {
         mutating _read { yield unsafe .init(&self) }
         mutating _modify {
-            var view: Property<Collection.ForEach, Self>.View.Typed<Element> = unsafe .init(&self)
+            var view: Property<Collection.ForEach, Self>.Inout.Typed<Element> = unsafe .init(&self)
             yield &view
         }
     }
@@ -242,13 +242,13 @@ extension Array.Small where Element: ~Copyable {
 
 // MARK: Drain: Operations (~Copyable)
 
-extension Property.View.Typed.Valued
+extension Property.Inout.Typed.Valued
 where Tag == Sequence.Drain, Base == Array<Element>.Small<n>, Element: ~Copyable {
     /// Drain iteration: `.drain { }`
     @inlinable
     public mutating func callAsFunction(_ body: (consuming Element) -> Void) {
         while unsafe !base.value._buffer.isEmpty {
-            body(unsafe base.value._buffer.remove.first())
+            body(base.value._buffer.remove.first())
         }
     }
 }

@@ -23,15 +23,15 @@ extension Array.`Protocol` where Self: ~Copyable {
 
 // MARK: ForEach: Borrowing Operations on .Typed (~Copyable)
 
-extension Property.View.Typed
+extension Property.Inout.Typed
 where Tag == Collection.ForEach, Base: Array.`Protocol` & ~Copyable, Element: ~Copyable {
     /// Borrowing iteration: `.forEach { }`
     @inlinable
     public func callAsFunction(_ body: (borrowing Base.Element) -> Void) {
-        var i = unsafe base.value.startIndex
+        var i = base.value.startIndex
         while unsafe i < base.value.endIndex {
-            body(unsafe base.value[i])
-            i = unsafe base.value.index(after: i)
+            body(base.value[i])
+            i = base.value.index(after: i)
         }
     }
 
@@ -47,10 +47,10 @@ where Tag == Collection.ForEach, Base: Array.`Protocol` & ~Copyable, Element: ~C
     /// Use when the index is needed (e.g., for mutation or cross-reference).
     @inlinable
     public func index(_ body: (Base.Index) -> Void) {
-        var i = unsafe base.value.startIndex
+        var i = base.value.startIndex
         while unsafe i < base.value.endIndex {
             body(i)
-            i = unsafe base.value.index(after: i)
+            i = base.value.index(after: i)
         }
     }
 }
