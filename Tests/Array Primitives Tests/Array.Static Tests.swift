@@ -201,7 +201,7 @@ extension ArrayStaticTests.EdgeCase {
         try array.append(42)
         #expect(array.count == 1)
         #expect(array.isFull == true)
-        #expect(array[Index<Int>(_unchecked: Ordinal(UInt(0)))] == 42)
+        #expect(array[0] == 42)
 
         #expect(throws: Array<Int>.Static<1>.Error.self) {
             try array.append(999)

@@ -10,6 +10,8 @@
 // ===----------------------------------------------------------------------===//
 
 import Array_Primitives_Test_Support
+import Ordinal_Primitives_Standard_Library_Integration
+import Tagged_Primitives_Standard_Library_Integration
 import Testing
 
 @testable import Array_Primitives
@@ -330,8 +332,8 @@ extension ArraySmallTests.EdgeCase {
         array.append(4)
 
         // Verify before spill
-        #expect(array[Index<Int>(_unchecked: Ordinal(UInt(0)))] == 1)
-        #expect(array[Index<Int>(_unchecked: Ordinal(UInt(3)))] == 4)
+        #expect(array[0] == 1)
+        #expect(array[3] == 4)
 
         // Spill
         array.append(5)
@@ -339,12 +341,12 @@ extension ArraySmallTests.EdgeCase {
 
         // Verify all elements preserved
         #expect(array.count == 6)
-        #expect(array[Index<Int>(_unchecked: Ordinal(UInt(0)))] == 1)
-        #expect(array[Index<Int>(_unchecked: Ordinal(UInt(1)))] == 2)
-        #expect(array[Index<Int>(_unchecked: Ordinal(UInt(2)))] == 3)
-        #expect(array[Index<Int>(_unchecked: Ordinal(UInt(3)))] == 4)
-        #expect(array[Index<Int>(_unchecked: Ordinal(UInt(4)))] == 5)
-        #expect(array[Index<Int>(_unchecked: Ordinal(UInt(5)))] == 6)
+        #expect(array[0] == 1)
+        #expect(array[1] == 2)
+        #expect(array[2] == 3)
+        #expect(array[3] == 4)
+        #expect(array[4] == 5)
+        #expect(array[5] == 6)
     }
 
     @Test
@@ -425,7 +427,7 @@ extension ArraySmallTests.EdgeCase {
 
         array.append(42)
         #expect(array.count == 1)
-        #expect(array[Index<Int>(_unchecked: Ordinal(UInt(0)))] == 42)
+        #expect(array[0] == 42)
 
         var elements: [Int] = []
         array.forEach { elements.append($0) }
@@ -434,8 +436,8 @@ extension ArraySmallTests.EdgeCase {
         // Spill with second element
         array.append(99)
         #expect(array.count == 2)
-        #expect(array[Index<Int>(_unchecked: Ordinal(UInt(0)))] == 42)
-        #expect(array[Index<Int>(_unchecked: Ordinal(UInt(1)))] == 99)
+        #expect(array[0] == 42)
+        #expect(array[1] == 99)
 
         elements = []
         array.forEach { elements.append($0) }

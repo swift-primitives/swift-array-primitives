@@ -55,6 +55,8 @@ let package = Package(
         .package(path: "../swift-algebra-modular-primitives"),
         .package(path: "../swift-equation-primitives"),
         .package(path: "../swift-hash-primitives"),
+        .package(path: "../swift-tagged-primitives"),
+        .package(path: "../swift-ordinal-primitives"),
     ],
     targets: [
 
@@ -145,6 +147,8 @@ let package = Package(
             dependencies: [
                 "Array Primitives",
                 "Array Primitives Test Support",
+                .product(name: "Tagged Primitives Standard Library Integration", package: "swift-tagged-primitives"),
+                .product(name: "Ordinal Primitives Standard Library Integration", package: "swift-ordinal-primitives"),
             ]
         )
     ],
