@@ -155,7 +155,7 @@ extension ArrayStaticTests.Unit {
 
         // Compare with subscript access
         for i in 0..<5 {
-            #expect(forEachElements[i] == array[Index<Int>(__unchecked: (), Ordinal(UInt(i)))])
+            #expect(forEachElements[i] == array[Index<Int>(_unchecked: Ordinal(UInt(i)))])
         }
     }
 
@@ -201,7 +201,7 @@ extension ArrayStaticTests.EdgeCase {
         try array.append(42)
         #expect(array.count == 1)
         #expect(array.isFull == true)
-        #expect(array[Index<Int>(__unchecked: (), Ordinal(UInt(0)))] == 42)
+        #expect(array[Index<Int>(_unchecked: Ordinal(UInt(0)))] == 42)
 
         #expect(throws: Array<Int>.Static<1>.Error.self) {
             try array.append(999)

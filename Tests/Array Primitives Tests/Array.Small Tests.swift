@@ -39,13 +39,13 @@ extension ArraySmallTests.Unit {
 
         array.append(1)
 
-        #expect(array.capacity.rawValue.rawValue == Array<Int>.Small<4>.inlineCapacity)
+        #expect(array.capacity.underlying.rawValue == Array<Int>.Small<4>.inlineCapacity)
 
         array.append(2)
         array.append(3)
         array.append(4)
         // Still inline at exactly inlineCapacity
-        #expect(array.capacity.rawValue.rawValue == Array<Int>.Small<4>.inlineCapacity)
+        #expect(array.capacity.underlying.rawValue == Array<Int>.Small<4>.inlineCapacity)
     }
 
     @Test
@@ -60,7 +60,7 @@ extension ArraySmallTests.Unit {
 
         // Spill
         array.append(5)
-        #expect(array.capacity.rawValue.rawValue > Array<Int>.Small<4>.inlineCapacity)
+        #expect(array.capacity.underlying.rawValue > Array<Int>.Small<4>.inlineCapacity)
     }
 
     @Test
@@ -69,7 +69,7 @@ extension ArraySmallTests.Unit {
         array.append(1)
         array.append(2)
 
-        #expect(array.capacity.rawValue.rawValue == 8)
+        #expect(array.capacity.underlying.rawValue == 8)
     }
 
     @Test
@@ -82,7 +82,7 @@ extension ArraySmallTests.Unit {
 
         array.append(3)  // Spill
 
-        #expect(array.capacity.rawValue.rawValue > inlineCapacity)
+        #expect(array.capacity.underlying.rawValue > inlineCapacity)
     }
 
     // MARK: - Count Invariants
@@ -212,7 +212,7 @@ extension ArraySmallTests.Unit {
 
         // Compare with subscript access
         for i in 0..<5 {
-            #expect(forEachElements[i] == array[Index<Int>(__unchecked: (), Ordinal(UInt(i)))])
+            #expect(forEachElements[i] == array[Index<Int>(_unchecked: Ordinal(UInt(i)))])
         }
     }
 
@@ -227,7 +227,7 @@ extension ArraySmallTests.Unit {
 
         // Compare with subscript access
         for i in 0..<10 {
-            #expect(forEachElements[i] == array[Index<Int>(__unchecked: (), Ordinal(UInt(i)))])
+            #expect(forEachElements[i] == array[Index<Int>(_unchecked: Ordinal(UInt(i)))])
         }
     }
 
@@ -250,7 +250,7 @@ extension ArraySmallTests.Unit {
 
         // Subscript access should match
         for i in 0..<10 {
-            let idx = Index<Int>(__unchecked: (), Ordinal(UInt(i)))
+            let idx = Index<Int>(_unchecked: Ordinal(UInt(i)))
             #expect(inlineArray[idx] == spilledArray[idx])
         }
 
@@ -330,8 +330,8 @@ extension ArraySmallTests.EdgeCase {
         array.append(4)
 
         // Verify before spill
-        #expect(array[Index<Int>(__unchecked: (), Ordinal(UInt(0)))] == 1)
-        #expect(array[Index<Int>(__unchecked: (), Ordinal(UInt(3)))] == 4)
+        #expect(array[Index<Int>(_unchecked: Ordinal(UInt(0)))] == 1)
+        #expect(array[Index<Int>(_unchecked: Ordinal(UInt(3)))] == 4)
 
         // Spill
         array.append(5)
@@ -339,12 +339,12 @@ extension ArraySmallTests.EdgeCase {
 
         // Verify all elements preserved
         #expect(array.count == 6)
-        #expect(array[Index<Int>(__unchecked: (), Ordinal(UInt(0)))] == 1)
-        #expect(array[Index<Int>(__unchecked: (), Ordinal(UInt(1)))] == 2)
-        #expect(array[Index<Int>(__unchecked: (), Ordinal(UInt(2)))] == 3)
-        #expect(array[Index<Int>(__unchecked: (), Ordinal(UInt(3)))] == 4)
-        #expect(array[Index<Int>(__unchecked: (), Ordinal(UInt(4)))] == 5)
-        #expect(array[Index<Int>(__unchecked: (), Ordinal(UInt(5)))] == 6)
+        #expect(array[Index<Int>(_unchecked: Ordinal(UInt(0)))] == 1)
+        #expect(array[Index<Int>(_unchecked: Ordinal(UInt(1)))] == 2)
+        #expect(array[Index<Int>(_unchecked: Ordinal(UInt(2)))] == 3)
+        #expect(array[Index<Int>(_unchecked: Ordinal(UInt(3)))] == 4)
+        #expect(array[Index<Int>(_unchecked: Ordinal(UInt(4)))] == 5)
+        #expect(array[Index<Int>(_unchecked: Ordinal(UInt(5)))] == 6)
     }
 
     @Test
@@ -360,7 +360,7 @@ extension ArraySmallTests.EdgeCase {
 
         // Verify all elements
         for i in 0..<1000 {
-            #expect(array[Index<Int>(__unchecked: (), Ordinal(UInt(i)))] == i * 2)
+            #expect(array[Index<Int>(_unchecked: Ordinal(UInt(i)))] == i * 2)
         }
 
         // forEach should also work
@@ -425,7 +425,7 @@ extension ArraySmallTests.EdgeCase {
 
         array.append(42)
         #expect(array.count == 1)
-        #expect(array[Index<Int>(__unchecked: (), Ordinal(UInt(0)))] == 42)
+        #expect(array[Index<Int>(_unchecked: Ordinal(UInt(0)))] == 42)
 
         var elements: [Int] = []
         array.forEach { elements.append($0) }
@@ -434,8 +434,8 @@ extension ArraySmallTests.EdgeCase {
         // Spill with second element
         array.append(99)
         #expect(array.count == 2)
-        #expect(array[Index<Int>(__unchecked: (), Ordinal(UInt(0)))] == 42)
-        #expect(array[Index<Int>(__unchecked: (), Ordinal(UInt(1)))] == 99)
+        #expect(array[Index<Int>(_unchecked: Ordinal(UInt(0)))] == 42)
+        #expect(array[Index<Int>(_unchecked: Ordinal(UInt(1)))] == 99)
 
         elements = []
         array.forEach { elements.append($0) }

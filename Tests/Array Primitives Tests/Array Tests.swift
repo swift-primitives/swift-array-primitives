@@ -122,7 +122,7 @@ extension ArrayTests.Unit {
 
         // Capture expected values first to avoid exclusivity violation
         var expected: [Int] = []
-        for i in 0..<20 { expected.append(array[Index<Int>(__unchecked: (), Ordinal(UInt(i)))]) }
+        for i in 0..<20 { expected.append(array[Index<Int>(_unchecked: Ordinal(UInt(i)))]) }
 
         var actual: [Int] = []
         array.forEach { actual.append($0) }
@@ -230,7 +230,7 @@ extension ArrayTests.Unit {
 
         // Verify all elements are accessible
         for i in 0..<100 {
-            #expect(array[Index<Int>(__unchecked: (), Ordinal(UInt(i)))] == i)
+            #expect(array[Index<Int>(_unchecked: Ordinal(UInt(i)))] == i)
         }
     }
 
@@ -275,7 +275,7 @@ extension ArrayTests.Unit {
 
         let span = array.span
         for i in 0..<5 {
-            #expect(span[i] == array[Index<Int>(__unchecked: (), Ordinal(UInt(i)))])
+            #expect(span[i] == array[Index<Int>(_unchecked: Ordinal(UInt(i)))])
         }
     }
 }
@@ -314,7 +314,7 @@ extension ArrayTests.EdgeCase {
 
         // Verify all elements preserved through growth
         for i in 0..<1000 {
-            #expect(array[Index<Int>(__unchecked: (), Ordinal(UInt(i)))] == i * 2)
+            #expect(array[Index<Int>(_unchecked: Ordinal(UInt(i)))] == i * 2)
         }
 
         // Verify forEach still works
