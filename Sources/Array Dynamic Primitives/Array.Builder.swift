@@ -173,3 +173,21 @@ extension Array where Element: ~Copyable {
         self = builder()
     }
 }
+
+// MARK: - Sequence Bulk-Add (Copyable Element only)
+
+extension Array.Builder where Element: Copyable {
+    /// Bulk-add a Swift.Sequence (Range, Swift.Array, lazy chain, etc.)
+    /// without per-iteration allocation. Available only when `Element:
+    /// Copyable` because Swift.Sequence iteration requires Copyable
+    /// elements. ~Copyable element types use literal statements only.
+    @inlinable
+    public static func buildExpression<S: Swift.Sequence>(_ expression: S) -> Array<Element>
+    where S.Element == Element {
+        var result = Array<Element>()
+        for value in expression {
+            result.append(value)
+        }
+        return result
+    }
+}
