@@ -9,22 +9,33 @@
 //
 // ===----------------------------------------------------------------------===//
 
-public import Algebra_Modular_Primitives
+public import Index_Primitives
+public import Finite_Primitives_Core
 
 // MARK: - Bounded Index
 
 extension Array.Bounded where Element: ~Copyable {
     /// Type-safe bounded index for bounded array elements.
     ///
-    /// Uses `Algebra.Z<N>` to provide compile-time bounds safety,
-    /// ensuring indices are always valid for this array's dimension.
+    /// `Array<Element>.Bounded<N>.Index` is `Index<Element>.Bounded<N>` — a
+    /// phantom-typed bounded-linear ordinal in `[0, N)`. The `Element` phantom
+    /// tag matches the family-wide `Array<Element>.Index = Index<Element>`
+    /// pattern; the `N` capacity bound provides compile-time dimension safety.
     ///
-    /// ## Example
+    /// Indices are bounds-checked at construction, not at subscript access.
+    /// Once an index is constructed, subscripting with it is guaranteed safe.
     ///
-    /// ```swift
-    /// let idx: Array<Int>.Bounded<3>.Index = try! .init(0)
-    /// var arr = Array<Int>.Bounded<3>([1, 2, 3])
-    /// print(arr[idx])  // 1
+    /// ## Type Structure
+    ///
     /// ```
-    public typealias Index = Algebra.Z<N>
+    /// Array<Element>.Bounded<N>.Index
+    /// = Index<Element>.Bounded<N>
+    /// = Tagged<Element, Ordinal.Finite<N>>
+    /// ```
+    ///
+    /// ## Type-Level Index Separation
+    ///
+    /// Indices from different bounded arrays are distinct types:
+    /// `Array<Int>.Bounded<3>.Index` ≠ `Array<Int>.Bounded<5>.Index`.
+    public typealias Index = Index_Primitives.Index<Element>.Bounded<N>
 }

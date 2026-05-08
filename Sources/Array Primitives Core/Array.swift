@@ -44,7 +44,7 @@ public import Index_Primitives
 /// - ``Array/Fixed``: Fixed-count, all elements initialized at creation
 /// - ``Array/Static``: Fixed-capacity inline storage (stack-allocated, variable count)
 /// - ``Array/Small``: Inline storage with automatic spill to heap (SmallVec pattern)
-/// - ``Array/Bounded``: Compile-time dimensioned with `Algebra.Z<N>` indexing
+/// - ``Array/Bounded``: Compile-time dimensioned with `Index<Element>.Bounded<N>` indexing
 /// - ``Array/Inline``: Typealias to `Swift.InlineArray` (all N elements always initialized)
 @safe
 public struct Array<Element: ~Copyable>: ~Copyable {

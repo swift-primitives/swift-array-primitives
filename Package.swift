@@ -52,7 +52,7 @@ let package = Package(
         .package(path: "../swift-property-primitives"),
         .package(path: "../swift-sequence-primitives"),
         .package(path: "../swift-buffer-primitives"),
-        .package(path: "../swift-algebra-modular-primitives"),
+        .package(path: "../swift-finite-primitives"),
         .package(path: "../swift-equation-primitives"),
         .package(path: "../swift-hash-primitives"),
         .package(path: "../swift-tagged-primitives"),
@@ -112,7 +112,7 @@ let package = Package(
             name: "Array Bounded Primitives",
             dependencies: [
                 "Array Primitives Core",
-                .product(name: "Algebra Modular Primitives", package: "swift-algebra-modular-primitives"),
+                .product(name: "Finite Primitives Core", package: "swift-finite-primitives"),
                 .product(name: "Equation Primitives", package: "swift-equation-primitives"),
                 .product(name: "Hash Primitives", package: "swift-hash-primitives"),
             ]

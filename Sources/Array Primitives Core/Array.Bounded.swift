@@ -15,19 +15,12 @@ extension Array where Element: ~Copyable {
 
     // MARK: - Bounded (Compile-Time Dimensioned, Heap-Allocated)
 
-    /// A fixed-size array with compile-time dimension and `Algebra.Z<N>` indexing.
+    /// A fixed-size array with compile-time dimension and `Index<Element>.Bounded<N>` indexing.
     ///
     /// `Array.Bounded<N>` provides compile-time dimension safety: the index type
-    /// `Algebra.Z<N>` ensures indices are always within `[0, N)`. Once an index
-    /// is constructed (with a bounds check), subscript access is guaranteed safe.
-    ///
-    /// ## Compile-Time Dimension Safety
-    ///
-    /// ```swift
-    /// let arr = Array<Int>.Bounded<3>([1, 2, 3])
-    /// let idx: Array<Int>.Bounded<3>.Index = try! .init(0)  // Bounds-checked
-    /// print(arr[idx])  // Safe — no runtime check needed
-    /// ```
+    /// `Index<Element>.Bounded<N>` ensures indices are always within `[0, N)`.
+    /// Once an index is constructed (with a bounds check), subscript access is
+    /// guaranteed safe.
     ///
     /// ## Type-Level Index Separation
     ///
