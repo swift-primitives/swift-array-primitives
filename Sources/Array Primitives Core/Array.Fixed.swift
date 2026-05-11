@@ -28,7 +28,7 @@ extension Array.Fixed {
     public init(
         count: Array.Index.Count,
         initializingWith initializer: (Array.Index) -> Element
-    ) throws(Self.Error) {
+    ) throws(Array.Fixed.Error) {
         guard count >= .zero else {
             throw .invalidCount(count)
         }
