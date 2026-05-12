@@ -30,6 +30,9 @@ extension Array where Element: ~Copyable {
     /// ## Copy-on-Write
     ///
     /// When `Element` is `Copyable`, uses copy-on-write heap storage.
+    // WHY: Category D — structural Sendable workaround; the type is
+    // WHY: structurally value-safe but the compiler cannot synthesize
+    // WHY: Sendable due to a stored pointer / generic parameter shape.
     @safe
     public struct Bounded<let N: Int>: ~Copyable {
         /// Internal bounded linear buffer.

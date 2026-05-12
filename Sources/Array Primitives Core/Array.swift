@@ -46,6 +46,9 @@ public import Index_Primitives
 /// - ``Array/Small``: Inline storage with automatic spill to heap (SmallVec pattern)
 /// - ``Array/Bounded``: Compile-time dimensioned with `Index<Element>.Bounded<N>` indexing
 /// - ``Array/Inline``: Typealias to `Swift.InlineArray` (all N elements always initialized)
+// WHY: Category D — structural Sendable workaround; the type is
+// WHY: structurally value-safe but the compiler cannot synthesize
+// WHY: Sendable due to a stored pointer / generic parameter shape.
 @safe
 public struct Array<Element: ~Copyable>: ~Copyable {
 
@@ -98,6 +101,9 @@ public struct Array<Element: ~Copyable>: ~Copyable {
     ///
     /// When `Element` is `Copyable`, `Fixed` uses copy-on-write semantics:
     /// copies share storage until mutation.
+    // WHY: Category D — structural Sendable workaround; the type is
+    // WHY: structurally value-safe but the compiler cannot synthesize
+    // WHY: Sendable due to a stored pointer / generic parameter shape.
     @safe
     public struct Fixed {
         /// Internal bounded linear buffer.
