@@ -141,4 +141,4 @@ extension Array.Small.Indexed where Element: Copyable {
 
 extension Array.Small.Indexed: Collection.Remove.Last where Element: Copyable {}
 extension Array.Small.Indexed: Collection.Clearable where Element: Copyable {}
-extension Array.Small.Indexed: @unchecked Sendable where Element: Sendable, Tag: ~Copyable {}
+extension Array.Small.Indexed: Sendable where Element: Sendable, Tag: ~Copyable {}

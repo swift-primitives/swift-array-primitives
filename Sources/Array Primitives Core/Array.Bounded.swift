@@ -54,4 +54,4 @@ extension Array.Bounded: Copyable where Element: Copyable {}
 
 // MARK: - Sendable
 
-extension Array.Bounded: @unchecked Sendable where Element: Sendable {}
+extension Array.Bounded: Sendable where Element: Sendable {}

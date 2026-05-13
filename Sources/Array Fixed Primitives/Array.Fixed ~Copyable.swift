@@ -81,7 +81,7 @@ extension Array.Fixed {
     }
 }
 
-extension Array.Fixed.Iterator: @unchecked Sendable where Element: Sendable {}
+extension Array.Fixed.Iterator: Sendable where Element: Sendable {}
 
 // MARK: - Sequence.Protocol Conformance
 

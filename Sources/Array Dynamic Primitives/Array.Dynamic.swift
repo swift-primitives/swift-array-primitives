@@ -78,7 +78,7 @@ extension Array where Element: Copyable {
     }
 }
 
-extension Array.Iterator: @unchecked Sendable where Element: Sendable {}
+extension Array.Iterator: Sendable where Element: Sendable {}
 
 // MARK: Sequence.Protocol Conformance
 
