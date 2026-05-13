@@ -47,4 +47,4 @@ extension Array where Element: ~Copyable {
 
 // MARK: - Sendable
 
-extension Array.Static: Sendable where Element: Sendable {}
+extension Array.Static: @unchecked Sendable where Element: Sendable {}

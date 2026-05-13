@@ -141,8 +141,8 @@ extension Array.Fixed: Copyable where Element: Copyable {}
 /// `Array` is `Copyable` when its elements are `Copyable`.
 /// Uses ManagedBuffer storage, so no deinit needed in the struct itself.
 extension Array: Copyable where Element: Copyable {}
-extension Array: Sendable where Element: Sendable {}
+extension Array: @unchecked Sendable where Element: Sendable {}
 
 // MARK: - Sendable
 
-extension Array.Fixed: Sendable where Element: Sendable {}
+extension Array.Fixed: @unchecked Sendable where Element: Sendable {}
