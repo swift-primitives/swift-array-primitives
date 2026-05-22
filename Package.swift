@@ -46,7 +46,7 @@ let package = Package(
         ),
     ],
     dependencies: [
-        .package(path: "../swift-standard-library-extensions"),
+        .package(url: "https://github.com/swift-primitives/swift-standard-library-extensions.git", branch: "main"),
         .package(path: "../swift-index-primitives"),
         .package(path: "../swift-collection-primitives"),
         .package(path: "../swift-property-primitives"),
