@@ -112,7 +112,7 @@ let package = Package(
             name: "Array Bounded Primitives",
             dependencies: [
                 "Array Primitives Core",
-                .product(name: "Finite Primitives Core", package: "swift-finite-primitives"),
+                .product(name: "Finite Primitives", package: "swift-finite-primitives"),
                 .product(name: "Equation Primitives", package: "swift-equation-primitives"),
                 .product(name: "Hash Primitives", package: "swift-hash-primitives"),
             ]

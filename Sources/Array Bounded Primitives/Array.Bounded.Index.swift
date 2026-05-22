@@ -10,7 +10,7 @@
 // ===----------------------------------------------------------------------===//
 
 public import Index_Primitives
-public import Finite_Primitives_Core
+public import Finite_Primitives
 
 // MARK: - Bounded Index
 
