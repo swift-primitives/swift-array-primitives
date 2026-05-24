@@ -52,6 +52,7 @@ let package = Package(
         .package(path: "../swift-property-primitives"),
         .package(path: "../swift-sequence-primitives"),
         .package(path: "../swift-buffer-primitives"),
+        .package(path: "../swift-buffer-linear-primitives"),
         .package(path: "../swift-finite-primitives"),
         .package(path: "../swift-equation-primitives"),
         .package(path: "../swift-hash-primitives"),
@@ -67,9 +68,9 @@ let package = Package(
                 .product(name: "Standard Library Extensions", package: "swift-standard-library-extensions"),
                 .product(name: "Index Primitives", package: "swift-index-primitives"),
                 .product(name: "Property Primitives", package: "swift-property-primitives"),
-                .product(name: "Buffer Linear Primitives", package: "swift-buffer-primitives"),
-                .product(name: "Buffer Linear Inline Primitives", package: "swift-buffer-primitives"),
-                .product(name: "Buffer Linear Small Primitives", package: "swift-buffer-primitives"),
+                .product(name: "Buffer Linear Primitives", package: "swift-buffer-linear-primitives"),
+                .product(name: "Buffer Linear Inline Primitives", package: "swift-buffer-linear-primitives"),
+                .product(name: "Buffer Linear Small Primitives", package: "swift-buffer-linear-primitives"),
             ]
         ),
 
@@ -103,7 +104,7 @@ let package = Package(
             name: "Array Small Primitives",
             dependencies: [
                 "Array Primitives Core",
-                .product(name: "Buffer Linear Small Primitives", package: "swift-buffer-primitives"),
+                .product(name: "Buffer Linear Small Primitives", package: "swift-buffer-linear-primitives"),
             ]
         ),
 
