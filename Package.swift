@@ -67,6 +67,7 @@ let package = Package(
             dependencies: [
                 .product(name: "Standard Library Extensions", package: "swift-standard-library-extensions"),
                 .product(name: "Index Primitives", package: "swift-index-primitives"),
+                .product(name: "Collection Primitives", package: "swift-collection-primitives"),
                 .product(name: "Property Primitives", package: "swift-property-primitives"),
                 .product(name: "Buffer Linear Primitives", package: "swift-buffer-linear-primitives"),
                 .product(name: "Buffer Linear Inline Primitives", package: "swift-buffer-linear-primitives"),
@@ -88,6 +89,7 @@ let package = Package(
             name: "Array Fixed Primitives",
             dependencies: [
                 "Array Primitives Core",
+                .product(name: "Collection Primitives", package: "swift-collection-primitives"),
             ]
         ),
 
@@ -96,6 +98,7 @@ let package = Package(
             name: "Array Static Primitives",
             dependencies: [
                 "Array Primitives Core",
+                .product(name: "Collection Primitives", package: "swift-collection-primitives"),
             ]
         ),
 
@@ -104,6 +107,7 @@ let package = Package(
             name: "Array Small Primitives",
             dependencies: [
                 "Array Primitives Core",
+                .product(name: "Collection Primitives", package: "swift-collection-primitives"),
                 .product(name: "Buffer Linear Small Primitives", package: "swift-buffer-linear-primitives"),
             ]
         ),
