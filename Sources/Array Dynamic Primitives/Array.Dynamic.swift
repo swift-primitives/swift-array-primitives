@@ -10,6 +10,9 @@
 // ===----------------------------------------------------------------------===//
 
 public import Array_Primitives_Core
+public import Buffer_Linear_Primitives
+public import Iterable
+public import Iterator_Chunk_Primitives
 
 // ============================================================================
 // MARK: - Protocol Conformances
@@ -87,6 +90,25 @@ extension Array: Sequence.`Protocol` where Element: Copyable {
     @inlinable
     public borrowing func makeIterator() -> Iterator {
         Iterator(_inner: _buffer.makeIterator())
+    }
+}
+
+// MARK: Iterable Conformance
+
+// `Array` conforms to BOTH `Swift.Sequence` / `Sequence.Protocol` (scalar iterator) and
+// the institute `Iterable` attachable. Both declare `associatedtype Iterator`, which Swift
+// unifies across protocols, so the dual conformer splits the two bindings with
+// `@_implements(Iterable, Iterator)`: Iterable → the backing buffer's bulk `Iterator.Chunk`
+// (vended for free by the memory→Iterable bridge); Sequence → the scalar `Array.Iterator`.
+// `makeIterator()` forwards to the backing `Buffer.Linear`'s `Iterable` iterator.
+extension Array: Iterable where Element: Copyable {
+    @_implements(Iterable, Iterator)
+    public typealias IterableIterator = Iterator_Primitive.Iterator.Chunk<Element>
+
+    @_lifetime(borrow self)
+    @inlinable
+    public borrowing func makeIterator() -> Iterator_Primitive.Iterator.Chunk<Element> {
+        _buffer.makeIterator()
     }
 }
 

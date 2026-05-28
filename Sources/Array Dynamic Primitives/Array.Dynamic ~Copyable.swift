@@ -215,20 +215,6 @@ extension Array where Element: Copyable {
 // MARK: - Property Views
 // ============================================================================
 
-// MARK: ForEach Property View
-
-extension Array where Element: ~Copyable {
-    /// Property view for iteration operations.
-    @inlinable
-    public var forEach: Property<Collection.ForEach, Self>.Inout.Typed<Element> {
-        mutating _read { yield unsafe .init(&self) }
-        mutating _modify {
-            var view: Property<Collection.ForEach, Self>.Inout.Typed<Element> = unsafe .init(&self)
-            yield &view
-        }
-    }
-}
-
 // MARK: Drain Property View
 
 extension Array where Element: ~Copyable {

@@ -53,6 +53,7 @@ let package = Package(
         .package(path: "../swift-sequence-primitives"),
         .package(path: "../swift-buffer-primitives"),
         .package(path: "../swift-buffer-linear-primitives"),
+        .package(path: "../swift-iterator-primitives"),
         .package(path: "../swift-finite-primitives"),
         .package(path: "../swift-equation-primitives"),
         .package(path: "../swift-hash-primitives"),
@@ -81,6 +82,9 @@ let package = Package(
             dependencies: [
                 "Array Primitives Core",
                 .product(name: "Sequence Primitives", package: "swift-sequence-primitives"),
+                .product(name: "Buffer Linear Primitives", package: "swift-buffer-linear-primitives"),
+                .product(name: "Iterable", package: "swift-iterator-primitives"),
+                .product(name: "Iterator Chunk Primitives", package: "swift-iterator-primitives"),
             ]
         ),
 
@@ -90,6 +94,9 @@ let package = Package(
             dependencies: [
                 "Array Primitives Core",
                 .product(name: "Collection Primitives", package: "swift-collection-primitives"),
+                .product(name: "Buffer Linear Bounded Primitives", package: "swift-buffer-linear-primitives"),
+                .product(name: "Iterable", package: "swift-iterator-primitives"),
+                .product(name: "Iterator Chunk Primitives", package: "swift-iterator-primitives"),
             ]
         ),
 
@@ -99,6 +106,9 @@ let package = Package(
             dependencies: [
                 "Array Primitives Core",
                 .product(name: "Collection Primitives", package: "swift-collection-primitives"),
+                .product(name: "Buffer Linear Inline Primitives", package: "swift-buffer-linear-primitives"),
+                .product(name: "Iterable", package: "swift-iterator-primitives"),
+                .product(name: "Iterator Chunk Primitives", package: "swift-iterator-primitives"),
             ]
         ),
 
@@ -109,6 +119,8 @@ let package = Package(
                 "Array Primitives Core",
                 .product(name: "Collection Primitives", package: "swift-collection-primitives"),
                 .product(name: "Buffer Linear Small Primitives", package: "swift-buffer-linear-primitives"),
+                .product(name: "Iterable", package: "swift-iterator-primitives"),
+                .product(name: "Iterator Chunk Primitives", package: "swift-iterator-primitives"),
             ]
         ),
 

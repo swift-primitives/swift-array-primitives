@@ -10,8 +10,11 @@
 // ===----------------------------------------------------------------------===//
 
 public import Array_Primitives_Core
+public import Buffer_Linear_Bounded_Primitives
 public import Collection_Primitives
 internal import Index_Primitives
+public import Iterable
+public import Iterator_Chunk_Primitives
 internal import Property_Primitives
 internal import Sequence_Primitives
 
@@ -90,6 +93,22 @@ extension Array.Fixed: Sequence.`Protocol` {
     @inlinable
     public borrowing func makeIterator() -> Array.Fixed.Iterator {
         Iterator(_inner: _buffer.makeIterator())
+    }
+}
+
+// MARK: - Iterable Conformance
+
+// Dual conformer (`Sequence.Protocol` + `Iterable`): both declare `associatedtype Iterator`,
+// split with `@_implements(Iterable, Iterator)`. Iterable → backing buffer's bulk
+// `Iterator.Chunk` (memory→Iterable bridge); Sequence → the scalar `Array.Fixed.Iterator`.
+extension Array.Fixed: Iterable where Element: Copyable {
+    @_implements(Iterable, Iterator)
+    public typealias IterableIterator = Iterator_Primitive.Iterator.Chunk<Element>
+
+    @_lifetime(borrow self)
+    @inlinable
+    public borrowing func makeIterator() -> Iterator_Primitive.Iterator.Chunk<Element> {
+        _buffer.makeIterator()
     }
 }
 
@@ -199,16 +218,3 @@ extension Array.Fixed where Element: ~Copyable {
 // MARK: - Property Views
 // ============================================================================
 
-// MARK: ForEach Property View
-
-extension Array.Fixed where Element: ~Copyable {
-    /// Property view for iteration operations.
-    @inlinable
-    public var forEach: Property<Collection.ForEach, Self>.Inout.Typed<Element> {
-        mutating _read { yield unsafe .init(&self) }
-        mutating _modify {
-            var view: Property<Collection.ForEach, Self>.Inout.Typed<Element> = unsafe .init(&self)
-            yield &view
-        }
-    }
-}

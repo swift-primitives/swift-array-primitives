@@ -10,8 +10,11 @@
 // ===----------------------------------------------------------------------===//
 
 public import Array_Primitives_Core
+public import Buffer_Linear_Inline_Primitives
 public import Collection_Primitives
+public import Iterable
 import Index_Primitives
+public import Iterator_Chunk_Primitives
 import Sequence_Primitives
 
 // ============================================================================
@@ -45,6 +48,22 @@ extension Array.Static: Sequence.`Protocol` {
     /// Returns a pointer-based iterator over the array elements.
     @inlinable
     public borrowing func makeIterator() -> Iterator {
+        _buffer.makeIterator()
+    }
+}
+
+// MARK: Iterable Conformance
+
+// Dual conformer (`Sequence.Protocol` + `Iterable`): both declare `associatedtype Iterator`,
+// split with `@_implements(Iterable, Iterator)`. Iterable → backing buffer's bulk
+// `Iterator.Chunk` (memory→Iterable bridge); Sequence → the scalar buffer iterator.
+extension Array.Static: Iterable where Element: Copyable {
+    @_implements(Iterable, Iterator)
+    public typealias IterableIterator = Iterator_Primitive.Iterator.Chunk<Element>
+
+    @_lifetime(borrow self)
+    @inlinable
+    public borrowing func makeIterator() -> Iterator_Primitive.Iterator.Chunk<Element> {
         _buffer.makeIterator()
     }
 }

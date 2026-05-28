@@ -12,6 +12,9 @@
 public import Array_Primitives_Core
 public import Buffer_Linear_Small_Primitives
 public import Collection_Primitives
+public import Iterable
+public import Iterator_Chunk_Primitives
+public import Sequence_Primitives
 
 // ============================================================================
 // MARK: - Protocol Conformances
@@ -79,6 +82,22 @@ extension Array.Small: Sequence.`Protocol` where Element: Copyable {
     @inlinable
     public borrowing func makeIterator() -> Iterator {
         Iterator(_inner: _buffer.makeIterator())
+    }
+}
+
+// MARK: Iterable Conformance
+
+// Dual conformer (`Sequence.Protocol` + `Iterable`): both declare `associatedtype Iterator`,
+// split with `@_implements(Iterable, Iterator)`. Iterable → backing buffer's bulk
+// `Iterator.Chunk` (memory→Iterable bridge); Sequence → the scalar `Array.Small.Iterator`.
+extension Array.Small: Iterable where Element: Copyable {
+    @_implements(Iterable, Iterator)
+    public typealias IterableIterator = Iterator_Primitive.Iterator.Chunk<Element>
+
+    @_lifetime(borrow self)
+    @inlinable
+    public borrowing func makeIterator() -> Iterator_Primitive.Iterator.Chunk<Element> {
+        _buffer.makeIterator()
     }
 }
 
