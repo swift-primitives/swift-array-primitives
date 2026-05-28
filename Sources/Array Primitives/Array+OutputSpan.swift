@@ -9,6 +9,7 @@
 //
 // ===----------------------------------------------------------------------===//
 
+public import Array_Primitive
 public import Index_Primitives
 
 // MARK: - Array + OutputSpan-based init / append / edit
@@ -36,10 +37,10 @@ extension Array where Element: ~Copyable {
         capacity: Array.Index.Count,
         initializingWith initializer: (inout OutputSpan<Element>) throws(E) -> Void
     ) throws(E) {
-        self._buffer = try Buffer<Element>.Linear(
+        self.init(_buffer: try Buffer<Element>.Linear(
             capacity: capacity,
             initializingWith: initializer
-        )
+        ))
     }
 
     /// Appends `addingCapacity` elements to the array via an `OutputSpan`

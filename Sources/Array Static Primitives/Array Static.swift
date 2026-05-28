@@ -8,67 +8,71 @@
 // See LICENSE for license information
 //
 // ===----------------------------------------------------------------------===//
-
-public import Array_Primitives_Core
+public import Array_Static_Primitive
+public import Array_Protocol_Primitives
 public import Buffer_Linear_Inline_Primitives
 public import Collection_Primitives
 public import Iterable
-import Index_Primitives
 public import Iterator_Chunk_Primitives
-import Sequence_Primitives
+public import Sequence_Primitives
+public import Memory_Contiguous_Primitives
+public import Memory_Iterator_Primitives
+import Index_Primitives
 
 // ============================================================================
-// MARK: - Protocol Conformances
+// MARK: - Institute Collection Conformances
 // ============================================================================
 
 // Collection.Protocol conformance is inherited through Collection.Bidirectional.
 
-// MARK: Collection.Access.Random Conformance
-
 extension Array.Static: Collection.Access.Random where Element: ~Copyable {}
 
-// MARK: Collection.Remove.Last Conformance
-
 extension Array.Static: Collection.Remove.Last where Element: ~Copyable {}
-
-// MARK: Collection.Clearable Conformance
 
 extension Array.Static: Collection.Clearable where Element: ~Copyable {}
 
 // ============================================================================
-// MARK: - Nested Types
+// MARK: - Iterable + Sequenceable (Copyable elements only)
 // ============================================================================
+//
+// Re-uses Iterator.Chunk (multipass, borrowing, over the inline buffer span) +
+// Buffer.Linear.Inline.Scalar (single-pass, consuming), mirroring buffer-linear's
+// Inline variant. No Swift.Sequence (Static is unconditionally ~Copyable).
 
-// MARK: Sequence.Protocol Conformance
-
-extension Array.Static: Sequence.`Protocol` {
-    /// Iterator type delegates to the buffer's existing pointer-based iterator.
-    public typealias Iterator = Buffer<Element>.Linear.Inline<capacity>.Iterator
-
-    /// Returns a pointer-based iterator over the array elements.
-    @inlinable
-    public borrowing func makeIterator() -> Iterator {
-        _buffer.makeIterator()
+// Memory.Contiguous.Protocol exposes the inline buffer's span so the
+// memory→Iterable bridge can vend `Iterator.Chunk`.
+extension Array.Static: Memory.Contiguous.`Protocol` where Element: Copyable {
+    public var span: Swift.Span<Element> {
+        @_lifetime(borrow self)
+        @inlinable
+        borrowing get { _buffer.span }
     }
 }
 
-// MARK: Iterable Conformance
-
-// Dual conformer (`Sequence.Protocol` + `Iterable`): both declare `associatedtype Iterator`,
-// split with `@_implements(Iterable, Iterator)`. Iterable → backing buffer's bulk
-// `Iterator.Chunk` (memory→Iterable bridge); Sequence → the scalar buffer iterator.
+// Iterable — multipass borrowing `makeIterator()` vended FOR FREE by the
+// memory→Iterable bridge over Memory.Contiguous.Protocol, yielding Iterator.Chunk.
 extension Array.Static: Iterable where Element: Copyable {
     @_implements(Iterable, Iterator)
     public typealias IterableIterator = Iterator_Primitive.Iterator.Chunk<Element>
-
-    @_lifetime(borrow self)
-    @inlinable
-    public borrowing func makeIterator() -> Iterator_Primitive.Iterator.Chunk<Element> {
-        _buffer.makeIterator()
-    }
 }
 
-// MARK: Error
+extension Array.Static: Sequenceable where Element: Copyable {
+    @_implements(Sequenceable, Iterator)
+    public typealias SequenceableIterator = Buffer<Element>.Linear.Inline<capacity>.Scalar
+
+    @inlinable
+    public consuming func makeIterator() -> Buffer<Element>.Linear.Inline<capacity>.Scalar {
+        _buffer.makeIterator()
+    }
+
+    /// Returns the count as the underestimated count since we know the exact size.
+    @inlinable
+    public var underestimatedCount: Int { Int(bitPattern: count) }
+}
+
+// ============================================================================
+// MARK: - Error
+// ============================================================================
 
 extension Array.Static.Error: CustomStringConvertible {
     public var description: String {

@@ -11,6 +11,8 @@
 
 public import Buffer_Linear_Primitives
 
+public import Array_Primitive
+
 extension Array where Element: ~Copyable {
 
     // MARK: - Bounded (Compile-Time Dimensioned, Heap-Allocated)

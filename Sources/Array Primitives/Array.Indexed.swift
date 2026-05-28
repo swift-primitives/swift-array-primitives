@@ -8,8 +8,8 @@
 // See LICENSE for license information
 //
 // ===----------------------------------------------------------------------===//
-
-public import Array_Primitives_Core
+public import Array_Primitive
+public import Array_Protocol_Primitives
 import Index_Primitives
 
 // ============================================================================
@@ -75,19 +75,14 @@ extension Array.Indexed {
 
 extension Array.Indexed: Collection.`Protocol` {
     @inlinable
-    public var startIndex: Index_Primitives.Index<Element> { _storage.startIndex }
+    public var startIndex: Index { _storage.startIndex.retag(Tag.self) }
 
     @inlinable
-    public var endIndex: Index_Primitives.Index<Element> { _storage.endIndex }
+    public var endIndex: Index { _storage.endIndex.retag(Tag.self) }
 
     @inlinable
-    public subscript(_ position: Index_Primitives.Index<Element>) -> Element {
-        get { _storage[position] }
-    }
-
-    @inlinable
-    public func index(after i: Index_Primitives.Index<Element>) -> Index_Primitives.Index<Element> {
-        _storage.index(after: i)
+    public func index(after i: Index) -> Index {
+        _storage.index(after: i.retag(Element.self)).retag(Tag.self)
     }
 }
 

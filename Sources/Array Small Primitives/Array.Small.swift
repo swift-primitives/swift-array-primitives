@@ -8,97 +8,59 @@
 // See LICENSE for license information
 //
 // ===----------------------------------------------------------------------===//
-
-public import Array_Primitives_Core
+public import Array_Small_Primitive
+public import Array_Protocol_Primitives
 public import Buffer_Linear_Small_Primitives
 public import Collection_Primitives
 public import Iterable
 public import Iterator_Chunk_Primitives
 public import Sequence_Primitives
+public import Memory_Contiguous_Primitives
+public import Memory_Iterator_Primitives
 
 // ============================================================================
-// MARK: - Protocol Conformances
+// MARK: - Institute Collection Conformances
 // ============================================================================
 
 // Collection.Protocol conformance is inherited through Collection.Bidirectional.
 
-// MARK: Collection.Access.Random Conformance
-
 extension Array.Small: Collection.Access.Random where Element: Copyable {}
-
-// MARK: Collection.Remove.Last Conformance
 
 extension Array.Small: Collection.Remove.Last where Element: ~Copyable {}
 
-// MARK: Collection.Clearable Conformance
-
 extension Array.Small: Collection.Clearable where Element: ~Copyable {}
 
-// Note: Array.Small cannot conform to Swift.Collection because it is unconditionally
-// ~Copyable (has deinit for inline storage cleanup). Swift.Collection requires Self: Copyable.
-
 // ============================================================================
-// MARK: - Nested Types
+// MARK: - Iterable + Sequenceable (Copyable elements only)
 // ============================================================================
+//
+// Re-uses Iterator.Chunk (multipass, borrowing, over the small-vec buffer span) +
+// Buffer.Linear.Small.Scalar (single-pass, consuming), mirroring buffer-linear's
+// Small variant. No Swift.Sequence (Small is unconditionally ~Copyable).
 
-// MARK: Iterator
+// Memory.Contiguous.Protocol exposes the small-vec buffer's span so the
+// memory→Iterable bridge can vend `Iterator.Chunk`.
+extension Array.Small: Memory.Contiguous.`Protocol` where Element: Copyable {}
 
-extension Array.Small where Element: Copyable {
-    /// Iterator for Array.Small elements.
-    ///
-    /// Delegates to the buffer's iterator for zero-copy iteration.
-    // WHY: Category D — structural Sendable workaround; the type is
-    // WHY: structurally value-safe but the compiler cannot synthesize
-    // WHY: Sendable due to a stored pointer / generic parameter shape.
-    @safe
-    public struct Iterator: Sequence.Iterator.`Protocol`, IteratorProtocol {
-        @usableFromInline
-        var _inner: Buffer<Element>.Linear.Small<inlineCapacity>.Iterator
-
-        @usableFromInline
-        init(_inner: Buffer<Element>.Linear.Small<inlineCapacity>.Iterator) {
-            self._inner = _inner
-        }
-
-        @_lifetime(&self)
-        @inlinable
-        public mutating func nextSpan(maximumCount: Cardinal) -> Span<Element> {
-            _inner.nextSpan(maximumCount: maximumCount)
-        }
-
-        @inlinable
-        public mutating func next() -> Element? {
-            _inner.next()
-        }
-    }
-}
-
-extension Array.Small.Iterator: Sendable where Element: Sendable {}
-
-// MARK: Sequence.Protocol Conformance
-
-extension Array.Small: Sequence.`Protocol` where Element: Copyable {
-    /// Returns an iterator over the array elements.
-    @inlinable
-    public borrowing func makeIterator() -> Iterator {
-        Iterator(_inner: _buffer.makeIterator())
-    }
-}
-
-// MARK: Iterable Conformance
-
-// Dual conformer (`Sequence.Protocol` + `Iterable`): both declare `associatedtype Iterator`,
-// split with `@_implements(Iterable, Iterator)`. Iterable → backing buffer's bulk
-// `Iterator.Chunk` (memory→Iterable bridge); Sequence → the scalar `Array.Small.Iterator`.
+// Iterable — multipass borrowing `makeIterator()` vended FOR FREE by the
+// memory→Iterable bridge over Memory.Contiguous.Protocol, yielding Iterator.Chunk.
 extension Array.Small: Iterable where Element: Copyable {
     @_implements(Iterable, Iterator)
     public typealias IterableIterator = Iterator_Primitive.Iterator.Chunk<Element>
+}
 
-    @_lifetime(borrow self)
+extension Array.Small: Sequenceable where Element: Copyable {
+    @_implements(Sequenceable, Iterator)
+    public typealias SequenceableIterator = Buffer<Element>.Linear.Small<inlineCapacity>.Scalar
+
     @inlinable
-    public borrowing func makeIterator() -> Iterator_Primitive.Iterator.Chunk<Element> {
+    public consuming func makeIterator() -> Buffer<Element>.Linear.Small<inlineCapacity>.Scalar {
         _buffer.makeIterator()
     }
+
+    /// Returns the count as the underestimated count since we know the exact size.
+    @inlinable
+    public var underestimatedCount: Int { Int(bitPattern: count) }
 }
 
 // ============================================================================

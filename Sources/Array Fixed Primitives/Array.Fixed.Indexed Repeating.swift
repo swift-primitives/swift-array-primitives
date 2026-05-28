@@ -8,8 +8,8 @@
 // See LICENSE for license information
 //
 // ===----------------------------------------------------------------------===//
-
-public import Array_Primitives_Core
+public import Array_Fixed_Primitive
+public import Array_Protocol_Primitives
 public import Index_Primitives
 
 // TODO: Should derive from protocol-level `init(repeating:count:)` default.

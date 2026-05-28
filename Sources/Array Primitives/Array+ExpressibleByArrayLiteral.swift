@@ -1,5 +1,5 @@
-public import Array_Primitives_Core
-
+public import Array_Primitive
+public import Array_Protocol_Primitives
 extension Array: ExpressibleByArrayLiteral where Element: Copyable {
     @inlinable
     public init(arrayLiteral elements: Element...) {

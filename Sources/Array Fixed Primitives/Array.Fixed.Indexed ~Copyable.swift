@@ -8,8 +8,7 @@
 // See LICENSE for license information
 //
 // ===----------------------------------------------------------------------===//
-
-import Array_Primitives_Core
-
+public import Array_Fixed_Primitive
+public import Array_Protocol_Primitives
 // MARK: - Sendable
 extension Array.Fixed.Indexed: @unchecked Sendable where Element: Sendable, Tag: ~Copyable {}

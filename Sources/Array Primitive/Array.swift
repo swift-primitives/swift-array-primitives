@@ -71,78 +71,19 @@ public struct Array<Element: ~Copyable>: ~Copyable {
         self._buffer = Buffer<Element>.Linear(minimumCapacity: initialCapacity)
     }
 
-    // MARK: - Fixed (Fixed-Count, Heap-Allocated)
-
-    /// A non-resizable array that is always fully initialized.
-    ///
-    /// Unlike the base `Array`, `Fixed` cannot grow or shrink after creation.
-    /// All elements are initialized at construction time. This is the Swift
-    /// equivalent of a fixed-length array.
-    ///
-    /// ## Move-Only Support
-    ///
-    /// Both the array and its elements can be `~Copyable`:
-    ///
-    /// ```swift
-    /// struct FileHandle: ~Copyable { ... }
-    /// let handles = try Array<FileHandle>.Fixed(count: 3) { _ in FileHandle() }
-    /// ```
-    ///
-    /// ## Conditional Copyable
-    ///
-    /// When `Element` is `Copyable`, `Fixed` is also `Copyable`:
-    ///
-    /// ```swift
-    /// let a = try Array<Int>.Fixed(count: 3) { $0 }
-    /// let b = a  // Copy works!
-    /// ```
-    ///
-    /// ## Copy-on-Write
-    ///
-    /// When `Element` is `Copyable`, `Fixed` uses copy-on-write semantics:
-    /// copies share storage until mutation.
-    // WHY: Category D — structural Sendable workaround; the type is
-    // WHY: structurally value-safe but the compiler cannot synthesize
-    // WHY: Sendable due to a stored pointer / generic parameter shape.
-    @safe
-    public struct Fixed {
-        /// Internal bounded linear buffer.
-        @usableFromInline
-        package var _buffer: Buffer<Element>.Linear.Bounded
-
-        // Note: No deinit needed - Buffer/Storage handles cleanup
+    /// Internal initializer for use by the ops module (cross-module designated init).
+    @usableFromInline
+    package init(_buffer: consuming Buffer<Element>.Linear) {
+        self._buffer = _buffer
     }
-
-    // MARK: - Inline (Typealias to Swift.InlineArray)
-
-    /// Fixed-count inline array (typealias to `Swift.InlineArray`).
-    ///
-    /// All N elements are always initialized. For variable-count inline
-    /// storage (0 to capacity elements), use ``Array/Static`` instead.
-    ///
-    /// ## Comparison
-    ///
-    /// | Type | Count | Storage | Heap |
-    /// |------|-------|---------|------|
-    /// | `Array.Inline<N>` | Fixed (always N) | Inline | No |
-    /// | `Array.Static<N>` | Variable (0..N) | Inline | No |
-    /// | `Array.Bounded<N>` | Fixed (always N) | Heap (CoW) | Yes |
-    public typealias Inline<let N: Int> = Swift.InlineArray<N, Element>
 }
 
 // MARK: - Conditional Copyable
 
-/// `Array.Fixed` is `Copyable` when its elements are `Copyable`.
-///
-/// This enables value semantics with copy-on-write optimization:
-/// copies share storage until mutation.
-extension Array.Fixed: Copyable where Element: Copyable {}
-
 /// `Array` is `Copyable` when its elements are `Copyable`.
 /// Uses ManagedBuffer storage, so no deinit needed in the struct itself.
 extension Array: Copyable where Element: Copyable {}
-extension Array: @unchecked Sendable where Element: Sendable {}
 
 // MARK: - Sendable
 
-extension Array.Fixed: @unchecked Sendable where Element: Sendable {}
+extension Array: @unchecked Sendable where Element: Sendable {}

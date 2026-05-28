@@ -8,8 +8,8 @@
 // See LICENSE for license information
 //
 // ===----------------------------------------------------------------------===//
-
-public import Array_Primitives_Core
+public import Array_Fixed_Primitive
+public import Array_Protocol_Primitives
 public import Buffer_Linear_Bounded_Primitives
 public import Collection_Primitives
 internal import Index_Primitives
@@ -54,63 +54,8 @@ extension Array.Fixed: Collection.Bidirectional where Element: ~Copyable {
 
 extension Array.Fixed: Array.`Protocol` where Element: ~Copyable {}
 
-// ============================================================================
-// MARK: - Sequence Protocol Conformances
-// ============================================================================
-
-// MARK: - Iterator
-
-extension Array.Fixed {
-    /// Iterator for Array.Fixed that delegates to Buffer.Linear.Bounded.Iterator.
-    public struct Iterator: Sequence.Iterator.`Protocol`, IteratorProtocol {
-        @usableFromInline
-        var _inner: Buffer<Element>.Linear.Bounded.Iterator
-
-        @usableFromInline
-        init(_inner: Buffer<Element>.Linear.Bounded.Iterator) {
-            self._inner = _inner
-        }
-
-        @_lifetime(&self)
-        @inlinable
-        public mutating func nextSpan(maximumCount: Cardinal) -> Span<Element> {
-            _inner.nextSpan(maximumCount: maximumCount)
-        }
-
-        @inlinable
-        public mutating func next() -> Element? {
-            _inner.next()
-        }
-    }
-}
-
-extension Array.Fixed.Iterator: Sendable where Element: Sendable {}
-
-// MARK: - Sequence.Protocol Conformance
-
-extension Array.Fixed: Sequence.`Protocol` {
-    /// Returns an iterator over the array elements.
-    @inlinable
-    public borrowing func makeIterator() -> Array.Fixed.Iterator {
-        Iterator(_inner: _buffer.makeIterator())
-    }
-}
-
-// MARK: - Iterable Conformance
-
-// Dual conformer (`Sequence.Protocol` + `Iterable`): both declare `associatedtype Iterator`,
-// split with `@_implements(Iterable, Iterator)`. Iterable → backing buffer's bulk
-// `Iterator.Chunk` (memory→Iterable bridge); Sequence → the scalar `Array.Fixed.Iterator`.
-extension Array.Fixed: Iterable where Element: Copyable {
-    @_implements(Iterable, Iterator)
-    public typealias IterableIterator = Iterator_Primitive.Iterator.Chunk<Element>
-
-    @_lifetime(borrow self)
-    @inlinable
-    public borrowing func makeIterator() -> Iterator_Primitive.Iterator.Chunk<Element> {
-        _buffer.makeIterator()
-    }
-}
+// Iteration conformances (Memory.Contiguous.Protocol + Iterable + Sequenceable)
+// live in Array.Fixed Copyable.swift, mirroring buffer-linear.
 
 // ============================================================================
 // MARK: - Properties

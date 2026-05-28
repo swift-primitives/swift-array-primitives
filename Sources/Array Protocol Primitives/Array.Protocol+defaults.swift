@@ -11,6 +11,8 @@
 
 // MARK: - Default Implementations
 
+public import Array_Primitive
+
 extension Array.`Protocol` where Self: ~Copyable {
     /// Calls `body` with a borrowing reference to the element at `index`.
     @inlinable

@@ -8,5 +8,5 @@
 // See LICENSE for license information
 //
 // ===----------------------------------------------------------------------===//
-
-internal import Array_Primitives_Core
+public import Array_Primitive
+public import Array_Protocol_Primitives

@@ -15,6 +15,8 @@
 // Use the typealias (e.g., `Array<T>.Small<N>.Error`) in your code.
 
 /// Errors that can occur during `Array.Small` initialization.
+public import Array_Primitive
+
 public enum __ArraySmallError: Swift.Error, Sendable, Equatable {
     /// Element stride exceeds inline storage slot size.
     case strideExceedsSlotSize(elementStride: Int, maxSlotSize: Int)

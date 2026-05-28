@@ -14,6 +14,9 @@
 /// Protocol unifying element access across all Array variants.
 ///
 /// See ``Array.`Protocol``` for documentation.
+public import Array_Primitive
+public import Collection_Primitives
+
 public protocol __ArrayProtocol: Collection.Bidirectional & ~Copyable {
     /// Accesses the element at the given position.
     subscript(_ position: Index) -> Element { get set }

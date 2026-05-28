@@ -11,6 +11,8 @@
 
 public import Buffer_Linear_Inline_Primitives
 
+public import Array_Primitive
+
 extension Array where Element: ~Copyable {
 
     // MARK: - Static (Fixed-Capacity, Inline Storage)
@@ -32,6 +34,9 @@ extension Array where Element: ~Copyable {
     /// - Element alignment must not exceed `MemoryLayout<Int>.alignment`
     /// - Capacity is fixed at compile time; use `Array.Small` for flexible sizing
     /// Element cleanup is handled by `Storage.Inline`'s deinit.
+    // `@frozen` permits the partial consume of `_buffer` in the consuming
+    // `Sequenceable.makeIterator()` (ops module), mirroring buffer-linear.
+    @frozen
     public struct Static<let capacity: Int>: ~Copyable {
         /// Internal inline linear buffer.
         @usableFromInline

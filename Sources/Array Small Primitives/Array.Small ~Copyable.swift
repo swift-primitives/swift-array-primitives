@@ -8,8 +8,8 @@
 // See LICENSE for license information
 //
 // ===----------------------------------------------------------------------===//
-
-public import Array_Primitives_Core
+public import Array_Small_Primitive
+public import Array_Protocol_Primitives
 public import Buffer_Linear_Small_Primitives
 public import Collection_Primitives
 internal import Index_Primitives

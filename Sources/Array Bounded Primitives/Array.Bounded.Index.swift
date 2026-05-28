@@ -14,6 +14,8 @@ public import Finite_Primitives
 
 // MARK: - Bounded Index
 
+public import Array_Bounded_Primitive
+
 extension Array.Bounded where Element: ~Copyable {
     /// Type-safe bounded index for bounded array elements.
     ///

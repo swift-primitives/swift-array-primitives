@@ -12,38 +12,36 @@ let package = Package(
         .visionOS(.v26)
     ],
     products: [
-        .library(
-            name: "Array Primitives",
-            targets: ["Array Primitives"]
-        ),
-        .library(
-            name: "Array Primitives Core",
-            targets: ["Array Primitives Core"]
-        ),
-        .library(
-            name: "Array Small Primitives",
-            targets: ["Array Small Primitives"]
-        ),
-        .library(
-            name: "Array Static Primitives",
-            targets: ["Array Static Primitives"]
-        ),
-        .library(
-            name: "Array Fixed Primitives",
-            targets: ["Array Fixed Primitives"]
-        ),
-        .library(
-            name: "Array Dynamic Primitives",
-            targets: ["Array Dynamic Primitives"]
-        ),
-        .library(
-            name: "Array Bounded Primitives",
-            targets: ["Array Bounded Primitives"]
-        ),
-        .library(
-            name: "Array Primitives Test Support",
-            targets: ["Array Primitives Test Support"]
-        ),
+        // MARK: - Namespace + base type
+        .library(name: "Array Primitive", targets: ["Array Primitive"]),
+
+        // MARK: - Inline
+        .library(name: "Array Inline Primitives", targets: ["Array Inline Primitives"]),
+
+        // MARK: - Protocol
+        .library(name: "Array Protocol Primitives", targets: ["Array Protocol Primitives"]),
+
+        // MARK: - Bounded variant
+        .library(name: "Array Bounded Primitive", targets: ["Array Bounded Primitive"]),
+        .library(name: "Array Bounded Primitives", targets: ["Array Bounded Primitives"]),
+
+        // MARK: - Fixed variant
+        .library(name: "Array Fixed Primitive", targets: ["Array Fixed Primitive"]),
+        .library(name: "Array Fixed Primitives", targets: ["Array Fixed Primitives"]),
+
+        // MARK: - Static variant
+        .library(name: "Array Static Primitive", targets: ["Array Static Primitive"]),
+        .library(name: "Array Static Primitives", targets: ["Array Static Primitives"]),
+
+        // MARK: - Small variant
+        .library(name: "Array Small Primitive", targets: ["Array Small Primitive"]),
+        .library(name: "Array Small Primitives", targets: ["Array Small Primitives"]),
+
+        // MARK: - Umbrella
+        .library(name: "Array Primitives", targets: ["Array Primitives"]),
+
+        // MARK: - Test Support
+        .library(name: "Array Primitives Test Support", targets: ["Array Primitives Test Support"]),
     ],
     dependencies: [
         .package(url: "https://github.com/swift-primitives/swift-standard-library-extensions.git", branch: "main"),
@@ -55,96 +53,156 @@ let package = Package(
         .package(path: "../swift-buffer-linear-primitives"),
         .package(path: "../swift-iterator-primitives"),
         .package(path: "../swift-finite-primitives"),
-        .package(path: "../swift-equation-primitives"),
-        .package(path: "../swift-hash-primitives"),
+        .package(path: "../swift-cardinal-primitives"),
         .package(path: "../swift-tagged-primitives"),
         .package(path: "../swift-ordinal-primitives"),
     ],
     targets: [
 
-        // MARK: - Core
+        // MARK: - Namespace + base type (struct Array; the heap/dynamic array)
         .target(
-            name: "Array Primitives Core",
+            name: "Array Primitive",
             dependencies: [
-                .product(name: "Standard Library Extensions", package: "swift-standard-library-extensions"),
+                .product(name: "Buffer Linear Primitives", package: "swift-buffer-linear-primitives"),
                 .product(name: "Index Primitives", package: "swift-index-primitives"),
+            ]
+        ),
+
+        // MARK: - Inline (typealias to Swift.InlineArray)
+        .target(
+            name: "Array Inline Primitives",
+            dependencies: [
+                "Array Primitive",
+            ]
+        ),
+
+        // MARK: - Protocol (Array.Protocol membership contract + defaults)
+        .target(
+            name: "Array Protocol Primitives",
+            dependencies: [
+                "Array Primitive",
                 .product(name: "Collection Primitives", package: "swift-collection-primitives"),
-                .product(name: "Property Primitives", package: "swift-property-primitives"),
+            ]
+        ),
+
+        // MARK: - Bounded type
+        .target(
+            name: "Array Bounded Primitive",
+            dependencies: [
+                "Array Primitive",
                 .product(name: "Buffer Linear Primitives", package: "swift-buffer-linear-primitives"),
-                .product(name: "Buffer Linear Inline Primitives", package: "swift-buffer-linear-primitives"),
-                .product(name: "Buffer Linear Small Primitives", package: "swift-buffer-linear-primitives"),
             ]
         ),
 
-        // MARK: - Dynamic
-        .target(
-            name: "Array Dynamic Primitives",
-            dependencies: [
-                "Array Primitives Core",
-                .product(name: "Sequence Primitives", package: "swift-sequence-primitives"),
-                .product(name: "Buffer Linear Primitives", package: "swift-buffer-linear-primitives"),
-                .product(name: "Iterable", package: "swift-iterator-primitives"),
-                .product(name: "Iterator Chunk Primitives", package: "swift-iterator-primitives"),
-            ]
-        ),
-
-        // MARK: - Fixed
-        .target(
-            name: "Array Fixed Primitives",
-            dependencies: [
-                "Array Primitives Core",
-                .product(name: "Collection Primitives", package: "swift-collection-primitives"),
-                .product(name: "Buffer Linear Bounded Primitives", package: "swift-buffer-linear-primitives"),
-                .product(name: "Iterable", package: "swift-iterator-primitives"),
-                .product(name: "Iterator Chunk Primitives", package: "swift-iterator-primitives"),
-            ]
-        ),
-
-        // MARK: - Static
-        .target(
-            name: "Array Static Primitives",
-            dependencies: [
-                "Array Primitives Core",
-                .product(name: "Collection Primitives", package: "swift-collection-primitives"),
-                .product(name: "Buffer Linear Inline Primitives", package: "swift-buffer-linear-primitives"),
-                .product(name: "Iterable", package: "swift-iterator-primitives"),
-                .product(name: "Iterator Chunk Primitives", package: "swift-iterator-primitives"),
-            ]
-        ),
-
-        // MARK: - Small
-        .target(
-            name: "Array Small Primitives",
-            dependencies: [
-                "Array Primitives Core",
-                .product(name: "Collection Primitives", package: "swift-collection-primitives"),
-                .product(name: "Buffer Linear Small Primitives", package: "swift-buffer-linear-primitives"),
-                .product(name: "Iterable", package: "swift-iterator-primitives"),
-                .product(name: "Iterator Chunk Primitives", package: "swift-iterator-primitives"),
-            ]
-        ),
-
-        // MARK: - Bounded
+        // MARK: - Bounded ops
         .target(
             name: "Array Bounded Primitives",
             dependencies: [
-                "Array Primitives Core",
+                "Array Bounded Primitive",
+                .product(name: "Index Primitives", package: "swift-index-primitives"),
                 .product(name: "Finite Primitives", package: "swift-finite-primitives"),
-                .product(name: "Equation Primitives", package: "swift-equation-primitives"),
-                .product(name: "Hash Primitives", package: "swift-hash-primitives"),
             ]
         ),
 
-        // MARK: - Umbrella
+        // MARK: - Fixed type
+        .target(
+            name: "Array Fixed Primitive",
+            dependencies: [
+                "Array Primitive",
+                .product(name: "Buffer Linear Primitives", package: "swift-buffer-linear-primitives"),
+            ]
+        ),
+
+        // MARK: - Fixed ops
+        .target(
+            name: "Array Fixed Primitives",
+            dependencies: [
+                "Array Fixed Primitive",
+                "Array Protocol Primitives",
+                .product(name: "Buffer Linear Bounded Primitives", package: "swift-buffer-linear-primitives"),
+                .product(name: "Collection Primitives", package: "swift-collection-primitives"),
+                .product(name: "Index Primitives", package: "swift-index-primitives"),
+                .product(name: "Iterable", package: "swift-iterator-primitives"),
+                .product(name: "Iterator Chunk Primitives", package: "swift-iterator-primitives"),
+                .product(name: "Property Primitives", package: "swift-property-primitives"),
+                .product(name: "Sequence Primitives", package: "swift-sequence-primitives"),
+            ]
+        ),
+
+        // MARK: - Static type
+        .target(
+            name: "Array Static Primitive",
+            dependencies: [
+                "Array Primitive",
+                .product(name: "Buffer Linear Inline Primitives", package: "swift-buffer-linear-primitives"),
+            ]
+        ),
+
+        // MARK: - Static ops
+        .target(
+            name: "Array Static Primitives",
+            dependencies: [
+                "Array Static Primitive",
+                "Array Protocol Primitives",
+                .product(name: "Buffer Linear Inline Primitives", package: "swift-buffer-linear-primitives"),
+                .product(name: "Collection Primitives", package: "swift-collection-primitives"),
+                .product(name: "Index Primitives", package: "swift-index-primitives"),
+                .product(name: "Iterable", package: "swift-iterator-primitives"),
+                .product(name: "Iterator Chunk Primitives", package: "swift-iterator-primitives"),
+                .product(name: "Sequence Primitives", package: "swift-sequence-primitives"),
+                .product(name: "Property Primitives", package: "swift-property-primitives"),
+            ]
+        ),
+
+        // MARK: - Small type
+        .target(
+            name: "Array Small Primitive",
+            dependencies: [
+                "Array Primitive",
+                .product(name: "Buffer Linear Small Primitives", package: "swift-buffer-linear-primitives"),
+            ]
+        ),
+
+        // MARK: - Small ops
+        .target(
+            name: "Array Small Primitives",
+            dependencies: [
+                "Array Small Primitive",
+                "Array Protocol Primitives",
+                .product(name: "Buffer Linear Small Primitives", package: "swift-buffer-linear-primitives"),
+                .product(name: "Collection Primitives", package: "swift-collection-primitives"),
+                .product(name: "Index Primitives", package: "swift-index-primitives"),
+                .product(name: "Ordinal Primitives", package: "swift-ordinal-primitives"),
+                .product(name: "Iterable", package: "swift-iterator-primitives"),
+                .product(name: "Iterator Chunk Primitives", package: "swift-iterator-primitives"),
+                .product(name: "Sequence Primitives", package: "swift-sequence-primitives"),
+                .product(name: "Property Primitives", package: "swift-property-primitives"),
+            ]
+        ),
+
+        // MARK: - Base ops + Umbrella ([MOD-005] dual-role: base Array conformances + re-export of all variants)
         .target(
             name: "Array Primitives",
             dependencies: [
-                "Array Primitives Core",
-                "Array Dynamic Primitives",
+                "Array Primitive",
+                "Array Protocol Primitives",
+                "Array Inline Primitives",
+                "Array Bounded Primitives",
                 "Array Fixed Primitives",
                 "Array Static Primitives",
                 "Array Small Primitives",
-                "Array Bounded Primitives",
+                .product(name: "Buffer Linear Primitives", package: "swift-buffer-linear-primitives"),
+                .product(name: "Buffer Linear Inline Primitives", package: "swift-buffer-linear-primitives"),
+                .product(name: "Buffer Linear Small Primitives", package: "swift-buffer-linear-primitives"),
+                .product(name: "Collection Primitives", package: "swift-collection-primitives"),
+                .product(name: "Index Primitives", package: "swift-index-primitives"),
+                .product(name: "Sequence Primitives", package: "swift-sequence-primitives"),
+                .product(name: "Iterable", package: "swift-iterator-primitives"),
+                .product(name: "Iterator Chunk Primitives", package: "swift-iterator-primitives"),
+                .product(name: "Property Primitives", package: "swift-property-primitives"),
+                .product(name: "Ordinal Primitives", package: "swift-ordinal-primitives"),
+                .product(name: "Cardinal Primitives", package: "swift-cardinal-primitives"),
+                .product(name: "Standard Library Extensions", package: "swift-standard-library-extensions"),
             ]
         ),
 

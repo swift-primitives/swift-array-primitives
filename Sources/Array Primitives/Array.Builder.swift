@@ -8,9 +8,8 @@
 // See LICENSE for license information
 //
 // ===----------------------------------------------------------------------===//
-
-public import Array_Primitives_Core
-
+public import Array_Primitive
+public import Array_Protocol_Primitives
 extension Array where Element: ~Copyable {
     /// A result builder for declaratively constructing arrays.
     ///

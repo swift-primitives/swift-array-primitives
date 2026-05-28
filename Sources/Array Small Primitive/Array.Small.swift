@@ -12,6 +12,8 @@
 public import Buffer_Linear_Small_Primitives
 internal import Index_Primitives
 
+public import Array_Primitive
+
 extension Array where Element: ~Copyable {
 
     // MARK: - Small (SmallVec Pattern)
@@ -28,6 +30,9 @@ extension Array where Element: ~Copyable {
     // SAFETY: safe types; `@safe` documents that this type performs no
     // SAFETY: unsafe operations.
     @safe
+    // `@frozen` permits the partial consume of `_buffer` in the consuming
+    // `Sequenceable.makeIterator()` (ops module), mirroring buffer-linear.
+    @frozen
     public struct Small<let inlineCapacity: Int>: ~Copyable {
         /// Internal small linear buffer.
         @usableFromInline

@@ -5,6 +5,8 @@
 //  Created by Coen ten Thije Boonkkamp on 23/01/2026.
 //
 
+public import Array_Primitive
+
 extension Array.Fixed {
     /// Errors that can occur during fixed array operations.
     public enum Error: Swift.Error, Sendable, Equatable {

@@ -13,6 +13,7 @@
 // due to Swift's ~Copyable constraint propagation rules. This file contains
 // only extensions that require internal access to _buffer.
 
+public import Array_Fixed_Primitive
 public import Index_Primitives
 
 // MARK: - Initialization (Checked)
@@ -34,7 +35,7 @@ extension Array.Fixed {
         }
 
         if count == .zero {
-            self._buffer = Buffer<Element>.Linear.Bounded(minimumCapacity: .zero)
+            self.init(_buffer: Buffer<Element>.Linear.Bounded(minimumCapacity: .zero))
             return
         }
 
@@ -48,7 +49,7 @@ extension Array.Fixed {
                 }
             }
         )
-        self._buffer = buffer
+        self.init(_buffer: buffer)
     }
 }
 
@@ -73,7 +74,7 @@ extension Array.Fixed {
         // Count is unsigned, always non-negative by construction
 
         if count == .zero {
-            self._buffer = Buffer<Element>.Linear.Bounded(minimumCapacity: .zero)
+            self.init(_buffer: Buffer<Element>.Linear.Bounded(minimumCapacity: .zero))
             return
         }
 
@@ -87,6 +88,6 @@ extension Array.Fixed {
                 }
             }
         )
-        self._buffer = buffer
+        self.init(_buffer: buffer)
     }
 }

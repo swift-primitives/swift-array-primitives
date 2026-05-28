@@ -9,6 +9,7 @@
 //
 // ===----------------------------------------------------------------------===//
 
+public import Array_Fixed_Primitive
 public import Index_Primitives
 
 // MARK: - Array.Fixed + OutputSpan-based initializer
@@ -60,6 +61,6 @@ extension Array.Fixed where Element: ~Copyable {
             buffer.count == capacity,
             "Array.Fixed.init(capacity:initializingWith:) requires the OutputSpan to be fully populated."
         )
-        self._buffer = buffer
+        self.init(_buffer: buffer)
     }
 }

@@ -7,6 +7,8 @@
 
 // MARK: - Error Types (Hoisted to Module Level)
 
+public import Array_Primitive
+
 extension Array.Static {
     /// Errors that can occur during static array operations.
     public typealias Error = __ArrayStaticError

@@ -8,24 +8,45 @@
 // See LICENSE for license information
 //
 // ===----------------------------------------------------------------------===//
-
-public import Array_Primitives_Core
+public import Array_Fixed_Primitive
+public import Array_Protocol_Primitives
+public import Buffer_Linear_Bounded_Primitives
 public import Collection_Primitives
 import Index_Primitives
+public import Iterable
+public import Iterator_Chunk_Primitives
+public import Sequence_Primitives
+public import Memory_Contiguous_Primitives
+public import Memory_Iterator_Primitives
 
-// MARK: - Swift.Sequence Conformance
+// MARK: - Memory.Contiguous.Protocol (span inherited from the ~Copyable extension)
 
-extension Array.Fixed: Swift.Sequence where Element: Copyable {
-    /// Returns the count as the underestimated count since we know the exact size.
-    @inlinable
-    public var underestimatedCount: Int { count }
+extension Array.Fixed: Memory.Contiguous.`Protocol` where Element: Copyable {}
+
+// MARK: - Iterable (multipass, bridge-vended) + Sequenceable (single-pass, consuming)
+//
+// Re-uses Iterator.Chunk for Iterable (vended free by the memory→Iterable bridge
+// over Memory.Contiguous.Protocol) and Buffer.Linear.Bounded.Scalar for
+// Sequenceable. No Swift.Sequence: the iteration family is ~Copyable end-to-end.
+
+extension Array.Fixed: Iterable where Element: Copyable {
+    @_implements(Iterable, Iterator)
+    public typealias IterableIterator = Iterator_Primitive.Iterator.Chunk<Element>
 }
 
-// MARK: - Swift.Collection Conformance
+extension Array.Fixed: Sequenceable where Element: Copyable {
+    @_implements(Sequenceable, Iterator)
+    public typealias SequenceableIterator = Buffer<Element>.Linear.Bounded.Scalar
 
-extension Array.Fixed: Swift.Collection where Element: Copyable {}
-extension Array.Fixed: Swift.BidirectionalCollection where Element: Copyable {}
-extension Array.Fixed: Swift.RandomAccessCollection where Element: Copyable {}
+    @inlinable
+    public consuming func makeIterator() -> Buffer<Element>.Linear.Bounded.Scalar {
+        _buffer.makeIterator()
+    }
+
+    /// Returns the count as the underestimated count since we know the exact size.
+    @inlinable
+    public var underestimatedCount: Int { Int(bitPattern: count) }
+}
 
 extension Array.Fixed where Element: Copyable {
     /// Accesses the element at the given typed index (copy semantics for Copyable elements).
