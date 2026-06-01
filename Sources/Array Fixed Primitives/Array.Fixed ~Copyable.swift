@@ -22,15 +22,12 @@ internal import Sequence_Primitives
 // MARK: - Collection Protocol Conformances
 // ============================================================================
 
-// Collection.Protocol conformance is inherited through Collection.Bidirectional.
-
-// MARK: - Collection.Access.Random Conformance
-
-extension Array.Fixed: Collection.Access.Random {}
-
-// MARK: - Collection.Indexed Conformance
-
-extension Array.Fixed: Collection.Indexed where Element: ~Copyable {
+// MARK: - Collection.Protocol Conformance
+//
+// Stated explicitly rather than left implicit through the Collection.Bidirectional
+// refinement (Collection.Bidirectional: Collection.`Protocol`). The conformance
+// carries its own witnesses: Index, startIndex, endIndex, index(after:), subscript.
+extension Array.Fixed: Collection.`Protocol` where Element: ~Copyable {
     public typealias Index = Array<Element>.Index
 
     @inlinable
@@ -41,7 +38,32 @@ extension Array.Fixed: Collection.Indexed where Element: ~Copyable {
 
     @inlinable
     public func index(after i: Index) -> Index { i.successor.saturating() }
+
+    /// Accesses the element at the given typed index (borrowing access for ~Copyable elements).
+    ///
+    /// - Parameter index: The typed index of the element to access.
+    /// - Precondition: `index` must be in bounds.
+    @inlinable
+    public subscript(_ index: Index) -> Element {
+        _read {
+            precondition(index < count, "Index out of bounds")
+            yield _buffer[index]
+        }
+        _modify {
+            precondition(index < count, "Index out of bounds")
+            yield &_buffer[index]
+        }
+    }
 }
+
+// MARK: - Collection.Access.Random Conformance
+
+extension Array.Fixed: Collection.Access.Random {}
+
+// MARK: - Collection.Indexed Conformance
+
+// Index-navigation protocol; witnesses satisfied by the Collection.Protocol extension above.
+extension Array.Fixed: Collection.Indexed where Element: ~Copyable {}
 
 // MARK: - Collection.Bidirectional Conformance
 
@@ -73,28 +95,6 @@ extension Array.Fixed where Element: ~Copyable {
     /// The total capacity of the array.
     @inlinable
     public var capacity: Index.Count { _buffer.capacity }
-}
-
-// ============================================================================
-// MARK: - Typed Subscript (~Copyable)
-// ============================================================================
-
-extension Array.Fixed where Element: ~Copyable {
-    /// Accesses the element at the given typed index (borrowing access for ~Copyable elements).
-    ///
-    /// - Parameter index: The typed index of the element to access.
-    /// - Precondition: `index` must be in bounds.
-    @inlinable
-    public subscript(_ index: Index) -> Element {
-        _read {
-            precondition(index < count, "Index out of bounds")
-            yield _buffer[index]
-        }
-        _modify {
-            precondition(index < count, "Index out of bounds")
-            yield &_buffer[index]
-        }
-    }
 }
 
 // ============================================================================

@@ -21,7 +21,7 @@ public import Memory_Iterator_Primitives
 // MARK: - Institute Collection Conformances
 // ============================================================================
 
-// Collection.Protocol conformance is inherited through Collection.Bidirectional.
+// Collection.Protocol is declared explicitly — with its witnesses — in `Array ~Copyable.swift`.
 
 extension Array: Collection.Access.Random where Element: Copyable {}
 

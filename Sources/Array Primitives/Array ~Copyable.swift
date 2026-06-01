@@ -19,9 +19,12 @@ import Index_Primitives
 // MARK: - Collection Conformances
 // ============================================================================
 
-// MARK: Collection.Indexed
+// MARK: Collection.Protocol
 
-extension Array: Collection.Indexed where Element: ~Copyable {
+// Stated explicitly rather than left implicit through the Collection.Bidirectional
+// refinement (Collection.Bidirectional: Collection.`Protocol`). The conformance
+// carries its own witnesses: startIndex, endIndex, index(after:), and the subscript.
+extension Array: Collection.`Protocol` where Element: ~Copyable {
     @inlinable
     public var startIndex: Index { .zero }
 
@@ -30,7 +33,29 @@ extension Array: Collection.Indexed where Element: ~Copyable {
 
     @inlinable
     public func index(after i: Index) -> Index { i.successor.saturating() }
+
+    /// Accesses the element at the given typed index.
+    ///
+    /// - Parameter index: The typed index of the element to access.
+    /// - Precondition: `index` must be in bounds.
+    @inlinable
+    public subscript(_ index: Index) -> Element {
+        _read {
+            precondition(index < count, "Index out of bounds")
+            yield _buffer[index]
+        }
+        _modify {
+            precondition(index < count, "Index out of bounds")
+            yield &_buffer[index]
+        }
+    }
 }
+
+// MARK: Collection.Indexed
+
+// Index-navigation protocol; its witnesses (startIndex / endIndex / index(after:))
+// are satisfied by the Collection.Protocol extension above.
+extension Array: Collection.Indexed where Element: ~Copyable {}
 
 // MARK: Collection.Bidirectional
 
@@ -61,30 +86,6 @@ extension Array where Element: ~Copyable {
     /// The current capacity of the array.
     @inlinable
     public var capacity: Index.Count { _buffer.capacity }
-}
-
-// ============================================================================
-// MARK: - Subscripts
-// ============================================================================
-
-// MARK: Index Subscript
-
-extension Array where Element: ~Copyable {
-    /// Accesses the element at the given typed index.
-    ///
-    /// - Parameter index: The typed index of the element to access.
-    /// - Precondition: `index` must be in bounds.
-    @inlinable
-    public subscript(_ index: Index) -> Element {
-        _read {
-            precondition(index < count, "Index out of bounds")
-            yield _buffer[index]
-        }
-        _modify {
-            precondition(index < count, "Index out of bounds")
-            yield &_buffer[index]
-        }
-    }
 }
 
 // ============================================================================
