@@ -32,7 +32,7 @@ extension Array.Static: Collection.Remove.Last where Element: ~Copyable {}
 extension Array.Static: Collection.Clearable where Element: ~Copyable {}
 
 // ============================================================================
-// MARK: - Iterable + Sequenceable (Copyable elements only)
+// MARK: - Iterable (~Copyable) + Sequenceable (Copyable elements)
 // ============================================================================
 //
 // Re-uses Iterator.Chunk (multipass, borrowing, over the inline buffer span) +
@@ -40,8 +40,11 @@ extension Array.Static: Collection.Clearable where Element: ~Copyable {}
 // Inline variant. No Swift.Sequence (Static is unconditionally ~Copyable).
 
 // Memory.Contiguous.Protocol exposes the inline buffer's span so the
-// memory→Iterable bridge can vend `Iterator.Chunk`.
-extension Array.Static: Memory.Contiguous.`Protocol` where Element: Copyable {
+// memory→Iterable bridge can vend `Iterator.Chunk`. RELAXED to `~Copyable` (Piece 7b):
+// Array.Static conforms Collection.Access.Random (-> Collection.Bidirectional ->
+// Collection.Protocol: Iterable) where Element: ~Copyable, so its Iterable must hold for
+// ~Copyable too. The inline buffer's span carries ~Copyable elements.
+extension Array.Static: Memory.Contiguous.`Protocol` where Element: ~Copyable {
     public var span: Swift.Span<Element> {
         @_lifetime(borrow self)
         @inlinable
@@ -51,7 +54,7 @@ extension Array.Static: Memory.Contiguous.`Protocol` where Element: Copyable {
 
 // Iterable — multipass borrowing `makeIterator()` vended FOR FREE by the
 // memory→Iterable bridge over Memory.Contiguous.Protocol, yielding Iterator.Chunk.
-extension Array.Static: Iterable where Element: Copyable {
+extension Array.Static: Iterable where Element: ~Copyable {
     @_implements(Iterable, Iterator)
     public typealias IterableIterator = Iterator_Primitive.Iterator.Chunk<Element>
 }
