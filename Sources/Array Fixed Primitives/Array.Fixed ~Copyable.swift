@@ -15,6 +15,8 @@ public import Collection_Primitives
 internal import Index_Primitives
 public import Iterable
 public import Iterator_Chunk_Primitives
+public import Memory_Contiguous_Primitives
+public import Memory_Iterator_Primitives
 internal import Property_Primitives
 internal import Sequence_Primitives
 
@@ -76,8 +78,20 @@ extension Array.Fixed: Collection.Bidirectional where Element: ~Copyable {
 
 extension Array.Fixed: Array.`Protocol` where Element: ~Copyable {}
 
-// Iteration conformances (Memory.Contiguous.Protocol + Iterable + Sequenceable)
-// live in Array.Fixed Copyable.swift, mirroring buffer-linear.
+// MARK: - Memory.Contiguous.Protocol + Iterable (multipass, bridge-vended, ~Copyable)
+//
+// RELAXED to `~Copyable` (Piece 7a / D4): the span (above) carries `~Copyable` elements
+// (`span[i]` borrows, never moves out), so the memory→Iterable bridge vends the bulk
+// `Iterator.Chunk` for BOTH element kinds. Required for the `Collection.Protocol: Iterable`
+// refine edge, since `Array.Fixed: Collection.Protocol where Element: ~Copyable`.
+// (Sequenceable — single-pass, consuming, Copyable-only — stays in Array.Fixed Copyable.swift.)
+
+extension Array.Fixed: Memory.Contiguous.`Protocol` where Element: ~Copyable {}
+
+extension Array.Fixed: Iterable where Element: ~Copyable {
+    @_implements(Iterable, Iterator)
+    public typealias IterableIterator = Iterator_Primitive.Iterator.Chunk<Element>
+}
 
 // ============================================================================
 // MARK: - Properties

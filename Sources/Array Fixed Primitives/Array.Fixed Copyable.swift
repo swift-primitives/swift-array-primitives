@@ -13,26 +13,14 @@ public import Array_Protocol_Primitives
 public import Buffer_Linear_Bounded_Primitives
 public import Collection_Primitives
 import Index_Primitives
-public import Iterable
-public import Iterator_Chunk_Primitives
 public import Sequence_Primitives
-public import Memory_Contiguous_Primitives
-public import Memory_Iterator_Primitives
 
-// MARK: - Memory.Contiguous.Protocol (span inherited from the ~Copyable extension)
-
-extension Array.Fixed: Memory.Contiguous.`Protocol` where Element: Copyable {}
-
-// MARK: - Iterable (multipass, bridge-vended) + Sequenceable (single-pass, consuming)
+// MARK: - Sequenceable (single-pass, consuming, Copyable-only)
 //
-// Re-uses Iterator.Chunk for Iterable (vended free by the memory→Iterable bridge
-// over Memory.Contiguous.Protocol) and Buffer.Linear.Bounded.Scalar for
-// Sequenceable. No Swift.Sequence: the iteration family is ~Copyable end-to-end.
-
-extension Array.Fixed: Iterable where Element: Copyable {
-    @_implements(Iterable, Iterator)
-    public typealias IterableIterator = Iterator_Primitive.Iterator.Chunk<Element>
-}
+// Buffer.Linear.Bounded.Scalar backs Sequenceable. No Swift.Sequence: the iteration
+// family is ~Copyable end-to-end. (Memory.Contiguous.Protocol + Iterable — the
+// multipass borrowing surface — moved to `Array.Fixed ~Copyable.swift` (Piece 7a / D4),
+// relaxed to `~Copyable`.)
 
 extension Array.Fixed: Sequenceable where Element: Copyable {
     @_implements(Sequenceable, Iterator)
