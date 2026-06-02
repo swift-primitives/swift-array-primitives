@@ -109,7 +109,7 @@ The array's primary contribution: making the indexed-contiguous-storage a **citi
 | `Swift.BidirectionalCollection` | Reverse traversal | Same |
 | `Swift.RandomAccessCollection` | Distance in O(1), all random-access algorithms | Same |
 | `Sequence.Protocol` | `makeIterator()` contract | Same |
-| `Collection.Indexed` | `startIndex`/`endIndex`/`index(after:)` | The index *navigation* contract is Array's |
+| `Collection.Indexed` (deleted 2026-06) | `startIndex`/`endIndex`/`index(after:)` | The index *navigation* contract is Array's (now via `Collection.Protocol`) |
 | `Collection.Bidirectional` | `index(before:)` | Same |
 | `ExpressibleByArrayLiteral` | `[1, 2, 3]` syntax | Contested (see below) |
 
@@ -191,7 +191,7 @@ For each file in `array-primitives`, classify every public API member as:
 |------|----------|-------|
 | `Collection.Protocol` conformance | Protocol | All variant `~Copyable.swift` files |
 | `Collection.Access.Random` conformance | Protocol | All variant files |
-| `Collection.Indexed` (`startIndex`/`endIndex`/`index(after:)`) | Protocol | All `~Copyable.swift` |
+| `Collection.Indexed` (`startIndex`/`endIndex`/`index(after:)`; deleted 2026-06) | Protocol | All `~Copyable.swift` |
 | `Collection.Bidirectional` (`index(before:)`) | Protocol | All `~Copyable.swift` |
 | `Swift.Sequence`/`Collection`/`BidirectionalCollection`/`RandomAccessCollection` | Protocol | `Array.Dynamic.swift`, `Array.Fixed Copyable.swift` |
 | `Array.Iterator` / `Array.Fixed.Iterator` | Iterator type | `Array.Dynamic.swift`, `Array.Fixed ~Copyable.swift` |

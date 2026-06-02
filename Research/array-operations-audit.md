@@ -84,7 +84,7 @@ Does swift-array-primitives provide the canonical operations expected of the Arr
 | Array literal | `init(arrayLiteral elements: Element...)` | `Array+ExpressibleByArrayLiteral.swift:3-12` | `Copyable` |
 | Underestimated count | `var underestimatedCount: Int` | `Array.Dynamic.swift:32` | `Copyable` |
 
-**Protocol conformances**: `Collection.Protocol`, `Collection.Access.Random`, `Collection.Indexed`, `Collection.Bidirectional`, `Sequence.Protocol`, `Swift.Sequence`, `Swift.Collection`, `Swift.BidirectionalCollection`, `Swift.RandomAccessCollection`, `ExpressibleByArrayLiteral`, `Copyable where Element: Copyable`, `@unchecked Sendable where Element: Sendable`.
+**Protocol conformances**: `Collection.Protocol`, `Collection.Access.Random`, `Collection.Indexed` (deleted 2026-06), `Collection.Bidirectional`, `Sequence.Protocol`, `Swift.Sequence`, `Swift.Collection`, `Swift.BidirectionalCollection`, `Swift.RandomAccessCollection`, `ExpressibleByArrayLiteral`, `Copyable where Element: Copyable`, `@unchecked Sendable where Element: Sendable`.
 
 **Phantom-typed wrapper**: `Array.Indexed<Tag>` with `count`, `isEmpty`, `capacity`, `subscript(index:)`, `append(_:)`, `removeLast()`, `removeAll(keepingCapacity:)`.
 
@@ -129,7 +129,7 @@ Does swift-array-primitives provide the canonical operations expected of the Arr
 | Indexed navigation | `startIndex`, `endIndex`, `index(after:)`, `index(before:)` | `Array.Fixed ~Copyable.swift:32-49` | `~Copyable` |
 | Underestimated count | `var underestimatedCount: Int` | `Array.Fixed Copyable.swift:21` | `Copyable` |
 
-**Protocol conformances**: `Collection.Protocol`, `Collection.Access.Random`, `Collection.Indexed`, `Collection.Bidirectional`, `Sequence.Protocol`, `Swift.Sequence`, `Swift.Collection`, `Swift.BidirectionalCollection`, `Swift.RandomAccessCollection`, `Copyable where Element: Copyable`, `@unchecked Sendable where Element: Sendable`.
+**Protocol conformances**: `Collection.Protocol`, `Collection.Access.Random`, `Collection.Indexed` (deleted 2026-06), `Collection.Bidirectional`, `Sequence.Protocol`, `Swift.Sequence`, `Swift.Collection`, `Swift.BidirectionalCollection`, `Swift.RandomAccessCollection`, `Copyable where Element: Copyable`, `@unchecked Sendable where Element: Sendable`.
 
 **Error type**: `Array.Fixed.Error` with cases `.invalidCount(Array.Index.Count)` and `.indexOutOfBounds(index:count:)`.
 
@@ -176,7 +176,7 @@ Does swift-array-primitives provide the canonical operations expected of the Arr
 | Unsafe write | `mutating func withUnsafeMutableBufferPointer<R, E>(_:) throws(E) -> R` | `Array.Static Copyable.swift:83-87` | `Copyable`, `@_spi(Unsafe)` |
 | Indexed navigation | `startIndex`, `endIndex`, `index(after:)`, `index(before:)` | `Array.Static ~Copyable.swift:25-41` | `~Copyable` |
 
-**Protocol conformances**: `Collection.Protocol`, `Collection.Access.Random`, `Collection.Indexed`, `Collection.Bidirectional`, `Collection.Remove.Last`, `Collection.Clearable`, `Sequence.Protocol`, `@unchecked Sendable where Element: Sendable`.
+**Protocol conformances**: `Collection.Protocol`, `Collection.Access.Random`, `Collection.Indexed` (deleted 2026-06), `Collection.Bidirectional`, `Collection.Remove.Last`, `Collection.Clearable`, `Sequence.Protocol`, `@unchecked Sendable where Element: Sendable`.
 
 **Note**: Cannot conform to `Swift.Collection` because `Array.Static` is unconditionally `~Copyable`.
 
@@ -225,7 +225,7 @@ Does swift-array-primitives provide the canonical operations expected of the Arr
 | Unsafe write | `mutating func withUnsafeMutableBufferPointer<R, E>(_:) throws(E) -> R` | `Array.Small ~Copyable.swift:180-189` | `Copyable`, `@_spi(Unsafe)` |
 | Indexed navigation | `startIndex`, `endIndex`, `index(after:)`, `index(before:)` | `Array.Small ~Copyable.swift:25-41` | `~Copyable` |
 
-**Protocol conformances**: `Collection.Protocol where Element: Copyable`, `Collection.Access.Random where Element: Copyable`, `Collection.Indexed`, `Collection.Bidirectional`, `Sequence.Protocol where Element: Copyable`, `@unchecked Sendable where Element: Sendable`.
+**Protocol conformances**: `Collection.Protocol where Element: Copyable`, `Collection.Access.Random where Element: Copyable`, `Collection.Indexed` (deleted 2026-06), `Collection.Bidirectional`, `Sequence.Protocol where Element: Copyable`, `@unchecked Sendable where Element: Sendable`.
 
 **Note**: Cannot conform to `Swift.Collection` because `Array.Small` is unconditionally `~Copyable`.
 
