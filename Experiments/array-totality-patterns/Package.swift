@@ -6,7 +6,7 @@ let package = Package(
     name: "array-totality-patterns",
     platforms: [.macOS(.v26)],
     dependencies: [
-        .package(path: "../../../swift-index-primitives")
+        .package(url: "https://github.com/swift-primitives/swift-index-primitives.git", branch: "main")
     ],
     targets: [
         .executableTarget(
