@@ -39,13 +39,13 @@ extension Array.Fixed {
             return
         }
 
-        let buffer = unsafe Buffer<Element>.Linear.Bounded(
+        let buffer = Buffer<Element>.Linear.Bounded(
             minimumCapacity: count,
             initializingCount: count,
             with: { ptr in
                 for i in 0..<Int(bitPattern: count) {
                     let index = Array.Index(Ordinal(UInt(i)))
-                    unsafe (ptr + i).initialize(to: initializer(index))
+                    ptr.append(initializer(index))
                 }
             }
         )
@@ -78,13 +78,13 @@ extension Array.Fixed {
             return
         }
 
-        let buffer = unsafe Buffer<Element>.Linear.Bounded(
+        let buffer = Buffer<Element>.Linear.Bounded(
             minimumCapacity: count,
             initializingCount: count,
             with: { ptr in
                 for i in 0..<Int(bitPattern: count) {
                     let index = Array.Index(Ordinal(UInt(i)))
-                    unsafe (ptr + i).initialize(to: initializer(index))
+                    ptr.append(initializer(index))
                 }
             }
         )
