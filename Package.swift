@@ -56,6 +56,8 @@ let package = Package(
         .package(url: "https://github.com/swift-primitives/swift-cardinal-primitives.git", branch: "main"),
         .package(url: "https://github.com/swift-primitives/swift-tagged-primitives.git", branch: "main"),
         .package(url: "https://github.com/swift-primitives/swift-ordinal-primitives.git", branch: "main"),
+        .package(url: "https://github.com/swift-primitives/swift-equation-primitives.git", branch: "main"),
+        .package(url: "https://github.com/swift-primitives/swift-hash-primitives.git", branch: "main"),
     ],
     targets: [
 
@@ -127,6 +129,8 @@ let package = Package(
                 .product(name: "Iterator Chunk Primitives", package: "swift-iterator-primitives"),
                 .product(name: "Property Primitives", package: "swift-property-primitives"),
                 .product(name: "Sequence Primitives", package: "swift-sequence-primitives"),
+                .product(name: "Equation Primitives Standard Library Integration", package: "swift-equation-primitives"),
+                .product(name: "Hash Primitives Standard Library Integration", package: "swift-hash-primitives"),
             ]
         ),
 
@@ -152,6 +156,8 @@ let package = Package(
                 .product(name: "Iterator Chunk Primitives", package: "swift-iterator-primitives"),
                 .product(name: "Sequence Primitives", package: "swift-sequence-primitives"),
                 .product(name: "Property Primitives", package: "swift-property-primitives"),
+                .product(name: "Equation Primitives Standard Library Integration", package: "swift-equation-primitives"),
+                .product(name: "Hash Primitives Standard Library Integration", package: "swift-hash-primitives"),
             ]
         ),
 
@@ -178,6 +184,8 @@ let package = Package(
                 .product(name: "Iterator Chunk Primitives", package: "swift-iterator-primitives"),
                 .product(name: "Sequence Primitives", package: "swift-sequence-primitives"),
                 .product(name: "Property Primitives", package: "swift-property-primitives"),
+                .product(name: "Equation Primitives Standard Library Integration", package: "swift-equation-primitives"),
+                .product(name: "Hash Primitives Standard Library Integration", package: "swift-hash-primitives"),
             ]
         ),
 
@@ -204,6 +212,8 @@ let package = Package(
                 .product(name: "Ordinal Primitives", package: "swift-ordinal-primitives"),
                 .product(name: "Cardinal Primitives", package: "swift-cardinal-primitives"),
                 .product(name: "Standard Library Extensions", package: "swift-standard-library-extensions"),
+                .product(name: "Equation Primitives Standard Library Integration", package: "swift-equation-primitives"),
+                .product(name: "Hash Primitives Standard Library Integration", package: "swift-hash-primitives"),
             ]
         ),
 
