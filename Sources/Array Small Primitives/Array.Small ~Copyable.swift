@@ -24,23 +24,11 @@ internal import Property_Primitives
 
 extension Array.Small where Element: ~Copyable {
     public typealias Index = Array<Element>.Index
-
-    @inlinable
-    public var startIndex: Index { .zero }
-
-    @inlinable
-    public var endIndex: Index { count.map(Ordinal.init) }
-
-    @inlinable
-    public func index(after i: Index) -> Index { i.successor.saturating() }
 }
 
 // MARK: Collection.Bidirectional
 
-extension Array.Small: Collection.Bidirectional where Element: ~Copyable {
-    @inlinable
-    public func index(before i: Index) -> Index { try! i.predecessor.exact() }
-}
+extension Array.Small: Collection.Bidirectional where Element: ~Copyable {}
 
 // MARK: Array.Protocol
 

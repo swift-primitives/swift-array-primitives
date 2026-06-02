@@ -23,23 +23,11 @@ import Sequence_Primitives
 
 extension Array.Static where Element: ~Copyable {
     public typealias Index = Array<Element>.Index
-
-    @inlinable
-    public var startIndex: Index { .zero }
-
-    @inlinable
-    public var endIndex: Index { count.map(Ordinal.init) }
-
-    @inlinable
-    public func index(after i: Index) -> Index { i.successor.saturating() }
 }
 
 // MARK: Collection.Bidirectional
 
-extension Array.Static: Collection.Bidirectional where Element: ~Copyable {
-    @inlinable
-    public func index(before i: Index) -> Index { try! i.predecessor.exact() }
-}
+extension Array.Static: Collection.Bidirectional where Element: ~Copyable {}
 
 // MARK: Array.Protocol
 

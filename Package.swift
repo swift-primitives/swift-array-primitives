@@ -82,6 +82,7 @@ let package = Package(
             dependencies: [
                 "Array Primitive",
                 .product(name: "Collection Primitives", package: "swift-collection-primitives"),
+                .product(name: "Index Primitives", package: "swift-index-primitives"),
             ]
         ),
 

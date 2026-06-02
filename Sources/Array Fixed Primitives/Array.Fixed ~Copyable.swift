@@ -27,19 +27,11 @@ internal import Sequence_Primitives
 // MARK: - Collection.Protocol Conformance
 //
 // Stated explicitly rather than left implicit through the Collection.Bidirectional
-// refinement (Collection.Bidirectional: Collection.`Protocol`). The conformance
-// carries its own witnesses: Index, startIndex, endIndex, index(after:), subscript.
+// refinement (Collection.Bidirectional: Collection.`Protocol`). The
+// startIndex / endIndex / index(after:) / index(before:) witnesses are provided
+// once by Array.Protocol's defaults; this conformance carries Index and the subscript.
 extension Array.Fixed: Collection.`Protocol` where Element: ~Copyable {
     public typealias Index = Array<Element>.Index
-
-    @inlinable
-    public var startIndex: Index { .zero }
-
-    @inlinable
-    public var endIndex: Index { count.map(Ordinal.init) }
-
-    @inlinable
-    public func index(after i: Index) -> Index { i.successor.saturating() }
 
     /// Accesses the element at the given typed index (borrowing access for ~Copyable elements).
     ///
@@ -64,10 +56,7 @@ extension Array.Fixed: Collection.Access.Random {}
 
 // MARK: - Collection.Bidirectional Conformance
 
-extension Array.Fixed: Collection.Bidirectional where Element: ~Copyable {
-    @inlinable
-    public func index(before i: Index) -> Index { try! i.predecessor.exact() }
-}
+extension Array.Fixed: Collection.Bidirectional where Element: ~Copyable {}
 
 // MARK: Array.Protocol
 

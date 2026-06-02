@@ -18,6 +18,13 @@ public import Array_Primitive
 public import Collection_Primitives
 
 public protocol __ArrayProtocol: Collection.Bidirectional & ~Copyable {
+    /// The number of elements in the array, as the array's typed count.
+    ///
+    /// Required here (rather than inherited) so the hoisted `endIndex` default
+    /// resolves to each variant's O(1) count, not Collection.Protocol's O(n)
+    /// index-walk (which would recurse through `endIndex`).
+    var count: Index_Primitives.Index<Element>.Count { get }
+
     /// Accesses the element at the given position.
     subscript(_ position: Index) -> Element { get set }
 }
