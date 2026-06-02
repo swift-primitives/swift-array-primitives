@@ -63,7 +63,7 @@ extension Array where Element: ~Copyable {
     /// - `var endIndex: Index { get }`
     /// - `func index(after i: Index) -> Index`
     /// - `func index(before i: Index) -> Index`
-    /// - `var isEmpty: Bool` (default from `Collection.Indexed`)
+    /// - `var isEmpty: Bool` (default from `Collection.Protocol`)
     ///
     /// ## Generic Usage
     ///

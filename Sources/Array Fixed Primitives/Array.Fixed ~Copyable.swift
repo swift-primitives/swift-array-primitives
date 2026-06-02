@@ -62,11 +62,6 @@ extension Array.Fixed: Collection.`Protocol` where Element: ~Copyable {
 
 extension Array.Fixed: Collection.Access.Random {}
 
-// MARK: - Collection.Indexed Conformance
-
-// Index-navigation protocol; witnesses satisfied by the Collection.Protocol extension above.
-extension Array.Fixed: Collection.Indexed where Element: ~Copyable {}
-
 // MARK: - Collection.Bidirectional Conformance
 
 extension Array.Fixed: Collection.Bidirectional where Element: ~Copyable {

@@ -19,9 +19,9 @@ import Sequence_Primitives
 // MARK: - Collection Conformances
 // ============================================================================
 
-// MARK: Collection.Indexed
+// MARK: Index navigation
 
-extension Array.Static: Collection.Indexed where Element: ~Copyable {
+extension Array.Static where Element: ~Copyable {
     public typealias Index = Array<Element>.Index
 
     @inlinable

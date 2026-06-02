@@ -20,9 +20,9 @@ internal import Property_Primitives
 // MARK: - Collection Conformances
 // ============================================================================
 
-// MARK: Collection.Indexed
+// MARK: Index navigation
 
-extension Array.Small: Collection.Indexed where Element: ~Copyable {
+extension Array.Small where Element: ~Copyable {
     public typealias Index = Array<Element>.Index
 
     @inlinable

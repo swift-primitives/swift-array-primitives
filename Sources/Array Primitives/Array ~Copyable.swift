@@ -51,12 +51,6 @@ extension Array: Collection.`Protocol` where Element: ~Copyable {
     }
 }
 
-// MARK: Collection.Indexed
-
-// Index-navigation protocol; its witnesses (startIndex / endIndex / index(after:))
-// are satisfied by the Collection.Protocol extension above.
-extension Array: Collection.Indexed where Element: ~Copyable {}
-
 // MARK: Collection.Bidirectional
 
 extension Array: Collection.Bidirectional where Element: ~Copyable {
