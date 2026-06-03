@@ -15,7 +15,7 @@ public import Collection_Primitives
 public import Iterable
 public import Iterator_Chunk_Primitives
 public import Sequence_Primitives
-public import Memory_Contiguous_Primitives
+public import Span_Protocol_Primitives
 public import Memory_Iterator_Primitives
 
 // ============================================================================
@@ -38,14 +38,14 @@ extension Array.Small: Collection.Clearable where Element: ~Copyable {}
 // Buffer.Linear.Small.Scalar (single-pass, consuming), mirroring buffer-linear's
 // Small variant. No Swift.Sequence (Small is unconditionally ~Copyable).
 
-// Memory.Contiguous.Protocol exposes the small-vec buffer's span so the
+// Span.`Protocol` exposes the small-vec buffer's span so the
 // memory→Iterable bridge can vend `Iterator.Chunk`. RELAXED to `~Copyable` (Piece 7b):
 // Array.Small conforms Collection.Bidirectional (-> Collection.Protocol: Iterable) where
 // Element: ~Copyable, so its Iterable must hold for ~Copyable too. The ~Copyable span exists.
-extension Array.Small: Memory.Contiguous.`Protocol` where Element: ~Copyable {}
+extension Array.Small: Span.`Protocol` where Element: ~Copyable {}
 
 // Iterable — multipass borrowing `makeIterator()` vended FOR FREE by the
-// memory→Iterable bridge over Memory.Contiguous.Protocol, yielding Iterator.Chunk.
+// memory→Iterable bridge over Span.`Protocol`, yielding Iterator.Chunk.
 extension Array.Small: Iterable where Element: ~Copyable {
     @_implements(Iterable, Iterator)
     public typealias IterableIterator = Iterator_Primitive.Iterator.Chunk<Element>

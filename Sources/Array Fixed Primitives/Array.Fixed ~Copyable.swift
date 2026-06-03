@@ -15,7 +15,7 @@ public import Collection_Primitives
 internal import Index_Primitives
 public import Iterable
 public import Iterator_Chunk_Primitives
-public import Memory_Contiguous_Primitives
+public import Span_Protocol_Primitives
 public import Memory_Iterator_Primitives
 internal import Property_Primitives
 internal import Sequence_Primitives
@@ -62,7 +62,7 @@ extension Array.Fixed: Collection.Bidirectional where Element: ~Copyable {}
 
 extension Array.Fixed: Array.`Protocol` where Element: ~Copyable {}
 
-// MARK: - Memory.Contiguous.Protocol + Iterable (multipass, bridge-vended, ~Copyable)
+// MARK: - Span.`Protocol` + Iterable (multipass, bridge-vended, ~Copyable)
 //
 // RELAXED to `~Copyable` (Piece 7a / D4): the span (above) carries `~Copyable` elements
 // (`span[i]` borrows, never moves out), so the memory→Iterable bridge vends the bulk
@@ -70,7 +70,7 @@ extension Array.Fixed: Array.`Protocol` where Element: ~Copyable {}
 // refine edge, since `Array.Fixed: Collection.Protocol where Element: ~Copyable`.
 // (Sequenceable — single-pass, consuming, Copyable-only — stays in Array.Fixed Copyable.swift.)
 
-extension Array.Fixed: Memory.Contiguous.`Protocol` where Element: ~Copyable {}
+extension Array.Fixed: Span.`Protocol` where Element: ~Copyable {}
 
 extension Array.Fixed: Iterable where Element: ~Copyable {
     @_implements(Iterable, Iterator)

@@ -18,7 +18,7 @@ public import Sequence_Primitives
 // MARK: - Sequenceable (single-pass, consuming, Copyable-only)
 //
 // Buffer.Linear.Bounded.Scalar backs Sequenceable. No Swift.Sequence: the iteration
-// family is ~Copyable end-to-end. (Memory.Contiguous.Protocol + Iterable — the
+// family is ~Copyable end-to-end. (Span.`Protocol` + Iterable — the
 // multipass borrowing surface — moved to `Array.Fixed ~Copyable.swift` (Piece 7a / D4),
 // relaxed to `~Copyable`.)
 

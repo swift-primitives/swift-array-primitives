@@ -14,7 +14,7 @@ public import Buffer_Linear_Primitives
 public import Iterable
 public import Iterator_Chunk_Primitives
 public import Sequence_Primitives
-public import Memory_Contiguous_Primitives
+public import Span_Protocol_Primitives
 public import Memory_Iterator_Primitives
 
 // ============================================================================
@@ -47,15 +47,15 @@ extension Array {
 // cannot back a Copyable stdlib `IteratorProtocol`. (The iteration family is
 // `~Copyable` end-to-end at the buffer layer; array follows.)
 
-// Memory.Contiguous.Protocol exposes the span so the memory→Iterable bridge can
+// Span.`Protocol` exposes the span so the memory→Iterable bridge can
 // vend `Iterator.Chunk`. RELAXED to `~Copyable` (Piece 7a / D4): the span carries
 // `~Copyable` elements (`span[i]` borrows, never moves out), so the bridge vends the
 // bulk `Iterator.Chunk` for BOTH element kinds. Required for the `Collection.Protocol:
 // Iterable` refine edge, since `Array: Collection.Protocol where Element: ~Copyable`.
-extension Array: Memory.Contiguous.`Protocol` where Element: ~Copyable {}
+extension Array: Span.`Protocol` where Element: ~Copyable {}
 
 // Iterable — the multipass borrowing `makeIterator()` is vended FOR FREE by the
-// memory→Iterable bridge over the Memory.Contiguous.Protocol conformance above,
+// memory→Iterable bridge over the Span.`Protocol` conformance above,
 // yielding `Iterator.Chunk` (no hand-written iterator). `~Copyable` per the bridge relax.
 extension Array: Iterable where Element: ~Copyable {
     @_implements(Iterable, Iterator)

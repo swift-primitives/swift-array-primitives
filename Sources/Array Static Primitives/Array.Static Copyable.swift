@@ -59,7 +59,7 @@ extension Array.Static where Element: Copyable {
 }
 
 // ============================================================================
-// MARK: - Buffer Access (Memory.Contiguous.Protocol)
+// MARK: - Buffer Access (Span.`Protocol`)
 // ============================================================================
 
 @_spi(Unsafe)
