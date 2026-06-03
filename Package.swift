@@ -52,8 +52,10 @@ let package = Package(
         .package(url: "https://github.com/swift-primitives/swift-collection-primitives.git", branch: "main"),
         .package(url: "https://github.com/swift-primitives/swift-property-primitives.git", branch: "main"),
         .package(url: "https://github.com/swift-primitives/swift-sequence-primitives.git", branch: "main"),
-        .package(url: "https://github.com/swift-primitives/swift-buffer-primitives.git", branch: "main"),
-        .package(url: "https://github.com/swift-primitives/swift-buffer-linear-primitives.git", branch: "main"),
+        // W2 mesh: buffer packages on their --w2 worktrees so every path to memory
+        // unifies on identity swift-memory-primitives--w2 (collision resolved).
+        .package(path: "../swift-buffer-primitives--w2"),
+        .package(path: "../swift-buffer-linear-primitives--w2"),
         .package(url: "https://github.com/swift-primitives/swift-iterator-primitives.git", branch: "main"),
         .package(url: "https://github.com/swift-primitives/swift-finite-primitives.git", branch: "main"),
         .package(url: "https://github.com/swift-primitives/swift-cardinal-primitives.git", branch: "main"),
@@ -68,7 +70,7 @@ let package = Package(
         .target(
             name: "Array Primitive",
             dependencies: [
-                .product(name: "Buffer Linear Primitives", package: "swift-buffer-linear-primitives"),
+                .product(name: "Buffer Linear Primitives", package: "swift-buffer-linear-primitives--w2"),
                 .product(name: "Index Primitives", package: "swift-index-primitives"),
             ]
         ),
@@ -96,7 +98,7 @@ let package = Package(
             name: "Array Bounded Primitive",
             dependencies: [
                 "Array Primitive",
-                .product(name: "Buffer Linear Primitives", package: "swift-buffer-linear-primitives"),
+                .product(name: "Buffer Linear Primitives", package: "swift-buffer-linear-primitives--w2"),
             ]
         ),
 
@@ -115,7 +117,7 @@ let package = Package(
             name: "Array Fixed Primitive",
             dependencies: [
                 "Array Primitive",
-                .product(name: "Buffer Linear Primitives", package: "swift-buffer-linear-primitives"),
+                .product(name: "Buffer Linear Primitives", package: "swift-buffer-linear-primitives--w2"),
             ]
         ),
 
@@ -127,7 +129,7 @@ let package = Package(
                 "Array Protocol Primitives",
                 .product(name: "Span Protocol Primitives", package: "swift-span-primitives"),
                 .product(name: "Memory Iterator Primitives", package: "swift-memory-iterator-primitives--w2"),
-                .product(name: "Buffer Linear Bounded Primitives", package: "swift-buffer-linear-primitives"),
+                .product(name: "Buffer Linear Bounded Primitives", package: "swift-buffer-linear-primitives--w2"),
                 .product(name: "Collection Primitives", package: "swift-collection-primitives"),
                 .product(name: "Index Primitives", package: "swift-index-primitives"),
                 .product(name: "Iterable", package: "swift-iterator-primitives"),
@@ -144,7 +146,7 @@ let package = Package(
             name: "Array Static Primitive",
             dependencies: [
                 "Array Primitive",
-                .product(name: "Buffer Linear Inline Primitives", package: "swift-buffer-linear-primitives"),
+                .product(name: "Buffer Linear Inline Primitives", package: "swift-buffer-linear-primitives--w2"),
             ]
         ),
 
@@ -156,7 +158,7 @@ let package = Package(
                 "Array Protocol Primitives",
                 .product(name: "Span Protocol Primitives", package: "swift-span-primitives"),
                 .product(name: "Memory Iterator Primitives", package: "swift-memory-iterator-primitives--w2"),
-                .product(name: "Buffer Linear Inline Primitives", package: "swift-buffer-linear-primitives"),
+                .product(name: "Buffer Linear Inline Primitives", package: "swift-buffer-linear-primitives--w2"),
                 .product(name: "Collection Primitives", package: "swift-collection-primitives"),
                 .product(name: "Index Primitives", package: "swift-index-primitives"),
                 .product(name: "Iterable", package: "swift-iterator-primitives"),
@@ -173,7 +175,7 @@ let package = Package(
             name: "Array Small Primitive",
             dependencies: [
                 "Array Primitive",
-                .product(name: "Buffer Linear Small Primitives", package: "swift-buffer-linear-primitives"),
+                .product(name: "Buffer Linear Small Primitives", package: "swift-buffer-linear-primitives--w2"),
             ]
         ),
 
@@ -185,7 +187,7 @@ let package = Package(
                 "Array Protocol Primitives",
                 .product(name: "Span Protocol Primitives", package: "swift-span-primitives"),
                 .product(name: "Memory Iterator Primitives", package: "swift-memory-iterator-primitives--w2"),
-                .product(name: "Buffer Linear Small Primitives", package: "swift-buffer-linear-primitives"),
+                .product(name: "Buffer Linear Small Primitives", package: "swift-buffer-linear-primitives--w2"),
                 .product(name: "Collection Primitives", package: "swift-collection-primitives"),
                 .product(name: "Index Primitives", package: "swift-index-primitives"),
                 .product(name: "Ordinal Primitives", package: "swift-ordinal-primitives"),
@@ -211,9 +213,9 @@ let package = Package(
                 "Array Small Primitives",
                 .product(name: "Span Protocol Primitives", package: "swift-span-primitives"),
                 .product(name: "Memory Iterator Primitives", package: "swift-memory-iterator-primitives--w2"),
-                .product(name: "Buffer Linear Primitives", package: "swift-buffer-linear-primitives"),
-                .product(name: "Buffer Linear Inline Primitives", package: "swift-buffer-linear-primitives"),
-                .product(name: "Buffer Linear Small Primitives", package: "swift-buffer-linear-primitives"),
+                .product(name: "Buffer Linear Primitives", package: "swift-buffer-linear-primitives--w2"),
+                .product(name: "Buffer Linear Inline Primitives", package: "swift-buffer-linear-primitives--w2"),
+                .product(name: "Buffer Linear Small Primitives", package: "swift-buffer-linear-primitives--w2"),
                 .product(name: "Collection Primitives", package: "swift-collection-primitives"),
                 .product(name: "Index Primitives", package: "swift-index-primitives"),
                 .product(name: "Sequence Primitives", package: "swift-sequence-primitives"),
@@ -233,7 +235,7 @@ let package = Package(
             name: "Array Primitives Test Support",
             dependencies: [
                 "Array Primitives",
-                .product(name: "Buffer Primitives Test Support", package: "swift-buffer-primitives"),
+                .product(name: "Buffer Primitives Test Support", package: "swift-buffer-primitives--w2"),
             ],
             path: "Tests/Support"
         ),
