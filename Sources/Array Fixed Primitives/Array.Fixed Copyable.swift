@@ -9,6 +9,7 @@
 //
 // ===----------------------------------------------------------------------===//
 public import Array_Fixed_Primitive
+public import Storage_Heap_Primitives
 public import Array_Protocol_Primitives
 public import Buffer_Linear_Bounded_Primitives
 public import Collection_Primitives
@@ -24,10 +25,10 @@ public import Sequence_Primitives
 
 extension Array.Fixed: Sequenceable where Element: Copyable {
     @_implements(Sequenceable, Iterator)
-    public typealias SequenceableIterator = Buffer<Element>.Linear.Bounded.Scalar
+    public typealias SequenceableIterator = Buffer<Storage<Element>.Heap>.Linear.Bounded.Scalar
 
     @inlinable
-    public consuming func makeIterator() -> Buffer<Element>.Linear.Bounded.Scalar {
+    public consuming func makeIterator() -> Buffer<Storage<Element>.Heap>.Linear.Bounded.Scalar {
         _buffer.makeIterator()
     }
 
@@ -58,11 +59,13 @@ extension Array.Fixed where Element: Copyable {
 
 extension Array.Fixed where Element: Copyable {
     /// Mutable span with copy-on-write semantics.
+    ///
+    /// Forwards `Buffer.Linear.Bounded`'s form-α `mutableSpan()` *method* (D1).
     @inlinable
     public var mutableSpan: MutableSpan<Element> {
         @_lifetime(&self)
         mutating get {
-            _buffer.mutableSpan
+            _buffer.mutableSpan()
         }
     }
 }

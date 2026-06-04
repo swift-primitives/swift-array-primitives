@@ -10,6 +10,7 @@
 // ===----------------------------------------------------------------------===//
 
 public import Buffer_Linear_Inline_Primitives
+public import Storage_Heap_Primitives
 
 public import Array_Primitive
 
@@ -40,12 +41,12 @@ extension Array where Element: ~Copyable {
     public struct Static<let capacity: Int>: ~Copyable {
         /// Internal inline linear buffer.
         @usableFromInline
-        package var _buffer: Buffer<Element>.Linear.Inline<capacity>
+        package var _buffer: Buffer<Storage<Element>.Heap>.Linear.Inline<capacity>
 
         /// Creates an empty inline array.
         @inlinable
         public init() {
-            self._buffer = Buffer<Element>.Linear.Inline<capacity>()
+            self._buffer = Buffer<Storage<Element>.Heap>.Linear.Inline<capacity>()
         }
     }
 }

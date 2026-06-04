@@ -10,6 +10,7 @@
 // ===----------------------------------------------------------------------===//
 
 public import Buffer_Linear_Small_Primitives
+public import Storage_Heap_Primitives
 internal import Index_Primitives
 
 public import Array_Primitive
@@ -36,7 +37,7 @@ extension Array where Element: ~Copyable {
     public struct Small<let inlineCapacity: Int>: ~Copyable {
         /// Internal small linear buffer.
         @usableFromInline
-        package var _buffer: Buffer<Element>.Linear.Small<inlineCapacity>
+        package var _buffer: Buffer<Storage<Element>.Heap>.Linear.Small<inlineCapacity>
 
         /// Creates an empty small array.
         @inlinable

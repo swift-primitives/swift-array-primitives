@@ -10,6 +10,7 @@
 // ===----------------------------------------------------------------------===//
 
 public import Buffer_Linear_Primitives
+public import Storage_Heap_Primitives
 public import Index_Primitives
 
 // MARK: - Array (Growable, Heap-Allocated)
@@ -57,9 +58,9 @@ public struct Array<Element: ~Copyable>: ~Copyable {
     /// Internal growable linear buffer.
     ///
     /// Delegates growth, CoW, element lifecycle, and span access
-    /// to `Buffer<Element>.Linear` from buffer-primitives.
+    /// to `Buffer<Storage<Element>.Heap>.Linear` from buffer-primitives.
     @usableFromInline
-    package var _buffer: Buffer<Element>.Linear
+    package var _buffer: Buffer<Storage<Element>.Heap>.Linear
 
     // MARK: - Initialization
 
@@ -68,12 +69,12 @@ public struct Array<Element: ~Copyable>: ~Copyable {
     /// - Parameter initialCapacity: The initial capacity to allocate.
     @inlinable
     public init(initialCapacity: Array.Index.Count = .zero) {
-        self._buffer = Buffer<Element>.Linear(minimumCapacity: initialCapacity)
+        self._buffer = Buffer<Storage<Element>.Heap>.Linear(minimumCapacity: initialCapacity)
     }
 
     /// Internal initializer for use by the ops module (cross-module designated init).
     @usableFromInline
-    package init(_buffer: consuming Buffer<Element>.Linear) {
+    package init(_buffer: consuming Buffer<Storage<Element>.Heap>.Linear) {
         self._buffer = _buffer
     }
 }

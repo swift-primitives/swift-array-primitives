@@ -148,11 +148,13 @@ extension Array.Fixed where Element: ~Copyable {
     }
 
     /// Mutable span of the array elements.
+    ///
+    /// Forwards `Buffer.Linear.Bounded`'s form-α `mutableSpan()` *method* (D1).
     @inlinable
     public var mutableSpan: MutableSpan<Element> {
         @_lifetime(&self)
         mutating get {
-            _buffer.mutableSpan
+            _buffer.mutableSpan()
         }
     }
 }

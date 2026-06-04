@@ -12,6 +12,7 @@
 // Public API extensions for the base Array type (growable, heap-allocated).
 // Note: Array struct is declared in Array.swift to enable conditional Copyable.
 public import Array_Primitive
+public import Storage_Heap_Primitives
 public import Array_Protocol_Primitives
 import Index_Primitives
 
@@ -128,7 +129,7 @@ extension Array where Element: ~Copyable {
     @inlinable
     public static func removeAll(_ base: inout Self) {
         base._buffer.remove.all()
-        base._buffer = Buffer<Element>.Linear(minimumCapacity: .zero)
+        base._buffer = Buffer<Storage<Element>.Heap>.Linear(minimumCapacity: .zero)
     }
 
     /// Removes all elements from the array.
@@ -136,7 +137,7 @@ extension Array where Element: ~Copyable {
     public mutating func removeAll(keepingCapacity: Bool = false) {
         _buffer.remove.all()
         if !keepingCapacity {
-            _buffer = Buffer<Element>.Linear(minimumCapacity: .zero)
+            _buffer = Buffer<Storage<Element>.Heap>.Linear(minimumCapacity: .zero)
         }
     }
 }
@@ -156,10 +157,15 @@ extension Array where Element: ~Copyable {
     }
 
     /// Mutable span of the array elements.
+    ///
+    /// Forwards the base `Buffer.Linear`'s form-α `mutableSpan()` *method* (D1; the
+    /// underlying property was dropped at the ⑤-(N) reparam — a generic substrate
+    /// cannot vend a forwarding mutable-span property; a Heap-pinned `<E>` method can).
     @inlinable
     public var mutableSpan: MutableSpan<Element> {
+        @_lifetime(&self)
         mutating get {
-            _buffer.mutableSpan
+            _buffer.mutableSpan()
         }
     }
 }
