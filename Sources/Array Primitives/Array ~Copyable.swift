@@ -162,7 +162,7 @@ extension Array where Element: ~Copyable {
     /// underlying property was dropped at the ⑤-(N) reparam — a generic substrate
     /// cannot vend a forwarding mutable-span property; a Heap-pinned `<E>` method can).
     @inlinable
-    public var mutableSpan: MutableSpan<Element> {
+    public var mutableSpan: Swift.MutableSpan<Element> {
         @_lifetime(&self)
         mutating get {
             _buffer.mutableSpan()

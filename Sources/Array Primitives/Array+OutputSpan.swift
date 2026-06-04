@@ -36,7 +36,7 @@ extension Array where Element: ~Copyable {
     @inlinable
     public init<E: Swift.Error>(
         capacity: Array.Index.Count,
-        initializingWith initializer: (inout OutputSpan<Element>) throws(E) -> Void
+        initializingWith initializer: (inout Swift.OutputSpan<Element>) throws(E) -> Void
     ) throws(E) {
         self.init(_buffer: try Buffer<Storage<Element>.Heap>.Linear(
             capacity: capacity,
@@ -59,7 +59,7 @@ extension Array where Element: ~Copyable {
     @inlinable
     public mutating func append<E: Swift.Error>(
         addingCapacity: Array.Index.Count,
-        initializingWith initializer: (inout OutputSpan<Element>) throws(E) -> Void
+        initializingWith initializer: (inout Swift.OutputSpan<Element>) throws(E) -> Void
     ) throws(E) {
         try _buffer.append(
             addingCapacity: addingCapacity,
@@ -80,7 +80,7 @@ extension Array where Element: ~Copyable {
     /// (append-style semantics).
     @inlinable
     public mutating func edit<E: Swift.Error, R: ~Copyable>(
-        _ body: (inout OutputSpan<Element>) throws(E) -> R
+        _ body: (inout Swift.OutputSpan<Element>) throws(E) -> R
     ) throws(E) -> R {
         try _buffer.edit(body)
     }
