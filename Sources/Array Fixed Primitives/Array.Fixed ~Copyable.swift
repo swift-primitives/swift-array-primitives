@@ -52,7 +52,7 @@ extension Array.Fixed: Collection.`Protocol` where Element: ~Copyable {
 
 // MARK: - Collection.Access.Random Conformance
 
-extension Array.Fixed: Collection.Access.Random {}
+extension Array.Fixed: Collection.Access.Random where Element: ~Copyable {}
 
 // MARK: - Collection.Bidirectional Conformance
 
