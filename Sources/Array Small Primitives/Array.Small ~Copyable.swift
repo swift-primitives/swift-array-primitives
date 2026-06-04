@@ -136,7 +136,7 @@ extension Array.Small where Element: ~Copyable {
 
 extension Array.Small where Element: ~Copyable {
     /// A read-only view of the array's elements.
-    public var span: Span<Element> {
+    public var span: Swift.Span<Element> {
         @_lifetime(borrow self)
         @inlinable
         borrowing get {
@@ -146,7 +146,7 @@ extension Array.Small where Element: ~Copyable {
     }
 
     /// A mutable view of the array's elements.
-    public var mutableSpan: MutableSpan<Element> {
+    public var mutableSpan: Swift.MutableSpan<Element> {
         @inlinable
         mutating get {
             _buffer.mutableSpan

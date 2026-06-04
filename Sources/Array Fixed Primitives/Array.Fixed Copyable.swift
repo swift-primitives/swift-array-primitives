@@ -62,7 +62,7 @@ extension Array.Fixed where Element: Copyable {
     ///
     /// Forwards `Buffer.Linear.Bounded`'s form-α `mutableSpan()` *method* (D1).
     @inlinable
-    public var mutableSpan: MutableSpan<Element> {
+    public var mutableSpan: Swift.MutableSpan<Element> {
         @_lifetime(&self)
         mutating get {
             _buffer.mutableSpan()

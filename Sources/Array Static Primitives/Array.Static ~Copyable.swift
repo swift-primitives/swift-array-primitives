@@ -138,7 +138,7 @@ extension Array.Static where Element: ~Copyable {
     /// Provides mutable span access to the array elements.
     @inlinable
     public mutating func withMutableSpan<R, E: Swift.Error>(
-        _ body: (borrowing MutableSpan<Element>) throws(E) -> R
+        _ body: (borrowing Swift.MutableSpan<Element>) throws(E) -> R
     ) throws(E) -> R {
         try body(_buffer.mutableSpan)
     }

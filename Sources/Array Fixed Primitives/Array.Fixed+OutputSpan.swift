@@ -52,7 +52,7 @@ extension Array.Fixed where Element: ~Copyable {
     @inlinable
     public init<E: Swift.Error>(
         capacity: Array.Index.Count,
-        initializingWith initializer: (inout OutputSpan<Element>) throws(E) -> Void
+        initializingWith initializer: (inout Swift.OutputSpan<Element>) throws(E) -> Void
     ) throws(E) {
         let buffer = try Buffer<Storage<Element>.Heap>.Linear.Bounded(
             capacity: capacity,
