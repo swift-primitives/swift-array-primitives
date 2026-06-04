@@ -45,7 +45,7 @@ let package = Package(
     ],
     dependencies: [
         .package(url: "https://github.com/swift-primitives/swift-memory-primitives.git", branch: "main"),
-        .package(path: "../swift-span-primitives"),
+        .package(url: "https://github.com/swift-primitives/swift-span-primitives.git", branch: "main"),
         .package(url: "https://github.com/swift-primitives/swift-memory-iterator-primitives.git", branch: "main"),
         .package(url: "https://github.com/swift-primitives/swift-standard-library-extensions.git", branch: "main"),
         .package(url: "https://github.com/swift-primitives/swift-index-primitives.git", branch: "main"),
