@@ -331,7 +331,7 @@ extension ArrayTests.EdgeCase {
         var array = Array<Int>()
         for i in 0..<10 { array.append(i) }
 
-        array.remove.all()
+        array.removeAll()
 
         #expect(array.count == 0)
         #expect(array.isEmpty == true)
@@ -347,7 +347,7 @@ extension ArrayTests.EdgeCase {
         array.append(1)
         array.append(2)
 
-        array.remove.all()
+        array.removeAll()
 
         array.append(100)
         array.append(200)
