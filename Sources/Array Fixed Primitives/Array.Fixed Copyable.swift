@@ -11,7 +11,7 @@
 public import Array_Fixed_Primitive
 public import Memory_Heap_Primitives
 public import Storage_Contiguous_Primitives
-public import Storage_Heap_Primitives
+public import Storage_Contiguous_Primitives
 public import Array_Protocol_Primitives
 public import Buffer_Linear_Bounded_Primitives
 public import Collection_Primitives

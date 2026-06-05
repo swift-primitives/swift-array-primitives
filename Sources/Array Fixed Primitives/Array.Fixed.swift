@@ -16,7 +16,7 @@
 public import Array_Fixed_Primitive
 public import Memory_Heap_Primitives
 public import Storage_Contiguous_Primitives
-public import Storage_Heap_Primitives
+public import Storage_Contiguous_Primitives
 public import Index_Primitives
 
 // MARK: - Initialization (Checked)

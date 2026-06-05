@@ -10,7 +10,7 @@
 // ===----------------------------------------------------------------------===//
 
 public import Buffer_Linear_Primitives
-public import Storage_Heap_Primitives
+public import Storage_Contiguous_Primitives
 public import Index_Primitives
 
 // MARK: - Array (Growable, Heap-Allocated)
