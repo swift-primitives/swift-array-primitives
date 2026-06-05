@@ -127,7 +127,7 @@ extension Array where Element: ~Copyable {
 
     // on remove.all() + buffer reassignment in deep @inlinable chain.
 
-    /// Static primitive for `Collection.Clearable`. Use `.remove.all()` at call sites.
+    /// Static clearing primitive. Prefer the instance `removeAll()` at call sites.
     @inlinable
     public static func removeAll(_ base: inout Self) {
         base._buffer.remove.all()

@@ -30,8 +30,6 @@ extension Array: Collection.Access.Random where Element: Copyable {}
 
 extension Array: Collection.Remove.Last where Element: ~Copyable {}
 
-extension Array: Collection.Clearable where Element: ~Copyable {}
-
 // ============================================================================
 // MARK: - Dynamic typealias
 // ============================================================================
