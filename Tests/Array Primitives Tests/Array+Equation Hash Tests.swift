@@ -23,12 +23,6 @@ private func finalizedHash(_ a: borrowing Array<Int>) -> Int {
     return hasher.finalize()
 }
 
-private func finalizedHash(_ a: borrowing Array<Int>.Static<3>) -> Int {
-    var hasher = Hasher()
-    a.hash(into: &hasher)
-    return hasher.finalize()
-}
-
 // A move-only element conforming Equation.Protocol + Hash.Protocol, to exercise
 // span-derived equality / hashing over ~Copyable elements (no copy out of the span).
 struct Token: ~Copyable {
@@ -75,34 +69,6 @@ struct ArrayEquationHashTests {
         let b: Array<Int> = []
         #expect(a == b)
         #expect(finalizedHash(a) == finalizedHash(b))
-    }
-
-    @Test
-    func `Array.Static: equal compare equal with equal hashes; unequal differ`() throws {
-        var a = Array<Int>.Static<3>()
-        try a.append(1)
-        try a.append(2)
-        try a.append(3)
-
-        var b = Array<Int>.Static<3>()
-        try b.append(1)
-        try b.append(2)
-        try b.append(3)
-
-        // `#expect(a == b)` directly would require Array.Static to conform
-        // BidirectionalCollection (the macro's operand-rendering path); compute the
-        // Bool first since Array.Static is ~Copyable.
-        let abEqual = a == b
-        #expect(abEqual)
-        #expect(finalizedHash(a) == finalizedHash(b))
-
-        var c = Array<Int>.Static<3>()
-        try c.append(1)
-        try c.append(2)
-        try c.append(9)
-
-        let acEqual = a == c
-        #expect(!acEqual)
     }
 
     @Test

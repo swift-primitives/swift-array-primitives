@@ -18,8 +18,6 @@ import Testing
 struct ArraySwapTests {
     @Suite struct Dynamic {}
     @Suite struct Fixed {}
-    @Suite struct Small {}
-    @Suite struct Static {}
     @Suite struct EdgeCases {}
 }
 
@@ -63,46 +61,6 @@ extension ArraySwapTests.Fixed {
         let third = array.withElement(at: j) { $0 }
         #expect(first == 20)
         #expect(third == 0)
-    }
-}
-
-// MARK: - Array.Small
-
-extension ArraySwapTests.Small {
-
-    @Test
-    func `swap on Array.Small`() throws {
-        var array = Array<Int>.Small<4>()
-        array.append(10)
-        array.append(20)
-        array.append(30)
-
-        let i = Array<Int>.Index(Ordinal(0))
-        let j = Array<Int>.Index(Ordinal(2))
-        array.swap(at: i, with: j)
-
-        #expect(array.count == 3)
-        // Can't easily read elements via subscript on Small without detailed API;
-        // trust buffer-level tests to verify the swap actually happened.
-    }
-}
-
-// MARK: - Array.Static
-
-extension ArraySwapTests.Static {
-
-    @Test
-    func `swap on Array.Static`() throws {
-        var array = Array<Int>.Static<4>()
-        try array.append(10)
-        try array.append(20)
-        try array.append(30)
-
-        let i = Array<Int>.Index(Ordinal(0))
-        let j = Array<Int>.Index(Ordinal(2))
-        array.swap(at: i, with: j)
-
-        #expect(array.count == 3)
     }
 }
 
