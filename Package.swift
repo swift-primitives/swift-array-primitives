@@ -16,7 +16,6 @@ let package = Package(
         .library(name: "Array Primitive", targets: ["Array Primitive"]),
 
         // MARK: - Inline
-        .library(name: "Array Inline Primitives", targets: ["Array Inline Primitives"]),
 
         // MARK: - Protocol
         .library(name: "Array Protocol Primitives", targets: ["Array Protocol Primitives"]),
@@ -30,12 +29,8 @@ let package = Package(
         .library(name: "Array Fixed Primitives", targets: ["Array Fixed Primitives"]),
 
         // MARK: - Static variant
-        .library(name: "Array Static Primitive", targets: ["Array Static Primitive"]),
-        .library(name: "Array Static Primitives", targets: ["Array Static Primitives"]),
 
         // MARK: - Small variant
-        .library(name: "Array Small Primitive", targets: ["Array Small Primitive"]),
-        .library(name: "Array Small Primitives", targets: ["Array Small Primitives"]),
 
         // MARK: - Umbrella
         .library(name: "Array Primitives", targets: ["Array Primitives"]),
@@ -44,6 +39,7 @@ let package = Package(
         .library(name: "Array Primitives Test Support", targets: ["Array Primitives Test Support"]),
     ],
     dependencies: [
+        .package(url: "https://github.com/swift-primitives/swift-memory-small-primitives.git", branch: "main"),
         .package(url: "https://github.com/swift-primitives/swift-memory-primitives.git", branch: "main"),
         .package(url: "https://github.com/swift-primitives/swift-span-primitives.git", branch: "main"),
         .package(url: "https://github.com/swift-primitives/swift-memory-iterator-primitives.git", branch: "main"),
@@ -83,12 +79,6 @@ let package = Package(
         ),
 
         // MARK: - Inline (typealias to Swift.InlineArray)
-        .target(
-            name: "Array Inline Primitives",
-            dependencies: [
-                "Array Primitive",
-            ]
-        ),
 
         // MARK: - Protocol (Array.Protocol membership contract + defaults)
         .target(
@@ -158,85 +148,12 @@ let package = Package(
         ),
 
         // MARK: - Static type
-        .target(
-            name: "Array Static Primitive",
-            dependencies: [
-                "Array Primitive",
-                .product(name: "Buffer Linear Inline Primitives", package: "swift-buffer-linear-primitives"),
-                .product(name: "Storage Heap Primitives", package: "swift-storage-primitives"),
-                .product(name: "Storage Contiguous Primitives", package: "swift-storage-primitives"),
-                .product(name: "Memory Heap Primitives", package: "swift-memory-heap-primitives"),
-            ]
-        ),
 
         // MARK: - Static ops
-        .target(
-            name: "Array Static Primitives",
-            dependencies: [
-                "Array Static Primitive",
-                "Array Protocol Primitives",
-                .product(name: "Span Protocol Primitives", package: "swift-span-primitives"),
-                .product(name: "Storage Heap Primitives", package: "swift-storage-primitives"),
-                .product(name: "Storage Contiguous Primitives", package: "swift-storage-primitives"),
-                .product(name: "Memory Heap Primitives", package: "swift-memory-heap-primitives"),
-                .product(name: "Memory Iterator Primitives", package: "swift-memory-iterator-primitives"),
-                .product(name: "Buffer Linear Inline Primitives", package: "swift-buffer-linear-primitives"),
-                .product(name: "Collection Primitives", package: "swift-collection-primitives"),
-                .product(name: "Index Primitives", package: "swift-index-primitives"),
-                .product(name: "Iterable", package: "swift-iterator-primitives"),
-                .product(name: "Iterator Chunk Primitives", package: "swift-iterator-primitives"),
-                .product(name: "Sequence Primitives", package: "swift-sequence-primitives"),
-                .product(name: "Property Primitives", package: "swift-property-primitives"),
-                .product(name: "Equation Primitives Standard Library Integration", package: "swift-equation-primitives"),
-                .product(name: "Hash Primitives Standard Library Integration", package: "swift-hash-primitives"),
-            ]
-        ),
 
         // MARK: - Small type
-        .target(
-            name: "Array Small Primitive",
-            dependencies: [
-                "Array Primitive",
-                .product(name: "Buffer Linear Small Primitives", package: "swift-buffer-linear-primitives"),
-                // Cleave-3 #12a/#5a: Array.Small composes Buffer<Storage<E>.Small<n>>.Linear (absorbed substrate).
-                .product(name: "Buffer Linear Primitive", package: "swift-buffer-linear-primitives"),
-                .product(name: "Buffer Linear Primitives", package: "swift-buffer-linear-primitives"),
-                .product(name: "Storage Small Primitives", package: "swift-storage-primitives"),
-                .product(name: "Storage Primitive", package: "swift-storage-primitives"),
-                .product(name: "Storage Heap Primitives", package: "swift-storage-primitives"),
-                .product(name: "Storage Contiguous Primitives", package: "swift-storage-primitives"),
-                .product(name: "Memory Heap Primitives", package: "swift-memory-heap-primitives"),
-            ]
-        ),
 
         // MARK: - Small ops
-        .target(
-            name: "Array Small Primitives",
-            dependencies: [
-                "Array Small Primitive",
-                "Array Protocol Primitives",
-                .product(name: "Span Protocol Primitives", package: "swift-span-primitives"),
-                .product(name: "Storage Heap Primitives", package: "swift-storage-primitives"),
-                .product(name: "Storage Contiguous Primitives", package: "swift-storage-primitives"),
-                .product(name: "Memory Heap Primitives", package: "swift-memory-heap-primitives"),
-                .product(name: "Memory Iterator Primitives", package: "swift-memory-iterator-primitives"),
-                .product(name: "Buffer Linear Small Primitives", package: "swift-buffer-linear-primitives"),
-                // Cleave-3 #12a/#5a: Array.Small composes Buffer<Storage<E>.Small<n>>.Linear (absorbed substrate).
-                .product(name: "Buffer Linear Primitive", package: "swift-buffer-linear-primitives"),
-                .product(name: "Buffer Linear Primitives", package: "swift-buffer-linear-primitives"),
-                .product(name: "Storage Small Primitives", package: "swift-storage-primitives"),
-                .product(name: "Storage Primitive", package: "swift-storage-primitives"),
-                .product(name: "Collection Primitives", package: "swift-collection-primitives"),
-                .product(name: "Index Primitives", package: "swift-index-primitives"),
-                .product(name: "Ordinal Primitives", package: "swift-ordinal-primitives"),
-                .product(name: "Iterable", package: "swift-iterator-primitives"),
-                .product(name: "Iterator Chunk Primitives", package: "swift-iterator-primitives"),
-                .product(name: "Sequence Primitives", package: "swift-sequence-primitives"),
-                .product(name: "Property Primitives", package: "swift-property-primitives"),
-                .product(name: "Equation Primitives Standard Library Integration", package: "swift-equation-primitives"),
-                .product(name: "Hash Primitives Standard Library Integration", package: "swift-hash-primitives"),
-            ]
-        ),
 
         // MARK: - Base ops + Umbrella ([MOD-005] dual-role: base Array conformances + re-export of all variants)
         .target(
@@ -244,23 +161,18 @@ let package = Package(
             dependencies: [
                 "Array Primitive",
                 "Array Protocol Primitives",
-                "Array Inline Primitives",
                 "Array Bounded Primitives",
                 "Array Fixed Primitives",
-                "Array Static Primitives",
-                "Array Small Primitives",
                 .product(name: "Span Protocol Primitives", package: "swift-span-primitives"),
                 .product(name: "Storage Heap Primitives", package: "swift-storage-primitives"),
                 .product(name: "Storage Contiguous Primitives", package: "swift-storage-primitives"),
                 .product(name: "Memory Heap Primitives", package: "swift-memory-heap-primitives"),
                 .product(name: "Memory Iterator Primitives", package: "swift-memory-iterator-primitives"),
                 .product(name: "Buffer Linear Primitives", package: "swift-buffer-linear-primitives"),
-                .product(name: "Buffer Linear Inline Primitives", package: "swift-buffer-linear-primitives"),
-                .product(name: "Buffer Linear Small Primitives", package: "swift-buffer-linear-primitives"),
                 // Cleave-3 #12a/#5a: Array.Small composes Buffer<Storage<E>.Small<n>>.Linear (absorbed substrate).
                 .product(name: "Buffer Linear Primitive", package: "swift-buffer-linear-primitives"),
                 .product(name: "Buffer Linear Primitives", package: "swift-buffer-linear-primitives"),
-                .product(name: "Storage Small Primitives", package: "swift-storage-primitives"),
+                .product(name: "Memory Small Primitives", package: "swift-memory-small-primitives"),
                 .product(name: "Storage Primitive", package: "swift-storage-primitives"),
                 .product(name: "Collection Primitives", package: "swift-collection-primitives"),
                 .product(name: "Index Primitives", package: "swift-index-primitives"),

@@ -10,7 +10,7 @@
 // ===----------------------------------------------------------------------===//
 
 public import Buffer_Linear_Inline_Primitives
-public import Storage_Small_Primitives
+public import Memory_Small_Primitives
 public import Buffer_Linear_Primitives
 public import Buffer_Linear_Small_Primitives
 public import Index_Primitives
@@ -47,24 +47,4 @@ extension Array.Fixed where Element: ~Copyable {
     }
 }
 
-extension Array.Small where Element: ~Copyable {
 
-    /// Exchanges the elements at the two given positions.
-    ///
-    /// - Complexity: O(1)
-    @inlinable
-    public mutating func swap(at i: Array.Index, with j: Array.Index) {
-        _buffer.swap(at: i, with: j)
-    }
-}
-
-extension Array.Static where Element: ~Copyable {
-
-    /// Exchanges the elements at the two given positions.
-    ///
-    /// - Complexity: O(1)
-    @inlinable
-    public mutating func swap(at i: Array.Index, with j: Array.Index) {
-        _buffer.swap(at: i, with: j)
-    }
-}
