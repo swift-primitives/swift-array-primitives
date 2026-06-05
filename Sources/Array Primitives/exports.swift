@@ -5,11 +5,8 @@
 
 @_exported public import Array_Primitive
 @_exported public import Array_Protocol_Primitives
-@_exported public import Array_Inline_Primitives
 @_exported public import Array_Bounded_Primitives
 @_exported public import Array_Fixed_Primitives
-@_exported public import Array_Static_Primitives
-@_exported public import Array_Small_Primitives
 @_exported public import Buffer_Linear_Primitives
 @_exported public import Cardinal_Primitives
 @_exported public import Collection_Primitives

@@ -9,10 +9,7 @@
 //
 // ===----------------------------------------------------------------------===//
 
-public import Buffer_Linear_Inline_Primitives
-public import Memory_Small_Primitives
 public import Buffer_Linear_Primitives
-public import Buffer_Linear_Small_Primitives
 public import Index_Primitives
 
 // MARK: - swap across Array variants

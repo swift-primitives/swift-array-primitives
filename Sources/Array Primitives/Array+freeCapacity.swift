@@ -10,8 +10,6 @@
 // ===----------------------------------------------------------------------===//
 
 public import Buffer_Linear_Primitives
-public import Memory_Small_Primitives
-public import Buffer_Linear_Small_Primitives
 public import Index_Primitives
 
 // MARK: - freeCapacity across Array variants
