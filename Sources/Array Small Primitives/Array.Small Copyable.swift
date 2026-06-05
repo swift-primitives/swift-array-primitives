@@ -9,6 +9,9 @@
 //
 // ===----------------------------------------------------------------------===//
 public import Array_Small_Primitive
+public import Storage_Small_Primitives
+public import Storage_Primitive
+public import Buffer_Linear_Primitive
 public import Array_Protocol_Primitives
 public import Buffer_Linear_Small_Primitives
 internal import Property_Primitives

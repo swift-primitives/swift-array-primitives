@@ -198,6 +198,11 @@ let package = Package(
             dependencies: [
                 "Array Primitive",
                 .product(name: "Buffer Linear Small Primitives", package: "swift-buffer-linear-primitives"),
+                // Cleave-3 #12a/#5a: Array.Small composes Buffer<Storage<E>.Small<n>>.Linear (absorbed substrate).
+                .product(name: "Buffer Linear Primitive", package: "swift-buffer-linear-primitives"),
+                .product(name: "Buffer Linear Primitives", package: "swift-buffer-linear-primitives"),
+                .product(name: "Storage Small Primitives", package: "swift-storage-primitives"),
+                .product(name: "Storage Primitive", package: "swift-storage-primitives"),
                 .product(name: "Storage Heap Primitives", package: "swift-storage-primitives"),
                 .product(name: "Storage Contiguous Primitives", package: "swift-storage-primitives"),
                 .product(name: "Memory Heap Primitives", package: "swift-memory-heap-primitives"),
@@ -216,6 +221,11 @@ let package = Package(
                 .product(name: "Memory Heap Primitives", package: "swift-memory-heap-primitives"),
                 .product(name: "Memory Iterator Primitives", package: "swift-memory-iterator-primitives"),
                 .product(name: "Buffer Linear Small Primitives", package: "swift-buffer-linear-primitives"),
+                // Cleave-3 #12a/#5a: Array.Small composes Buffer<Storage<E>.Small<n>>.Linear (absorbed substrate).
+                .product(name: "Buffer Linear Primitive", package: "swift-buffer-linear-primitives"),
+                .product(name: "Buffer Linear Primitives", package: "swift-buffer-linear-primitives"),
+                .product(name: "Storage Small Primitives", package: "swift-storage-primitives"),
+                .product(name: "Storage Primitive", package: "swift-storage-primitives"),
                 .product(name: "Collection Primitives", package: "swift-collection-primitives"),
                 .product(name: "Index Primitives", package: "swift-index-primitives"),
                 .product(name: "Ordinal Primitives", package: "swift-ordinal-primitives"),
@@ -247,6 +257,11 @@ let package = Package(
                 .product(name: "Buffer Linear Primitives", package: "swift-buffer-linear-primitives"),
                 .product(name: "Buffer Linear Inline Primitives", package: "swift-buffer-linear-primitives"),
                 .product(name: "Buffer Linear Small Primitives", package: "swift-buffer-linear-primitives"),
+                // Cleave-3 #12a/#5a: Array.Small composes Buffer<Storage<E>.Small<n>>.Linear (absorbed substrate).
+                .product(name: "Buffer Linear Primitive", package: "swift-buffer-linear-primitives"),
+                .product(name: "Buffer Linear Primitives", package: "swift-buffer-linear-primitives"),
+                .product(name: "Storage Small Primitives", package: "swift-storage-primitives"),
+                .product(name: "Storage Primitive", package: "swift-storage-primitives"),
                 .product(name: "Collection Primitives", package: "swift-collection-primitives"),
                 .product(name: "Index Primitives", package: "swift-index-primitives"),
                 .product(name: "Sequence Primitives", package: "swift-sequence-primitives"),

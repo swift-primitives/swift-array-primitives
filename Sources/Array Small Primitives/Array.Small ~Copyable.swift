@@ -9,6 +9,9 @@
 //
 // ===----------------------------------------------------------------------===//
 public import Array_Small_Primitive
+public import Storage_Small_Primitives
+public import Storage_Primitive
+public import Buffer_Linear_Primitive
 public import Array_Protocol_Primitives
 public import Buffer_Linear_Small_Primitives
 public import Collection_Primitives
@@ -56,7 +59,7 @@ extension Array.Small where Element: ~Copyable {
 
     /// Whether the array is currently using heap storage.
     @inlinable
-    public var isSpilled: Bool { _buffer.isSpilled }
+    public var isSpilled: Bool { _buffer.substrate.isSpilled }
 }
 
 // ============================================================================
@@ -114,19 +117,19 @@ extension Array.Small where Element: ~Copyable {
     @inlinable
     public static func removeLast(_ base: inout Self) -> Element? {
         guard !base._buffer.isEmpty else { return nil }
-        return base._buffer.remove.last()
+        return base._buffer.removeLast()
     }
 
     /// Static primitive for `Collection.Clearable`. Use `.remove.all()` at call sites.
     @inlinable
     public static func removeAll(_ base: inout Self) {
-        base._buffer.remove.all(keepingCapacity: false)
+        base._buffer.removeAll(keepingCapacity: false)
     }
 
     /// Removes all elements from the array.
     @inlinable
     public mutating func removeAll(keepingCapacity: Bool = false) {
-        _buffer.remove.all(keepingCapacity: keepingCapacity)
+        _buffer.removeAll(keepingCapacity: keepingCapacity)
     }
 }
 
@@ -149,7 +152,7 @@ extension Array.Small where Element: ~Copyable {
     public var mutableSpan: Swift.MutableSpan<Element> {
         @inlinable
         mutating get {
-            _buffer.mutableSpan
+            _buffer.mutableSpan()
         }
     }
 }
@@ -222,7 +225,7 @@ where Tag == Sequence.Drain, Base == Array<Element>.Small<n>, Element: ~Copyable
     @inlinable
     public mutating func callAsFunction(_ body: (consuming Element) -> Void) {
         while unsafe !base.value._buffer.isEmpty {
-            body(base.value._buffer.remove.first())
+            body(base.value._buffer.removeFirst())
         }
     }
 }
