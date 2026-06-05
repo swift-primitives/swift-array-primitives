@@ -10,6 +10,8 @@
 // ===----------------------------------------------------------------------===//
 
 public import Array_Primitive
+public import Memory_Heap_Primitives
+public import Storage_Contiguous_Primitives
 public import Storage_Heap_Primitives
 public import Index_Primitives
 
@@ -38,7 +40,7 @@ extension Array where Element: ~Copyable {
         capacity: Array.Index.Count,
         initializingWith initializer: (inout Swift.OutputSpan<Element>) throws(E) -> Void
     ) throws(E) {
-        self.init(_buffer: try Buffer<Storage<Element>.Heap>.Linear(
+        self.init(_buffer: try Buffer<Storage<Element>.Contiguous<Memory.Heap<Element>>>.Linear(
             capacity: capacity,
             initializingWith: initializer
         ))

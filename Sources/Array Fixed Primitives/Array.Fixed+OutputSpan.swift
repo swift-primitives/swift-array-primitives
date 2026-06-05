@@ -10,6 +10,8 @@
 // ===----------------------------------------------------------------------===//
 
 public import Array_Fixed_Primitive
+public import Memory_Heap_Primitives
+public import Storage_Contiguous_Primitives
 public import Storage_Heap_Primitives
 public import Index_Primitives
 
@@ -54,7 +56,7 @@ extension Array.Fixed where Element: ~Copyable {
         capacity: Array.Index.Count,
         initializingWith initializer: (inout Swift.OutputSpan<Element>) throws(E) -> Void
     ) throws(E) {
-        let buffer = try Buffer<Storage<Element>.Heap>.Linear.Bounded(
+        let buffer = try Buffer<Storage<Element>.Contiguous<Memory.Heap<Element>>>.Linear.Bounded(
             capacity: capacity,
             initializingWith: initializer
         )

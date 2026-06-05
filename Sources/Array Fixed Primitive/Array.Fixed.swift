@@ -10,6 +10,8 @@
 // ===----------------------------------------------------------------------===//
 
 public import Array_Primitive
+public import Memory_Heap_Primitives
+public import Storage_Contiguous_Primitives
 public import Storage_Heap_Primitives
 public import Buffer_Linear_Primitives
 
@@ -52,11 +54,11 @@ extension Array where Element: ~Copyable {
     public struct Fixed {
         /// Internal bounded linear buffer.
         @usableFromInline
-        package var _buffer: Buffer<Storage<Element>.Heap>.Linear.Bounded
+        package var _buffer: Buffer<Storage<Element>.Contiguous<Memory.Heap<Element>>>.Linear.Bounded
 
         /// Internal initializer for use by the ops module (cross-module designated init).
         @usableFromInline
-        package init(_buffer: consuming Buffer<Storage<Element>.Heap>.Linear.Bounded) {
+        package init(_buffer: consuming Buffer<Storage<Element>.Contiguous<Memory.Heap<Element>>>.Linear.Bounded) {
             self._buffer = _buffer
         }
 

@@ -26,7 +26,7 @@ extension Array where Element: ~Copyable {
     ///
     /// Public API is in the Array Small Primitives module.
     /// Element cleanup is handled by `Storage.Inline`'s deinit (inline path)
-    /// or `Storage.Heap`'s deinit (spilled path).
+    /// or `Storage.Contiguous<Memory.Heap>`'s deinit (spilled path).
     // SAFETY: Safe by construction — backing storage uses only stdlib
     // SAFETY: safe types; `@safe` documents that this type performs no
     // SAFETY: unsafe operations.
@@ -37,7 +37,7 @@ extension Array where Element: ~Copyable {
     public struct Small<let inlineCapacity: Int>: ~Copyable {
         /// Internal small linear buffer.
         @usableFromInline
-        package var _buffer: Buffer<Storage<Element>.Heap>.Linear.Small<inlineCapacity>
+        package var _buffer: Buffer<Storage<Element>.Contiguous<Memory.Heap<Element>>>.Linear.Small<inlineCapacity>
 
         /// Creates an empty small array.
         @inlinable

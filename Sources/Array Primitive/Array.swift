@@ -58,9 +58,9 @@ public struct Array<Element: ~Copyable>: ~Copyable {
     /// Internal growable linear buffer.
     ///
     /// Delegates growth, CoW, element lifecycle, and span access
-    /// to `Buffer<Storage<Element>.Heap>.Linear` from buffer-primitives.
+    /// to `Buffer<Storage<Element>.Contiguous<Memory.Heap<Element>>>.Linear` from buffer-primitives.
     @usableFromInline
-    package var _buffer: Buffer<Storage<Element>.Heap>.Linear
+    package var _buffer: Buffer<Storage<Element>.Contiguous<Memory.Heap<Element>>>.Linear
 
     // MARK: - Initialization
 
@@ -69,12 +69,12 @@ public struct Array<Element: ~Copyable>: ~Copyable {
     /// - Parameter initialCapacity: The initial capacity to allocate.
     @inlinable
     public init(initialCapacity: Array.Index.Count = .zero) {
-        self._buffer = Buffer<Storage<Element>.Heap>.Linear(minimumCapacity: initialCapacity)
+        self._buffer = Buffer<Storage<Element>.Contiguous<Memory.Heap<Element>>>.Linear(minimumCapacity: initialCapacity)
     }
 
     /// Internal initializer for use by the ops module (cross-module designated init).
     @usableFromInline
-    package init(_buffer: consuming Buffer<Storage<Element>.Heap>.Linear) {
+    package init(_buffer: consuming Buffer<Storage<Element>.Contiguous<Memory.Heap<Element>>>.Linear) {
         self._buffer = _buffer
     }
 }

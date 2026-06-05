@@ -14,6 +14,8 @@
 // only extensions that require internal access to _buffer.
 
 public import Array_Fixed_Primitive
+public import Memory_Heap_Primitives
+public import Storage_Contiguous_Primitives
 public import Storage_Heap_Primitives
 public import Index_Primitives
 
@@ -36,11 +38,11 @@ extension Array.Fixed {
         }
 
         if count == .zero {
-            self.init(_buffer: Buffer<Storage<Element>.Heap>.Linear.Bounded(minimumCapacity: .zero))
+            self.init(_buffer: Buffer<Storage<Element>.Contiguous<Memory.Heap<Element>>>.Linear.Bounded(minimumCapacity: .zero))
             return
         }
 
-        let buffer = Buffer<Storage<Element>.Heap>.Linear.Bounded(
+        let buffer = Buffer<Storage<Element>.Contiguous<Memory.Heap<Element>>>.Linear.Bounded(
             minimumCapacity: count,
             initializingCount: count,
             with: { ptr in
@@ -75,11 +77,11 @@ extension Array.Fixed {
         // Count is unsigned, always non-negative by construction
 
         if count == .zero {
-            self.init(_buffer: Buffer<Storage<Element>.Heap>.Linear.Bounded(minimumCapacity: .zero))
+            self.init(_buffer: Buffer<Storage<Element>.Contiguous<Memory.Heap<Element>>>.Linear.Bounded(minimumCapacity: .zero))
             return
         }
 
-        let buffer = Buffer<Storage<Element>.Heap>.Linear.Bounded(
+        let buffer = Buffer<Storage<Element>.Contiguous<Memory.Heap<Element>>>.Linear.Bounded(
             minimumCapacity: count,
             initializingCount: count,
             with: { ptr in

@@ -9,6 +9,8 @@
 //
 // ===----------------------------------------------------------------------===//
 public import Array_Primitive
+public import Memory_Heap_Primitives
+public import Storage_Contiguous_Primitives
 public import Storage_Heap_Primitives
 public import Array_Protocol_Primitives
 public import Buffer_Linear_Primitives
@@ -65,10 +67,10 @@ extension Array: Iterable where Element: ~Copyable {
 
 extension Array: Sequenceable where Element: Copyable {
     @_implements(Sequenceable, Iterator)
-    public typealias SequenceableIterator = Buffer<Storage<Element>.Heap>.Linear.Scalar
+    public typealias SequenceableIterator = Buffer<Storage<Element>.Contiguous<Memory.Heap<Element>>>.Linear.Scalar
 
     @inlinable
-    public consuming func makeIterator() -> Buffer<Storage<Element>.Heap>.Linear.Scalar {
+    public consuming func makeIterator() -> Buffer<Storage<Element>.Contiguous<Memory.Heap<Element>>>.Linear.Scalar {
         _buffer.makeIterator()
     }
 

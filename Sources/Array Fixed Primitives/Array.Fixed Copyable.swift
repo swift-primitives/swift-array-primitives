@@ -9,6 +9,8 @@
 //
 // ===----------------------------------------------------------------------===//
 public import Array_Fixed_Primitive
+public import Memory_Heap_Primitives
+public import Storage_Contiguous_Primitives
 public import Storage_Heap_Primitives
 public import Array_Protocol_Primitives
 public import Buffer_Linear_Bounded_Primitives
@@ -25,10 +27,10 @@ public import Sequence_Primitives
 
 extension Array.Fixed: Sequenceable where Element: Copyable {
     @_implements(Sequenceable, Iterator)
-    public typealias SequenceableIterator = Buffer<Storage<Element>.Heap>.Linear.Bounded.Scalar
+    public typealias SequenceableIterator = Buffer<Storage<Element>.Contiguous<Memory.Heap<Element>>>.Linear.Bounded.Scalar
 
     @inlinable
-    public consuming func makeIterator() -> Buffer<Storage<Element>.Heap>.Linear.Bounded.Scalar {
+    public consuming func makeIterator() -> Buffer<Storage<Element>.Contiguous<Memory.Heap<Element>>>.Linear.Bounded.Scalar {
         _buffer.makeIterator()
     }
 

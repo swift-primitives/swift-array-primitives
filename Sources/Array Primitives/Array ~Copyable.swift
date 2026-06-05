@@ -12,6 +12,8 @@
 // Public API extensions for the base Array type (growable, heap-allocated).
 // Note: Array struct is declared in Array.swift to enable conditional Copyable.
 public import Array_Primitive
+public import Memory_Heap_Primitives
+public import Storage_Contiguous_Primitives
 public import Storage_Heap_Primitives
 public import Array_Protocol_Primitives
 import Index_Primitives
@@ -129,7 +131,7 @@ extension Array where Element: ~Copyable {
     @inlinable
     public static func removeAll(_ base: inout Self) {
         base._buffer.remove.all()
-        base._buffer = Buffer<Storage<Element>.Heap>.Linear(minimumCapacity: .zero)
+        base._buffer = Buffer<Storage<Element>.Contiguous<Memory.Heap<Element>>>.Linear(minimumCapacity: .zero)
     }
 
     /// Removes all elements from the array.
@@ -137,7 +139,7 @@ extension Array where Element: ~Copyable {
     public mutating func removeAll(keepingCapacity: Bool = false) {
         _buffer.remove.all()
         if !keepingCapacity {
-            _buffer = Buffer<Storage<Element>.Heap>.Linear(minimumCapacity: .zero)
+            _buffer = Buffer<Storage<Element>.Contiguous<Memory.Heap<Element>>>.Linear(minimumCapacity: .zero)
         }
     }
 }
