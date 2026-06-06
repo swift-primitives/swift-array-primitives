@@ -23,9 +23,8 @@ extension Array where Element: ~Copyable {
     ///
     /// Matches SE-0527's reserveCapacity semantics and Swift.Array's
     /// established convention. Fixed-capacity variants (Array.Fixed,
-    /// Array.Bounded, Array.Static, Array.Small) do not support this API
-    /// because their capacity is an invariant of the type or a compile-time
-    /// parameter.
+    /// Array.Bounded) do not support this API because their capacity is an
+    /// invariant of the type or a compile-time parameter.
     ///
     /// - Complexity: O(`count`) when growth occurs; O(1) otherwise.
     @inlinable

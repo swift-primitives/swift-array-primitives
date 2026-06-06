@@ -26,9 +26,9 @@ extension Array where Element: ~Copyable {
     /// When `Element: Copyable`, Buffer.Linear's CoW-aware shadow is dispatched
     /// automatically.
     ///
-    /// Fixed-capacity variants (Array.Fixed, Array.Bounded, Array.Static,
-    /// Array.Small) do not support this API: their capacity is an invariant
-    /// of the type or a compile-time parameter.
+    /// Fixed-capacity variants (Array.Fixed, Array.Bounded) do not support
+    /// this API: their capacity is an invariant of the type or a compile-time
+    /// parameter.
     ///
     /// - Parameter newCapacity: The desired new capacity. Must be greater than
     ///     or equal to the current `count`.
