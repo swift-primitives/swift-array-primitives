@@ -61,7 +61,7 @@ The proposal explicitly names its predecessors and siblings:
 |---|---|---|
 | [SE-0447 Span](https://github.com/swiftlang/swift-evolution/blob/main/proposals/0447-span-access-shared-contiguous-storage.md) | **Landed** | `Span<Element: ~Copyable>`, 915 LoC, `stdlib/public/core/Span/Span.swift`; availability `SwiftCompatibilitySpan 5.0` / originally in CompatibilitySpan module, moved to Swift in 6.2 |
 | [SE-0467 MutableSpan](https://github.com/swiftlang/swift-evolution/blob/main/proposals/0467-MutableSpan.md) | **Landed** | `MutableSpan<Element: ~Copyable>`, 853 LoC |
-| [SE-0506 OutputSpan](https://github.com/swiftlang/swift-evolution/blob/main/proposals/0506-output-span.md) | **Landed** | `OutputSpan<Element: ~Copyable>`, 497 LoC, plus `OutputRawSpan`, 375 LoC |
+| [SE-0485 OutputSpan](https://github.com/swiftlang/swift-evolution/blob/main/proposals/0485-outputspan.md) | **Landed** | `OutputSpan<Element: ~Copyable>`, 497 LoC, plus `OutputRawSpan`, 375 LoC |
 | [SE-0453 InlineArray](https://github.com/swiftlang/swift-evolution/blob/main/proposals/0453-vector.md) | **Landed** | `InlineArray<let count: Int, Element: ~Copyable>`, 618 LoC, with `[N of Element]` sugar |
 | [SE-0516 BorrowingSequence](https://github.com/swiftlang/swift-evolution/blob/main/proposals/0516-borrowing-sequence.md) | **Not landed** | `BorrowingSequence` protocol absent from stdlib; `SpanIterator` absent |
 | SE-0527 RigidArray / UniqueArray | Active Review | `RigidArray`, `UniqueArray`, `Containers` module all absent |
@@ -292,7 +292,7 @@ Items 7–10 are posture statements — no work required, but worth linking from
 - [SE-0527 RigidArray and UniqueArray](https://github.com/swiftlang/swift-evolution/blob/main/proposals/0527-rigidarray-uniquearray.md) — Active Review 2026-04-13 → 2026-04-27
 - [SE-0447 Span](https://github.com/swiftlang/swift-evolution/blob/main/proposals/0447-span-access-shared-contiguous-storage.md) — Accepted
 - [SE-0467 MutableSpan](https://github.com/swiftlang/swift-evolution/blob/main/proposals/0467-MutableSpan.md) — Accepted
-- [SE-0506 OutputSpan](https://github.com/swiftlang/swift-evolution/blob/main/proposals/0506-output-span.md) — Accepted
+- [SE-0485 OutputSpan](https://github.com/swiftlang/swift-evolution/blob/main/proposals/0485-outputspan.md) — Accepted
 - [SE-0453 InlineArray](https://github.com/swiftlang/swift-evolution/blob/main/proposals/0453-vector.md) — Accepted
 - [SE-0516 BorrowingSequence](https://github.com/swiftlang/swift-evolution/blob/main/proposals/0516-borrowing-sequence.md)
 
