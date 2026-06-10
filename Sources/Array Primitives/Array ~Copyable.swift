@@ -31,18 +31,24 @@ public import Span_Protocol_Primitives
 // columns). The `Shared` column reaches its elements through the generic subscript
 // and the scoped `withSpan` forms instead; its protocol-lattice membership arrives
 // with a `Shared: Span.Protocol` conformance, recorded as future work.
+//
+// NO element bound (Audit-#5 relaxation, W5-1): the lattice protocols admit
+// `~Copyable` elements and every witness reads borrowing (`_read`/`borrowing get` —
+// the R2 probe verified borrow-through-call over move-only elements debug + -O).
+// Element-RETURNING conveniences stay `S.Element: Copyable`-gated in their own
+// extensions.
 
 // MARK: Collection.Protocol
 
-extension Array: Collection.`Protocol` where S: Span.`Protocol` & ~Copyable, S.Element: Copyable {}
+extension Array: Collection.`Protocol` where S: Span.`Protocol` & ~Copyable {}
 
 // MARK: Collection.Bidirectional
 
-extension Array: Collection.Bidirectional where S: Span.`Protocol` & ~Copyable, S.Element: Copyable {}
+extension Array: Collection.Bidirectional where S: Span.`Protocol` & ~Copyable {}
 
 // MARK: Array.Protocol
 
-extension Array: Array.`Protocol` where S: Span.`Protocol` & ~Copyable, S.Element: Copyable {}
+extension Array: Array.`Protocol` where S: Span.`Protocol` & ~Copyable {}
 
 // ============================================================================
 // MARK: - Properties (generic: Buffer.Protocol count + seam capacity)

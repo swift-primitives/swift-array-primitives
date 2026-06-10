@@ -55,6 +55,19 @@ private typealias BoundedHeapColumn<E: ~Copyable> =
 
 private typealias FixedArray<E: ~Copyable> = Fixed<BoundedHeapColumn<E>>
 
+/// Generic borrow-through-call reads via the lattice bound — compiles ONLY with the
+/// element-unbounded conformances (the Audit-#5 relaxation, W5-1; the R2 probe shape).
+private func latticeSum<C: Collection.`Protocol` & ~Copyable>(_ c: borrowing C) -> Int
+where C.Element == Item, C.Index == Index<Item> {
+    var total = 0
+    var i = c.startIndex
+    while i < c.endIndex {
+        total += c[i].value
+        i = c.index(after: i)
+    }
+    return total
+}
+
 @Suite(.serialized)
 struct ArrayTests {
 
@@ -388,6 +401,26 @@ struct ArrayTests {
         let back = a.index(before: end)
         let lastValue = a[back]
         #expect(lastValue == 30)
+    }
+
+    // MARK: - The Audit-#5 relaxation (move-only elements reach the lattice)
+
+    @Test
+    func `move-only elements reach the span-bridged lattice`() {
+        Probe.reset()
+        do {
+            var a = MoveArray<Item>(initialCapacity: 3)
+            a.append(Item(1, value: 10))
+            a.append(Item(2, value: 20))
+            a.append(Item(3, value: 30))
+            let total = latticeSum(a)               // generic Collection.Protocol dispatch
+            #expect(total == 60)
+            var walked = 0
+            a.forEach { walked += $0.value }        // Iterable terminal over the span bridge
+            #expect(walked == 60)
+        }
+        let ds = Probe.destroyedSorted
+        #expect(ds == [1, 2, 3])                    // borrowing reads moved nothing out
     }
 
     // MARK: - OutputSpan construction lanes (direct column)

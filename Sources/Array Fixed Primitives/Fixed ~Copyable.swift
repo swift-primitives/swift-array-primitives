@@ -23,16 +23,19 @@ import Memory_Iterator_Primitives
 // ============================================================================
 // MARK: - Collection Conformances (the span-bridged lattice; mirrors Array<S>)
 // ============================================================================
+//
+// NO element bound (Audit-#5 relaxation, W5-1 — see `Array ~Copyable.swift`):
+// the lattice protocols admit `~Copyable` elements; witnesses read borrowing.
 
-extension Fixed: Collection.`Protocol` where S: Span.`Protocol` & ~Copyable, S.Element: Copyable {}
+extension Fixed: Collection.`Protocol` where S: Span.`Protocol` & ~Copyable {}
 
-extension Fixed: Collection.Access.Random where S: Span.`Protocol` & ~Copyable, S.Element: Copyable {}
+extension Fixed: Collection.Access.Random where S: Span.`Protocol` & ~Copyable {}
 
-extension Fixed: Collection.Bidirectional where S: Span.`Protocol` & ~Copyable, S.Element: Copyable {}
+extension Fixed: Collection.Bidirectional where S: Span.`Protocol` & ~Copyable {}
 
 // The hoisted protocol name (`__ArrayProtocol`): `Array.Protocol` is namespaced under the
 // column-generic `Array<S>`, which a top-level conformance clause cannot bind.
-extension Fixed: __ArrayProtocol where S: Span.`Protocol` & ~Copyable, S.Element: Copyable {}
+extension Fixed: __ArrayProtocol where S: Span.`Protocol` & ~Copyable {}
 
 extension Fixed: Span.`Protocol` where S: Span.`Protocol` & ~Copyable {
     /// Read-only span of the elements, forwarded from the column.
@@ -45,7 +48,8 @@ extension Fixed: Span.`Protocol` where S: Span.`Protocol` & ~Copyable {
     }
 }
 
-extension Fixed: Iterable where S: Span.`Protocol` & ~Copyable, S.Element: Copyable {
+// No element bound — the D4 bridge vends `Iterator.Chunk` for both element kinds.
+extension Fixed: Iterable where S: Span.`Protocol` & ~Copyable {
     @_implements(Iterable, Iterator)
     public typealias IterableIterator = Iterator_Primitive.Iterator.Chunk<S.Element>
 }

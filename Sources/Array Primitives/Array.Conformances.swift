@@ -22,7 +22,8 @@ public import Span_Protocol_Primitives
 // Collection.Protocol / Bidirectional / Array.Protocol are declared — with the lattice
 // rationale — in `Array ~Copyable.swift`.
 
-extension Array: Collection.Access.Random where S: Span.`Protocol` & ~Copyable, S.Element: Copyable {}
+// NO element bound (Audit-#5 relaxation, W5-1 — see `Array ~Copyable.swift`).
+extension Array: Collection.Access.Random where S: Span.`Protocol` & ~Copyable {}
 
 // Collection.Remove.Last: WITHDRAWN at the W4 reshape. Its generic witness would mutate
 // through the seam without per-column CoW pinning; the semantic `removeLast()` (gated,
@@ -59,8 +60,9 @@ extension Array: Span.`Protocol` where S: Span.`Protocol` & ~Copyable {
 }
 
 // Iterable — the multipass borrowing `makeIterator()` is vended by the memory→Iterable
-// bridge over the Span.`Protocol` conformance above, yielding `Iterator.Chunk`.
-extension Array: Iterable where S: Span.`Protocol` & ~Copyable, S.Element: Copyable {
+// bridge over the Span.`Protocol` conformance above, yielding `Iterator.Chunk` (which
+// admits ~Copyable elements — D4; no element bound per the Audit-#5 relaxation).
+extension Array: Iterable where S: Span.`Protocol` & ~Copyable {
     @_implements(Iterable, Iterator)
     public typealias IterableIterator = Iterator_Primitive.Iterator.Chunk<S.Element>
 }
