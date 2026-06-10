@@ -9,19 +9,18 @@
 //
 // ===----------------------------------------------------------------------===//
 public import Array_Fixed_Primitive
-public import Array_Protocol_Primitives
 // TODO: `init(repeating:count:)` should derive from a protocol requirement
 // `init(count:initializingWith:)` so all conformers get `repeating` for free.
 // Candidate home: Array.Protocol or a Finite.Constructible protocol.
 
-extension Array.Fixed where Element: Copyable {
+extension Array.Fixed where S: ~Copyable, S.Element: Copyable {
     /// Creates a fixed array filled with a repeated value.
     ///
     /// - Parameters:
     ///   - value: The value to repeat.
     ///   - count: The number of elements.
     @inlinable
-    public init(repeating value: Element, count: Array.Index.Count) {
+    public init(repeating value: S.Element, count: Array<S>.Index.Count) {
         self.init(__unchecked: (), count: count, initializingWith: { _ in value })
     }
 }

@@ -9,40 +9,20 @@
 //
 // ===----------------------------------------------------------------------===//
 
-public import Buffer_Linear_Primitives
-public import Index_Primitives
+public import Array_Fixed_Primitives
 
-// MARK: - freeCapacity across Array variants
+// MARK: - freeCapacity on Array.Fixed
 //
-// Matches SE-0527's `freeCapacity` convention (number of additional elements
-// that can be added without reallocating). Computed via the underlying
-// `_buffer.capacity - _buffer.count` (saturating subtraction).
-//
-// Variants that do not currently expose a runtime `capacity` property
-// (e.g., Array.Static<N>, whose capacity is the type-level generic) are
-// deferred to a follow-up that also adds runtime capacity to them.
+// The base Array's `freeCapacity` is COLUMN-GENERIC (seam capacity − count, saturating)
+// and lives in `Array ~Copyable.swift`.
 
-extension Array where Element: ~Copyable {
-
-    /// The number of additional elements that can be added to this array
-    /// without reallocating storage.
-    ///
-    /// - Complexity: O(1)
-    @inlinable
-    public var freeCapacity: Array.Index.Count {
-        _buffer.capacity.subtract.saturating(_buffer.count)
-    }
-}
-
-extension Array.Fixed where Element: ~Copyable {
+extension Array.Fixed where S: ~Copyable {
 
     /// Always zero — `Array.Fixed`'s invariant is `count == capacity`.
     ///
     /// - Complexity: O(1)
     @inlinable
-    public var freeCapacity: Array.Index.Count {
+    public var freeCapacity: Array<S>.Index.Count {
         _buffer.capacity.subtract.saturating(_buffer.count)
     }
 }
-
-

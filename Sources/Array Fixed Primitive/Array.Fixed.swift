@@ -11,11 +11,11 @@
 
 public import Array_Primitive
 public import Memory_Heap_Primitives
-public import Storage_Contiguous_Primitives
+public import Memory_Allocator_Primitive
 public import Storage_Contiguous_Primitives
 public import Buffer_Linear_Primitives
 
-extension Array where Element: ~Copyable {
+extension Array where S: ~Copyable {
 
     // MARK: - Fixed (Fixed-Count, Heap-Allocated)
 
@@ -25,55 +25,36 @@ extension Array where Element: ~Copyable {
     /// All elements are initialized at construction time. This is the Swift
     /// equivalent of a fixed-length array.
     ///
-    /// ## Move-Only Support
+    /// ## Move-Only (R-1)
+    ///
+    /// `Fixed` wraps the direct bounded buffer over the enclosing column's element —
+    /// a move-only substrate — so it is unconditionally `~Copyable`: copyability lives
+    /// at the column (`Shared`), not in per-ADT CoW machinery. Use `clone()` for an
+    /// explicit deep copy of `Copyable` elements; a value-semantic fixed array is a
+    /// future `Shared`-column variant, to be added on consumer evidence.
     ///
     /// Both the array and its elements can be `~Copyable`:
     ///
     /// ```swift
     /// struct FileHandle: ~Copyable { ... }
-    /// let handles = try Array<FileHandle>.Fixed(count: 3) { _ in FileHandle() }
+    /// let handles = try Array<…>.Fixed(count: 3) { _ in FileHandle() }
     /// ```
-    ///
-    /// ## Conditional Copyable
-    ///
-    /// When `Element` is `Copyable`, `Fixed` is also `Copyable`:
-    ///
-    /// ```swift
-    /// let a = try Array<Int>.Fixed(count: 3) { $0 }
-    /// let b = a  // Copy works!
-    /// ```
-    ///
-    /// ## Copy-on-Write
-    ///
-    /// When `Element` is `Copyable`, `Fixed` uses copy-on-write semantics:
-    /// copies share storage until mutation.
-    // WHY: Category D — structural Sendable workaround; the type is
-    // WHY: structurally value-safe but the compiler cannot synthesize
-    // WHY: Sendable due to a stored pointer / generic parameter shape.
     @safe
-    public struct Fixed {
-        /// Internal bounded linear buffer.
+    public struct Fixed: ~Copyable {
+        /// Internal bounded linear buffer over the column's element.
         @usableFromInline
-        package var _buffer: Buffer<Storage<Element>.Contiguous<Memory.Heap<Element>>>.Linear.Bounded
+        package var _buffer: Buffer<Storage<Memory.Allocator<Memory.Heap>.System>.Contiguous<S.Element>>.Linear.Bounded
 
         /// Internal initializer for use by the ops module (cross-module designated init).
         @usableFromInline
-        package init(_buffer: consuming Buffer<Storage<Element>.Contiguous<Memory.Heap<Element>>>.Linear.Bounded) {
+        package init(_buffer: consuming Buffer<Storage<Memory.Allocator<Memory.Heap>.System>.Contiguous<S.Element>>.Linear.Bounded) {
             self._buffer = _buffer
         }
 
-        // Note: No deinit needed - Buffer/Storage handles cleanup
+        // Note: No deinit needed — the buffer's oracle handles cleanup.
     }
 }
 
-// MARK: - Conditional Copyable
-
-/// `Array.Fixed` is `Copyable` when its elements are `Copyable`.
-///
-/// This enables value semantics with copy-on-write optimization:
-/// copies share storage until mutation.
-extension Array.Fixed: Copyable where Element: Copyable {}
-
 // MARK: - Sendable
 
-extension Array.Fixed: @unchecked Sendable where Element: Sendable {}
+extension Array.Fixed: @unchecked Sendable where S: ~Copyable, S.Element: Sendable {}

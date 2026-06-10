@@ -11,18 +11,8 @@
 
 public import Index_Primitives
 
-extension Array where Element: ~Copyable {
-    /// Type-safe index for array elements.
-    ///
-    /// Uses `Index<Element>` to provide compile-time safety preventing
-    /// cross-collection index confusion.
-    ///
-    /// ## Example
-    ///
-    /// ```swift
-    /// let arrayIdx: Array<Int>.Index = 5
-    /// var array = try Array<Int>.Bounded(count: 10) { $0 }
-    /// print(array[arrayIdx])  // 5
-    /// ```
-    public typealias Index = Index_Primitives.Index<Element>
+extension Array where S: ~Copyable {
+    /// Type-safe index for array elements — typed by the COLUMN's element (the user element
+    /// on both ratified columns), preventing cross-collection index confusion.
+    public typealias Index = Index_Primitives.Index<S.Element>
 }

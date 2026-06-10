@@ -16,12 +16,12 @@ public import Finite_Primitives
 
 public import Array_Bounded_Primitive
 
-extension Array.Bounded where Element: ~Copyable {
+extension Array.Bounded where S: ~Copyable {
     /// Type-safe bounded index for bounded array elements.
     ///
-    /// `Array<Element>.Bounded<N>.Index` is `Index<Element>.Bounded<N>` — a
-    /// phantom-typed bounded-linear ordinal in `[0, N)`. The `Element` phantom
-    /// tag matches the family-wide `Array<Element>.Index = Index<Element>`
+    /// `Array<S>.Bounded<N>.Index` is `Index<S.Element>.Bounded<N>` — a
+    /// phantom-typed bounded-linear ordinal in `[0, N)`. The element phantom
+    /// tag matches the family-wide `Array<S>.Index = Index<S.Element>`
     /// pattern; the `N` capacity bound provides compile-time dimension safety.
     ///
     /// Indices are bounds-checked at construction, not at subscript access.
@@ -30,14 +30,14 @@ extension Array.Bounded where Element: ~Copyable {
     /// ## Type Structure
     ///
     /// ```
-    /// Array<Element>.Bounded<N>.Index
-    /// = Index<Element>.Bounded<N>
-    /// = Tagged<Element, Ordinal.Finite<N>>
+    /// Array<S>.Bounded<N>.Index
+    /// = Index<S.Element>.Bounded<N>
+    /// = Tagged<S.Element, Ordinal.Finite<N>>
     /// ```
     ///
     /// ## Type-Level Index Separation
     ///
     /// Indices from different bounded arrays are distinct types:
-    /// `Array<Int>.Bounded<3>.Index` ≠ `Array<Int>.Bounded<5>.Index`.
-    public typealias Index = Index_Primitives.Index<Element>.Bounded<N>
+    /// `Array<…Int…>.Bounded<3>.Index` ≠ `Array<…Int…>.Bounded<5>.Index`.
+    public typealias Index = Index_Primitives.Index<S.Element>.Bounded<N>
 }

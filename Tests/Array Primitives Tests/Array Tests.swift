@@ -1,406 +1,527 @@
-// ===----------------------------------------------------------------------===//
-//
-// This source file is part of the swift-primitives open source project
-//
-// Copyright (c) 2024-2026 Coen ten Thije Boonkkamp and the swift-primitives project authors
-// Licensed under Apache License v2.0
-//
-// See LICENSE for license information
-//
-// ===----------------------------------------------------------------------===//
-
-import Array_Primitives_Test_Support
+import Array_Primitives
+import Index_Primitives
+import Tagged_Primitives_Standard_Library_Integration
+import Ordinal_Primitives_Standard_Library_Integration
 import Testing
 
-@testable import Array_Primitives
+// MARK: - Fixtures
 
-// MARK: - Test Suite Structure
-
-/// Test namespace for Array
-///
-/// Note: Array is ~Copyable, so it doesn't conform to Sequence.
-/// Use forEach for iteration instead of for-in loops.
-enum ArrayTests {
-    @Suite struct Unit {}
-    @Suite struct EdgeCase {}
-    @Suite struct Integration {}
-    @Suite struct Performance {}
+/// ~Copyable element with identity + recording deinit (teardown observation).
+private struct Item: ~Copyable {
+    let id: Int
+    var value: Int
+    init(_ id: Int, value: Int = 0) { self.id = id; self.value = value }
+    deinit { Probe.recordDestroy(id) }
 }
 
-// MARK: - Unit Tests
+/// Copyable element with observable destruction (class ref — deinit at refcount zero).
+private final class Payload {
+    let id: Int
+    init(_ id: Int) { self.id = id }
+    deinit { Probe.recordDestroy(id) }
+}
 
-extension ArrayTests.Unit {
+/// Serialized destruction recorder (the suite below is `.serialized`).
+private enum Probe {
+    nonisolated(unsafe) static var _destroyed: [Int] = []
+    static func reset() { unsafe _destroyed = [] }
+    static func recordDestroy(_ id: Int) { unsafe _destroyed.append(id) }
+    static var destroyedSorted: [Int] { unsafe _destroyed.sorted() }
+}
 
-    // MARK: - Count Invariants
+// The two ratified columns.
+private typealias HeapColumn<E: ~Copyable> =
+    Buffer<Storage<Memory.Allocator<Memory.Heap>.System>.Contiguous<E>>.Linear
+
+private typealias SharedColumn<E: ~Copyable> = Shared<E, HeapColumn<E>>
+
+/// The default move-only array (zero-cost ownership column).
+private typealias MoveArray<E: ~Copyable> = Array<HeapColumn<E>>
+
+/// The explicit CoW value-semantic array (`Shared` column).
+private typealias CoWArray<E: ~Copyable> = Array<SharedColumn<E>>
+
+@Suite(.serialized)
+struct ArrayTests {
+
+    // MARK: - Construction + properties (both columns)
 
     @Test
-    func `Empty array has count zero`() {
-        let array = Array<Int>()
-        #expect(array.count == 0)
-        #expect(array.isEmpty == true)
+    func `direct column constructs empty with capacity`() {
+        let a = MoveArray<Int>(initialCapacity: 4)
+        let isEmpty = a.isEmpty
+        let count = a.count
+        #expect(isEmpty)
+        #expect(count == Index<Int>.Count(0))
+        let capacityOK = a.capacity >= Index<Int>.Count(4)
+        #expect(capacityOK)
+        let free = a.freeCapacity
+        #expect(free == a.capacity)
     }
 
     @Test
-    func `Append increments count`() {
-        var array = Array<Int>()
+    func `shared column constructs empty with capacity`() {
+        let a = CoWArray<Int>(initialCapacity: 4)
+        let isEmpty = a.isEmpty
+        #expect(isEmpty)
+        let capacityOK = a.capacity >= Index<Int>.Count(4)
+        #expect(capacityOK)
+    }
 
-        array.append(1)
-        #expect(array.count == 1)
+    // MARK: - Append / subscript / element access (both columns)
 
-        array.append(2)
-        #expect(array.count == 2)
-
-        array.append(3)
-        #expect(array.count == 3)
+    @Test
+    func `direct column appends, reads, and writes through the gated subscript`() {
+        var a = MoveArray<Int>(initialCapacity: 2)
+        a.append(10)
+        a.append(20)
+        a.append(30)                                // growth past initial capacity
+        let count = a.count
+        #expect(count == Index<Int>.Count(3))
+        let e1 = a[1]
+        #expect(e1 == 20)
+        a[1] = 25                                   // _modify (gate is a no-op here)
+        let e1b = a[1]
+        #expect(e1b == 25)
+        let opt = a.element(at: 2)
+        #expect(opt == 30)
+        let beyond = a.element(at: 3)
+        #expect(beyond == nil)
+        let viaClosure = a.withElement(at: 0) { $0 * 2 }
+        #expect(viaClosure == 20)
     }
 
     @Test
-    func `RemoveLast decrements count`() {
-        var array = Array<Int>()
-        array.append(1)
-        array.append(2)
-        array.append(3)
-
-        _ = array.remove.last()
-        #expect(array.count == 2)
-
-        _ = array.remove.last()
-        #expect(array.count == 1)
-
-        _ = array.remove.last()
-        #expect(array.count == 0)
+    func `shared column appends and reads; copies share until mutation`() {
+        var a = CoWArray<Int>(initialCapacity: 2)
+        a.append(1)
+        a.append(2)
+        let b = a                                   // S5: Array is Copyable because S is
+        let bCount = b.count
+        #expect(bCount == Index<Int>.Count(2))
+        a.append(3)                                 // CoW restore inside Shared.append
+        let aCount = a.count, bCount2 = b.count
+        #expect(aCount == Index<Int>.Count(3))
+        #expect(bCount2 == Index<Int>.Count(2))
     }
 
     @Test
-    func `RemoveLast on empty returns nil`() {
-        var array = Array<Int>()
-        #expect(array.remove.last() == nil)
-        #expect(array.count == 0)
+    func `the seam mutation gate makes the generic subscript CoW-correct`() {
+        var a = CoWArray<Int>(initialCapacity: 2)
+        a.append(1)
+        a.append(2)
+        let b = a                                   // share the box
+        a[0] = 100                                  // generic _modify → prepareForMutation()
+        let aSees = a[0], bSees = b[0]
+        #expect(aSees == 100)
+        #expect(bSees == 1)                         // sibling untouched: uniqueness was restored
     }
 
-    // MARK: - forEach Invariants
+    // MARK: - Generic mutations through the gate + seam (both columns)
 
     @Test
-    func `forEach yields exactly count elements`() {
-        var array = Array<Int>()
-        for i in 0..<10 { array.append(i) }
-
-        var iteratedCount = 0
-        array.forEach { _ in iteratedCount += 1 }
-
-        #expect(iteratedCount == 10)
-    }
-
-    @Test
-    func `forEach yields elements in insertion order`() {
-        var array = Array<Int>()
-        array.append(10)
-        array.append(20)
-        array.append(30)
-        array.append(40)
-
-        var elements: [Int] = []
-        array.forEach { elements.append($0) }
-
-        #expect(elements == [10, 20, 30, 40])
-    }
-
-    @Test
-    func `Empty array forEach yields nothing`() {
-        var array = Array<Int>()
-
-        var iteratedCount = 0
-        array.forEach { _ in iteratedCount += 1 }
-
-        #expect(iteratedCount == 0)
+    func `removeLast and remove(at:) shift correctly on the direct column`() {
+        var a = MoveArray<Int>(initialCapacity: 4)
+        a.append(1)
+        a.append(2)
+        a.append(3)
+        a.append(4)
+        let last = a.removeLast()
+        #expect(last == 4)
+        let removed = a.remove(at: 1)               // [1, 2, 3] → remove 2 → [1, 3]
+        #expect(removed == 2)
+        let count = a.count
+        #expect(count == Index<Int>.Count(2))
+        let e0 = a[0], e1 = a[1]
+        #expect(e0 == 1)
+        #expect(e1 == 3)
     }
 
     @Test
-    func `forEach matches subscript access`() {
-        var array = Array<Int>()
-        for i in 0..<20 { array.append(i * 5) }
-
-        // Capture expected values first to avoid exclusivity violation
-        var expected: [Int] = []
-        for i in 0..<20 { expected.append(array[Index<Int>(_unchecked: Ordinal(UInt(i)))]) }
-
-        var actual: [Int] = []
-        array.forEach { actual.append($0) }
-
-        #expect(actual == expected)
-    }
-
-    // MARK: - Copy-on-Write Invariants
-
-    @Test
-    func `CoW: Copy shares storage initially`() {
-        var original = Array<Int>()
-        original.append(1)
-        original.append(2)
-        original.append(3)
-
-        var copy = original
-
-        // Both should have same elements
-        var originalElements: [Int] = []
-        var copyElements: [Int] = []
-
-        original.forEach { originalElements.append($0) }
-        copy.forEach { copyElements.append($0) }
-
-        #expect(originalElements == copyElements)
+    func `remove(at:) on the shared column diverges from siblings`() {
+        var a = CoWArray<Int>(initialCapacity: 4)
+        a.append(1)
+        a.append(2)
+        a.append(3)
+        let b = a
+        let removed = a.remove(at: 0)
+        #expect(removed == 1)
+        let aCount = a.count, bCount = b.count
+        #expect(aCount == Index<Int>.Count(2))
+        #expect(bCount == Index<Int>.Count(3))
+        let a0 = a[0], b0 = b[0]
+        #expect(a0 == 2)
+        #expect(b0 == 1)
     }
 
     @Test
-    func `CoW: Mutation of copy does not affect original`() {
-        var original = Array<Int>()
-        original.append(1)
-        original.append(2)
-        original.append(3)
-
-        var copy = original
-
-        // Mutate the copy
-        copy.append(4)
-        copy[0] = 100
-
-        // Original should be unchanged
-        #expect(original.count == 3)
-        #expect(original[0] == 1)
-        #expect(original[1] == 2)
-        #expect(original[2] == 3)
-
-        // Copy should have the mutations
-        #expect(copy.count == 4)
-        #expect(copy[0] == 100)
-        #expect(copy[3] == 4)
+    func `swap exchanges elements in place`() {
+        var a = MoveArray<Int>(initialCapacity: 3)
+        a.append(1)
+        a.append(2)
+        a.append(3)
+        a.swap(at: 0, with: 2)
+        let e0 = a[0], e2 = a[2]
+        #expect(e0 == 3)
+        #expect(e2 == 1)
+        a.swap(at: 1, with: 1)                      // same-index no-op
+        let e1 = a[1]
+        #expect(e1 == 2)
     }
 
     @Test
-    func `CoW: Mutation of original does not affect copy`() {
-        var original = Array<Int>()
-        original.append(1)
-        original.append(2)
-        original.append(3)
-
-        let copy = original
-
-        // Mutate the original
-        original.append(4)
-        original[0] = 100
-
-        // Copy should be unchanged
-        #expect(copy.count == 3)
-        #expect(copy[0] == 1)
-        #expect(copy[1] == 2)
-        #expect(copy[2] == 3)
+    func `drain consumes front-to-back and empties the array`() {
+        var a = MoveArray<Int>(initialCapacity: 3)
+        a.append(7)
+        a.append(8)
+        a.append(9)
+        var seen: [Int] = []
+        a.drain { seen.append($0) }
+        #expect(seen == [7, 8, 9])
+        let isEmpty = a.isEmpty
+        #expect(isEmpty)
     }
 
     @Test
-    func `CoW: Multiple copies are independent`() {
-        var original = Array<Int>()
-        original.append(1)
-        original.append(2)
-
-        var copy1 = original
-        var copy2 = original
-
-        copy1.append(100)
-        copy2.append(200)
-        original.append(300)
-
-        #expect(original[2] == 300)
-        #expect(copy1[2] == 100)
-        #expect(copy2[2] == 200)
+    func `drain on a shared column detaches from siblings first`() {
+        var a = CoWArray<Int>(initialCapacity: 2)
+        a.append(5)
+        a.append(6)
+        let b = a
+        var seen: [Int] = []
+        a.drain { seen.append($0) }
+        #expect(seen == [5, 6])
+        let aEmpty = a.isEmpty, bCount = b.count
+        #expect(aEmpty)
+        #expect(bCount == Index<Int>.Count(2))      // the gate cloned before draining
     }
 
-    // MARK: - Capacity Invariants
+    @Test
+    func `removeAll on both columns; keepingCapacity preserves slots`() {
+        var a = MoveArray<Int>(initialCapacity: 4)
+        a.append(1)
+        a.append(2)
+        a.removeAll(keepingCapacity: true)
+        let aEmpty = a.isEmpty
+        #expect(aEmpty)
+        let aCapacityKept = a.capacity >= Index<Int>.Count(4)
+        #expect(aCapacityKept)
+
+        var c = CoWArray<Int>(initialCapacity: 4)
+        c.append(1)
+        let d = c
+        c.removeAll()
+        let cEmpty = c.isEmpty, dCount = d.count
+        #expect(cEmpty)
+        #expect(dCount == Index<Int>.Count(1))      // detach, not drain: sibling intact
+    }
+
+    // MARK: - Move-only elements (direct column end-to-end)
 
     @Test
-    func `Capacity grows to accommodate elements`() {
-        var array = Array<Int>()
-
-        // Add elements beyond initial capacity hint
-        for i in 0..<100 {
-            array.append(i)
+    func `move-only elements append, mutate via withElement, and tear down once`() {
+        Probe.reset()
+        do {
+            var a = MoveArray<Item>(initialCapacity: 2)
+            a.append(Item(1, value: 10))
+            a.append(Item(2, value: 20))
+            let v = a.withElement(at: 1) { $0.value }
+            #expect(v == 20)
+            let taken = a.removeLast()
+            let tid = taken.id
+            #expect(tid == 2)
+            _ = consume taken
+            let mid = Probe.destroyedSorted
+            #expect(mid == [2])
         }
+        let ds = Probe.destroyedSorted
+        #expect(ds == [1, 2])                       // the remaining element died with the array
+    }
 
-        #expect(array.capacity >= 100)
-        #expect(array.count == 100)
+    // MARK: - Cloning
 
-        // Verify all elements are accessible
-        for i in 0..<100 {
-            #expect(array[Index<Int>(_unchecked: Ordinal(UInt(i)))] == i)
+    @Test
+    func `generic clone always detaches the CoW column`() {
+        var a = CoWArray<Int>(initialCapacity: 2)
+        a.append(1)
+        a.append(2)
+        var c = a.clone()
+        c[0] = 99
+        let a0 = a[0], c0 = c[0]
+        #expect(a0 == 1)
+        #expect(c0 == 99)
+    }
+
+    @Test
+    func `pinned clone copies the direct column into fresh storage`() {
+        var a = MoveArray<Int>(initialCapacity: 2)
+        a.append(4)
+        a.append(5)
+        var c = a.clone()
+        c[0] = 40
+        let a0 = a[0], c0 = c[0]
+        #expect(a0 == 4)
+        #expect(c0 == 40)
+        let cCount = c.count
+        #expect(cCount == Index<Int>.Count(2))
+    }
+
+    // MARK: - Capacity ops (both columns)
+
+    @Test
+    func `reserveCapacity and reallocate on both columns`() {
+        var a = MoveArray<Int>(initialCapacity: 1)
+        a.append(1)
+        a.reserveCapacity(Index<Int>.Count(8))
+        let aCapacityOK = a.capacity >= Index<Int>.Count(8)
+        #expect(aCapacityOK)
+        a.reallocate(capacity: Index<Int>.Count(1))
+        let aCapacityShrunk = a.capacity
+        #expect(aCapacityShrunk == Index<Int>.Count(1))
+        let kept = a[0]
+        #expect(kept == 1)
+
+        var c = CoWArray<Int>(initialCapacity: 1)
+        c.append(2)
+        let sibling = c
+        c.reserveCapacity(Index<Int>.Count(8))      // uniquely, behind the gate
+        let cCapacityOK = c.capacity >= Index<Int>.Count(8)
+        #expect(cCapacityOK)
+        let siblingValue = sibling[0]
+        #expect(siblingValue == 2)
+    }
+
+    // MARK: - Spans
+
+    @Test
+    func `direct column vends span (Span.Protocol witness) and mutableSpan`() {
+        var a = MoveArray<Int>(initialCapacity: 3)
+        a.append(1)
+        a.append(2)
+        a.append(3)
+        var sum = 0
+        do {
+            let span = a.span
+            for i in 0..<span.count { sum += span[i] }
         }
-    }
-
-    @Test
-    func `forEach visits all elements in order`() {
-        var array = Array<Int>()
-        array.append(10)
-        array.append(20)
-        array.append(30)
-
-        var visited: [Int] = []
-        array.forEach { visited.append($0) }
-
-        #expect(visited == [10, 20, 30])
-    }
-
-    @Test
-    func `forEach visits count elements`() {
-        var array = Array<Int>()
-        for i in 0..<50 { array.append(i) }
-
-        var visitCount = 0
-        array.forEach { _ in visitCount += 1 }
-
-        #expect(visitCount == 50)
-    }
-
-    // MARK: - Span Invariants
-
-    @Test
-    func `Span count matches array count`() {
-        var array = Array<Int>()
-        for i in 0..<10 { array.append(i) }
-
-        #expect(array.span.count == 10)
-    }
-
-    @Test
-    func `Span elements match subscript access`() {
-        var array = Array<Int>()
-        for i in 0..<5 { array.append(i * 7) }
-
-        let span = array.span
-        for i in 0..<5 {
-            #expect(span[i] == array[Index<Int>(_unchecked: Ordinal(UInt(i)))])
+        #expect(sum == 6)
+        do {
+            var m = a.mutableSpan()
+            m[0] = 10
         }
+        let e0 = a[0]
+        #expect(e0 == 10)
+    }
+
+    @Test
+    func `shared column scoped spans; mutable restores uniqueness first`() {
+        var a = CoWArray<Int>(initialCapacity: 3)
+        a.append(1)
+        a.append(2)
+        let b = a
+        let sum = a.withSpan { span in
+            var acc = 0
+            for i in 0..<span.count { acc += span[i] }
+            return acc
+        }
+        #expect(sum == 3)
+        a.withMutableSpan { span in
+            span[0] = 100
+        }
+        let aSees = a[0], bSees = b[0]
+        #expect(aSees == 100)
+        #expect(bSees == 1)
+    }
+
+    // MARK: - Element-keyed semantics (the S5 chain through the Shared carrier)
+
+    @Test
+    func `Equatable and Hashable chain through the column`() {
+        var a = CoWArray<Int>(initialCapacity: 4)
+        a.append(1)
+        a.append(2)
+        var b = CoWArray<Int>(initialCapacity: 8)
+        b.append(1)
+        b.append(2)
+        #expect(a == b)                             // element-wise, capacity-independent
+        b.append(3)
+        #expect(a != b)
+        var h1 = Hasher(), h2 = Hasher()
+        a.hash(into: &h1)
+        var a2 = a
+        a2[0] = 1                                   // forces divergence (same elements)
+        a2.hash(into: &h2)
+        #expect(h1.finalize() == h2.finalize())
+    }
+
+    // MARK: - Collection lattice (direct column: Array.Protocol defaults over the span bridge)
+
+    @Test
+    func `index navigation defaults walk the direct column`() {
+        var a = MoveArray<Int>(initialCapacity: 3)
+        a.append(10)
+        a.append(20)
+        a.append(30)
+        let start = a.startIndex
+        let end = a.endIndex
+        var walked: [Int] = []
+        var i = start
+        while i < end {
+            walked.append(a[i])
+            i = a.index(after: i)
+        }
+        #expect(walked == [10, 20, 30])
+        let back = a.index(before: end)
+        let lastValue = a[back]
+        #expect(lastValue == 30)
+    }
+
+    // MARK: - OutputSpan construction lanes (direct column)
+
+    @Test
+    func `OutputSpan init, windowed append, and edit on the direct column`() {
+        var a = MoveArray<Int>(capacity: Index<Int>.Count(3)) { span in
+            span.append(1)
+            span.append(2)
+        }
+        let count = a.count
+        #expect(count == Index<Int>.Count(2))       // no full-population requirement
+        a.append(addingCapacity: Index<Int>.Count(2)) { span in
+            span.append(3)
+        }
+        let count2 = a.count
+        #expect(count2 == Index<Int>.Count(3))
+        let total: Int = a.edit { span in
+            var acc = 0
+            for i in 0..<span.count { acc += span[i] }
+            return acc
+        }
+        #expect(total == 6)
+    }
+
+    // MARK: - take() (column extraction) + Sequenceable chain
+
+    @Test
+    func `take unwraps the column; Sequenceable consumes through it`() {
+        var a = MoveArray<Int>(initialCapacity: 2)
+        a.append(1)
+        a.append(2)
+        let column = a.take()
+        let columnCount = column.count
+        #expect(columnCount == Index<Int>.Count(2))
+
+        var b = MoveArray<Int>(initialCapacity: 2)
+        b.append(7)
+        b.append(8)
+        var it = b.makeIterator()                   // consuming, via the S chain
+        var seen: [Int] = []
+        while let x = it.next() { seen.append(x) }
+        #expect(seen == [7, 8])
+    }
+
+    // MARK: - Sendable chain smoke
+
+    @Test
+    func `sendable composes through both columns`() {
+        let a = MoveArray<Int>(initialCapacity: 1)
+        requireSendable(a)
+        let b = CoWArray<Int>(initialCapacity: 1)
+        requireSendable(b)
+        #expect(Bool(true))
     }
 }
 
-// MARK: - Edge Case Tests
+// MARK: - Array.Fixed (the fixed-count, always-full discipline)
 
-extension ArrayTests.EdgeCase {
+@Suite(.serialized)
+struct ArrayFixedTests {
 
     @Test
-    func `Single element operations`() {
-        var array = Array<Int>()
-
-        array.append(42)
-        #expect(array.count == 1)
-        #expect(array[0] == 42)
-
-        var elements: [Int] = []
-        array.forEach { elements.append($0) }
-        #expect(elements == [42])
-
-        let removed = array.remove.last()
-        #expect(removed == 42)
-        #expect(array.count == 0)
+    func `checked init populates every slot; properties hold`() throws {
+        let f = try MoveArray<Int>.Fixed(count: Index<Int>.Count(3)) { _ in 7 }
+        let count = f.count
+        #expect(count == Index<Int>.Count(3))
+        let isEmpty = f.isEmpty
+        #expect(!isEmpty)
+        let free = f.freeCapacity
+        #expect(free == Index<Int>.Count(0))        // always-full invariant
+        let e1 = f.withElement(at: 1) { $0 }
+        #expect(e1 == 7)
     }
 
     @Test
-    func `Growth beyond initial capacity preserves elements`() {
-        var array = Array<Int>()  // Small initial capacity
-
-        // Add many elements
-        for i in 0..<1000 {
-            array.append(i * 2)
-        }
-
-        #expect(array.count == 1000)
-
-        // Verify all elements preserved through growth
-        for i in 0..<1000 {
-            #expect(array[Index<Int>(_unchecked: Ordinal(UInt(i)))] == i * 2)
-        }
-
-        // Verify forEach still works
-        var index = 0
-        array.forEach { element in
-            #expect(element == index * 2)
-            index += 1
-        }
-        #expect(index == 1000)
+    func `repeating + subscript read-write + swap`() {
+        var f = MoveArray<Int>.Fixed(repeating: 1, count: Index<Int>.Count(3))
+        f[0] = 10
+        f[2] = 30
+        f.swap(at: 0, with: 2)
+        let e0 = f[0], e2 = f[2]
+        #expect(e0 == 30)
+        #expect(e2 == 10)
+        let opt = f.element(at: 1)
+        #expect(opt == 1)
     }
 
     @Test
-    func `RemoveAll clears count`() {
-        var array = Array<Int>()
-        for i in 0..<10 { array.append(i) }
-
-        array.removeAll()
-
-        #expect(array.count == 0)
-        #expect(array.isEmpty == true)
-
-        var iterCount = 0
-        array.forEach { _ in iterCount += 1 }
-        #expect(iterCount == 0)
+    func `OutputSpan init enforces full population and reads back via span`() {
+        let f = MoveArray<Int>.Fixed(capacity: Index<Int>.Count(3)) { span in
+            span.append(1)
+            span.append(2)
+            span.append(3)
+        }
+        var sum = 0
+        do {
+            let span = f.span
+            for i in 0..<span.count { sum += span[i] }
+        }
+        #expect(sum == 6)
     }
 
     @Test
-    func `Append after removeAll works`() {
-        var array = Array<Int>()
-        array.append(1)
-        array.append(2)
+    func `mutableSpan writes through; index defaults navigate`() throws {
+        var f = try MoveArray<Int>.Fixed(count: Index<Int>.Count(2)) { _ in 5 }
+        do {
+            var m = f.mutableSpan
+            m[1] = 50
+        }
+        let e1 = f[1]
+        #expect(e1 == 50)
+        var walked: [Int] = []
+        var i = f.startIndex
+        while i < f.endIndex {
+            walked.append(f[i])
+            i = f.index(after: i)
+        }
+        #expect(walked == [5, 50])
+    }
 
-        array.removeAll()
-
-        array.append(100)
-        array.append(200)
-
-        #expect(array.count == 2)
-        #expect(array[0] == 100)
-        #expect(array[1] == 200)
+    @Test
+    func `move-only elements live in Fixed and tear down once`() throws {
+        Probe2.reset()
+        do {
+            let f = try MoveArray<Item2>.Fixed(count: Index<Item2>.Count(2)) { _ in Item2(9) }
+            f.withElement(at: 0) { item in
+                #expect(item.id == 9)
+            }
+            _ = consume f
+        }
+        let count = Probe2.destroyedCount
+        #expect(count == 2)
     }
 }
 
-// MARK: - Integration Tests
-
-extension ArrayTests.Integration {
-
-    @Test
-    func `forEach and withSpan yield same elements`() {
-        var array = Array<Int>()
-        for i in 0..<10 { array.append(i * 2) }
-
-        var forEachElements: [Int] = []
-        array.forEach { forEachElements.append($0) }
-
-        var spanElements: [Int] = []
-        let span = array.span
-        for i in 0..<span.count {
-            spanElements.append(span[i])
-        }
-
-        #expect(forEachElements == spanElements)
-    }
-
-    @Test
-    func `CoW preserves forEach correctness after copy mutation`() {
-        var original = Array<Int>()
-        for i in 0..<5 { original.append(i) }
-
-        var copy = original
-        copy.append(999)
-
-        // Original forEach should still work correctly
-        var originalElements: [Int] = []
-        original.forEach { originalElements.append($0) }
-        #expect(originalElements == [0, 1, 2, 3, 4])
-
-        // Copy forEach should include the new element
-        var copyElements: [Int] = []
-        copy.forEach { copyElements.append($0) }
-        #expect(copyElements == [0, 1, 2, 3, 4, 999])
-    }
+/// Separate recorder for the Fixed suite (suites are serialized internally, not across).
+private enum Probe2 {
+    nonisolated(unsafe) static var _destroyed: Int = 0
+    static func reset() { unsafe _destroyed = 0 }
+    static func record() { unsafe _destroyed += 1 }
+    static var destroyedCount: Int { unsafe _destroyed }
 }
 
-// MARK: - Performance Tests
-
-extension ArrayTests.Performance {
-    // Performance tests with .timed() trait
+private struct Item2: ~Copyable {
+    let id: Int
+    init(_ id: Int) { self.id = id }
+    deinit { Probe2.record() }
 }
+
+private func requireSendable<T: Sendable & ~Copyable>(_ value: borrowing T) {}

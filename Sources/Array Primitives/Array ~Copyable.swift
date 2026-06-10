@@ -9,109 +9,141 @@
 //
 // ===----------------------------------------------------------------------===//
 
-// Public API extensions for the base Array type (growable, heap-allocated).
-// Note: Array struct is declared in Array.swift to enable conditional Copyable.
+// The COLUMN-GENERIC surface of the base Array: everything expressible through the
+// seam (`Store.Protocol`: subscript/initialize/move/capacity + the `prepareForMutation()`
+// gate) and the count surface (`Buffer.Protocol`) lives here ONCE, for every column.
+// Semantic mutations call the gate before their first write, so the same generic body
+// is copy-on-write-correct on the `Shared` column and free on the move-only columns.
+// Only GROWTH and CONSTRUCTION pin per column (`Array+Columns.swift`).
 public import Array_Primitive
-public import Memory_Heap_Primitives
-public import Storage_Contiguous_Primitives
-public import Storage_Contiguous_Primitives
 public import Array_Protocol_Primitives
-import Index_Primitives
+public import Buffer_Protocol_Primitives
+public import Store_Protocol_Primitives
+public import Span_Protocol_Primitives
 
 // ============================================================================
-// MARK: - Collection Conformances
+// MARK: - Collection Conformances (the span-bridged lattice)
 // ============================================================================
+//
+// `Collection.Protocol` refines `Iterable`, whose multipass borrowing iterator is
+// vended by the memory→Iterable bridge over `Span.Protocol` — so the lattice holds
+// exactly where the COLUMN vends a span (`S: Span.Protocol`: the direct buffer
+// columns). The `Shared` column reaches its elements through the generic subscript
+// and the scoped `withSpan` forms instead; its protocol-lattice membership arrives
+// with a `Shared: Span.Protocol` conformance, recorded as future work.
 
 // MARK: Collection.Protocol
 
-// Stated explicitly rather than left implicit through the Collection.Bidirectional
-// refinement (Collection.Bidirectional: Collection.`Protocol`). The
-// startIndex / endIndex / index(after:) / index(before:) witnesses are provided
-// once by Array.Protocol's defaults; this conformance carries only the subscript.
-extension Array: Collection.`Protocol` where Element: ~Copyable {
-    /// Accesses the element at the given typed index.
-    ///
-    /// - Parameter index: The typed index of the element to access.
-    /// - Precondition: `index` must be in bounds.
-    @inlinable
-    public subscript(_ index: Index) -> Element {
-        _read {
-            precondition(index < count, "Index out of bounds")
-            yield _buffer[index]
-        }
-        _modify {
-            precondition(index < count, "Index out of bounds")
-            yield &_buffer[index]
-        }
-    }
-}
+extension Array: Collection.`Protocol` where S: Span.`Protocol` & ~Copyable, S.Element: Copyable {}
 
 // MARK: Collection.Bidirectional
 
-extension Array: Collection.Bidirectional where Element: ~Copyable {}
+extension Array: Collection.Bidirectional where S: Span.`Protocol` & ~Copyable, S.Element: Copyable {}
 
 // MARK: Array.Protocol
 
-extension Array: Array.`Protocol` where Element: ~Copyable {}
+extension Array: Array.`Protocol` where S: Span.`Protocol` & ~Copyable, S.Element: Copyable {}
 
 // ============================================================================
-// MARK: - Properties
+// MARK: - Properties (generic: Buffer.Protocol count + seam capacity)
 // ============================================================================
 
-extension Array where Element: ~Copyable {
+extension Array where S: ~Copyable {
     /// The number of elements in the array.
     @inlinable
     public var count: Index.Count {
-        _buffer.count
+        store.count
     }
 
     /// Whether the array is empty.
     @inlinable
-    public var isEmpty: Bool { _buffer.isEmpty }
+    public var isEmpty: Bool { store.isEmpty }
 
     /// The current capacity of the array.
     @inlinable
-    public var capacity: Index.Count { _buffer.capacity }
+    public var capacity: Index.Count { store.capacity }
+
+    /// The number of additional elements that can be added without reallocating.
+    ///
+    /// - Complexity: O(1)
+    @inlinable
+    public var freeCapacity: Index.Count {
+        store.capacity.subtract.saturating(store.count)
+    }
 }
 
 // ============================================================================
-// MARK: - Element Access
+// MARK: - Element Access (generic: the seam subscript)
 // ============================================================================
 
-extension Array where Element: ~Copyable {
+extension Array where S: ~Copyable {
+    /// Accesses the element at the given typed index.
+    ///
+    /// The mutating access runs the column's semantic mutation gate FIRST
+    /// (`prepareForMutation()`), so in-place writes are copy-on-write-correct on the
+    /// `Shared` column and free on the statically-unique columns.
+    ///
+    /// - Parameter index: The typed index of the element to access.
+    /// - Precondition: `index` must be in bounds.
+    @inlinable
+    public subscript(_ index: Index) -> S.Element {
+        _read {
+            precondition(index < count, "Index out of bounds")
+            yield store[index]
+        }
+        _modify {
+            precondition(index < count, "Index out of bounds")
+            store.prepareForMutation()
+            yield &store[index]
+        }
+    }
+
     /// Accesses the element at the given index via closure (for ~Copyable elements).
     ///
-    /// - Parameters:
-    ///   - index: The index of the element.
-    ///   - body: A closure that receives a borrowed reference to the element.
-    /// - Returns: The result of the closure.
     /// - Precondition: The index must be in bounds.
     @inlinable
-    public func withElement<R>(at index: Index, _ body: (borrowing Element) -> R) -> R {
+    public func withElement<R>(at index: Index, _ body: (borrowing S.Element) -> R) -> R {
         precondition(index < count, "Index out of bounds")
-        return body(_buffer[index])
+        return body(store[index])
+    }
+}
+
+extension Array where S: ~Copyable, S.Element: Copyable {
+    /// Returns the element at the typed index, or nil if out of bounds.
+    @inlinable
+    public func element(at index: Index) -> S.Element? {
+        guard index < count else { return nil }
+        return store[index]
+    }
+
+    /// Returns element at index offset from given base index.
+    @inlinable
+    public func element(
+        at base: Index,
+        offsetBy offset: Index.Offset
+    ) -> S.Element? {
+        guard let newIndex = try? (base + offset) else { return nil }
+        guard newIndex < count else { return nil }
+        return store[newIndex]
     }
 }
 
 // ============================================================================
-// MARK: - Mutating Operations
+// MARK: - Mutating Operations (generic: gate + seam)
 // ============================================================================
 
-extension Array where Element: ~Copyable {
-    /// Appends an element to the array.
+extension Array where S: ~Copyable {
+    /// Removes and returns the last element.
     ///
-    /// - Parameter element: The element to append (consumed).
-    /// - Complexity: O(1) amortized.
+    /// - Precondition: The array must not be empty.
+    /// - Complexity: O(1)
     @inlinable
-    public mutating func append(_ element: consuming Element) {
-        _buffer.append(consume element)
-    }
-
-    /// Static primitive for `Collection.Remove.Last`. Use `.remove.last()` at call sites.
-    @inlinable
-    public static func removeLast(_ base: inout Self) -> Element? {
-        guard !base._buffer.isEmpty else { return nil }
-        return base._buffer.remove.last()
+    public mutating func removeLast() -> S.Element {
+        precondition(!isEmpty, "Cannot remove from an empty array")
+        store.prepareForMutation()
+        let end: Index = count.map(Ordinal.init)
+        let last = try! end.predecessor.exact()
+        return store.move(at: last)
     }
 
     /// Removes and returns the element at the given index, shifting subsequent elements left.
@@ -121,123 +153,69 @@ extension Array where Element: ~Copyable {
     /// - Precondition: The index must be in bounds.
     /// - Complexity: O(n) where n is the distance from `index` to the end.
     @inlinable
-    public mutating func remove(at index: Index) -> Element {
-        _buffer.remove(at: index)
-    }
-
-    // on remove.all() + buffer reassignment in deep @inlinable chain.
-
-    /// Static clearing primitive. Prefer the instance `removeAll()` at call sites.
-    @inlinable
-    public static func removeAll(_ base: inout Self) {
-        base._buffer.remove.all()
-        base._buffer = Buffer<Storage<Element>.Contiguous<Memory.Heap<Element>>>.Linear(minimumCapacity: .zero)
-    }
-
-    /// Removes all elements from the array.
-    @inlinable
-    public mutating func removeAll(keepingCapacity: Bool = false) {
-        _buffer.remove.all()
-        if !keepingCapacity {
-            _buffer = Buffer<Storage<Element>.Contiguous<Memory.Heap<Element>>>.Linear(minimumCapacity: .zero)
+    public mutating func remove(at index: Index) -> S.Element {
+        precondition(index < count, "Index out of bounds")
+        store.prepareForMutation()
+        let end: Index = count.map(Ordinal.init)
+        let removed = store.move(at: index)
+        var dst = index
+        var src = dst.successor.saturating()
+        while src < end {
+            store.initialize(at: dst, to: store.move(at: src))
+            dst = src
+            src = src.successor.saturating()
         }
-    }
-}
-
-// ============================================================================
-// MARK: - Span Access
-// ============================================================================
-
-extension Array where Element: ~Copyable {
-    /// Read-only span of the array elements.
-    @inlinable
-    public var span: Swift.Span<Element> {
-        @_lifetime(borrow self)
-        borrowing get {
-            _buffer.span
-        }
+        return removed
     }
 
-    /// Mutable span of the array elements.
+    /// Exchanges the elements at the two given positions.
     ///
-    /// Forwards the base `Buffer.Linear`'s form-α `mutableSpan()` *method* (D1; the
-    /// underlying property was dropped at the ⑤-(N) reparam — a generic substrate
-    /// cannot vend a forwarding mutable-span property; a Heap-pinned `<E>` method can).
-    @inlinable
-    public var mutableSpan: Swift.MutableSpan<Element> {
-        @_lifetime(&self)
-        mutating get {
-            _buffer.mutableSpan()
-        }
-    }
-}
-
-// ============================================================================
-// MARK: - Buffer Access
-// ============================================================================
-
-@_spi(Unsafe)
-extension Array where Element: Copyable {
-    /// Provides read-only access to the underlying contiguous storage.
+    /// Passing the same index for both has no effect.
     ///
-    /// - Warning: This is an escape hatch for C interop. Prefer `span` for safe access.
-    /// - Warning: The pointer must not escape the closure scope.
-    @unsafe
+    /// - Precondition: Both indices must be in bounds.
+    /// - Complexity: O(1)
     @inlinable
-    public func withUnsafeBufferPointer<R, E: Swift.Error>(
-        _ body: (UnsafeBufferPointer<Element>) throws(E) -> R
-    ) throws(E) -> R {
-        try unsafe _buffer.withUnsafeBufferPointer(body)
+    public mutating func swap(at i: Index, with j: Index) {
+        precondition(i < count && j < count, "Index out of bounds")
+        guard i != j else { return }
+        store.prepareForMutation()
+        let a = store.move(at: i)
+        let b = store.move(at: j)
+        store.initialize(at: i, to: b)
+        store.initialize(at: j, to: a)
     }
 
-    /// Provides mutable access to the underlying contiguous storage.
+    /// Consumes every element front-to-back, leaving the array empty.
     ///
-    /// - Warning: This is an escape hatch for C interop. Prefer `mutableSpan` for safe access.
-    /// - Warning: The pointer must not escape the closure scope.
-    @unsafe
+    /// The seam's ledger keeps `count` honest mid-drain (each `move` decrements), so the
+    /// loop terminates when the column reports empty.
     @inlinable
-    public mutating func withUnsafeMutableBufferPointer<R, E: Swift.Error>(
-        _ body: (UnsafeMutableBufferPointer<Element>) throws(E) -> R
-    ) throws(E) -> R {
-        try unsafe _buffer.withUnsafeMutableBufferPointer(body)
+    public mutating func drain(_ body: (consuming S.Element) -> Void) {
+        store.prepareForMutation()
+        var slot: Index = .zero
+        while !isEmpty {
+            body(store.move(at: slot))
+            slot = slot.successor.saturating()
+        }
     }
 }
 
 // ============================================================================
-// MARK: - Property Views
+// MARK: - Cloning (generic on the CoW column)
 // ============================================================================
 
-// MARK: Drain Property View
-
-extension Array where Element: ~Copyable {
-    public enum Drain {
-        public typealias View = Property<Sequence.Drain, Array<Element>>.Inout.Typed<Element>
-    }
-}
-
-extension Array where Element: ~Copyable {
-    /// Property view for draining operations.
+extension Array where S: Copyable {
+    /// Returns an independent copy of this array with its own storage.
+    ///
+    /// On the `Shared` (CoW) column the fresh value shares the box with `self` at the
+    /// moment of copy, so running the mutation gate on it ALWAYS installs a deep copy —
+    /// `clone()` never returns shared storage.
+    ///
+    /// - Complexity: O(`count`)
     @inlinable
-    public var drain: Drain.View {
-        mutating _read {
-            yield unsafe .init(&self)
-        }
-        mutating _modify {
-            var view: Drain.View = unsafe .init(&self)
-            yield &view
-        }
-    }
-}
-
-// MARK: Drain: Operations (~Copyable)
-
-extension Property.Inout.Typed
-where Tag == Sequence.Drain, Base == Array<Element>, Element: ~Copyable {
-    /// Drain iteration: `.drain { }`
-    @inlinable
-    public mutating func callAsFunction(_ body: (consuming Element) -> Void) {
-        while unsafe !base.value._buffer.isEmpty {
-            body(base.value._buffer.remove.first())
-        }
+    public borrowing func clone() -> Self {
+        var result = copy self
+        result.store.prepareForMutation()
+        return result
     }
 }

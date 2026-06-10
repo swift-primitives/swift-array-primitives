@@ -9,82 +9,108 @@
 //
 // ===----------------------------------------------------------------------===//
 
-public import Buffer_Linear_Primitives
+public import Buffer_Primitive
+public import Buffer_Linear_Primitive
+public import Buffer_Protocol_Primitives
+public import Store_Protocol_Primitives
 public import Storage_Contiguous_Primitives
+public import Memory_Heap_Primitives
+public import Memory_Allocator_Primitive
+public import Shared_Primitive
 public import Index_Primitives
 
-// MARK: - Array (Growable, Heap-Allocated)
+// MARK: - Array (the ADT tier — generic over the COLUMN)
 
-/// A growable, heap-allocated array with ~Copyable support.
+/// A growable array — the semantic ADT over an explicit storage COLUMN.
 ///
-/// This is the primary dynamic array type, equivalent to C++'s `std::vector`
-/// or Rust's `Vec<T>`. It supports both copyable and move-only elements.
-///
-/// This shadows `Swift.Array`. Bare `Array` resolves to this type when any
-/// module in the ecosystem is imported. Use `Swift.Array` or `[T]` syntax
-/// when the stdlib array is needed.
-///
-/// ## Move-Only Support
-///
-/// Both the array and its elements can be `~Copyable`:
+/// The ratified two-column design (`PROPOSAL-tower-perfected-design.md` §1.3): `Array` is
+/// generic over `S`, and **copyability flows from the column** (S5):
 ///
 /// ```swift
-/// struct FileHandle: ~Copyable { ... }
-/// var handles = Array<FileHandle>()
-/// handles.append(FileHandle())
+/// Array<            Buffer<Storage<…System>.Contiguous<FD >>.Linear >    // zero-cost MOVE-ONLY (default)
+/// Array<Shared<Int, Buffer<Storage<…System>.Contiguous<Int>>.Linear>>   // explicit CoW value semantics
 /// ```
 ///
-/// ## Copy-on-Write
+/// Both columns expose the USER element as `S.Element` (the direct buffer's element IS the
+/// user element; `Shared`'s direct `Element` parameter is welded to its buffer's), so the
+/// element-generic surface (subscript, `count`, iteration) lives here generically; only
+/// construction, growth, and CoW-checked mutation pin per column (mechanic #2). The
+/// element-keyed semantics chain from the `Shared` carrier:
+/// `Array<S>: Equatable where S: Equatable`.
 ///
-/// When `Element` is `Copyable`, the array uses copy-on-write semantics:
-/// copies share storage until mutation.
-///
-/// ## Variants
-///
-/// - ``Array``: Dynamically-growing storage (this type)
-/// - ``Array/Fixed``: Fixed-count, all elements initialized at creation
-/// - ``Array/Static``: Fixed-capacity inline storage (stack-allocated, variable count)
-/// - ``Array/Small``: Inline storage with automatic spill to heap (SmallVec pattern)
-/// - ``Array/Bounded``: Compile-time dimensioned with `Index<Element>.Bounded<N>` indexing
-/// - ``Array/Inline``: Typealias to `Swift.InlineArray` (all N elements always initialized)
-// WHY: Category D — structural Sendable workaround; the type is
-// WHY: structurally value-safe but the compiler cannot synthesize
-// WHY: Sendable due to a stored pointer / generic parameter shape.
-@safe
-public struct Array<Element: ~Copyable>: ~Copyable {
+/// This shadows `Swift.Array`. Bare `Array` resolves to this type when any module in the
+/// ecosystem is imported; use `Swift.Array` or `[T]` syntax for the stdlib array.
+public struct Array<S: Store.`Protocol` & Buffer.`Protocol` & ~Copyable>: ~Copyable
+where S.Count == Index_Primitives.Index<S.Element>.Count {
 
-    // MARK: - Buffer Storage
-
-    /// Internal growable linear buffer.
-    ///
-    /// Delegates growth, CoW, element lifecycle, and span access
-    /// to `Buffer<Storage<Element>.Contiguous<Memory.Heap<Element>>>.Linear` from buffer-primitives.
+    /// The storage column — a move-only buffer (the default ownership column) or a `Shared`
+    /// CoW column. The ADT is a thin semantic discipline over it; it carries NO deinit
+    /// (teardown lives in the leaf's oracle / the shared box's drain).
     @usableFromInline
-    package var _buffer: Buffer<Storage<Element>.Contiguous<Memory.Heap<Element>>>.Linear
+    package var store: S
 
-    // MARK: - Initialization
-
-    /// Creates an empty array with initial capacity hint.
-    ///
-    /// - Parameter initialCapacity: The initial capacity to allocate.
+    /// Wraps an existing column.
     @inlinable
-    public init(initialCapacity: Array.Index.Count = .zero) {
-        self._buffer = Buffer<Storage<Element>.Contiguous<Memory.Heap<Element>>>.Linear(minimumCapacity: initialCapacity)
+    public init(store: consuming S) {
+        self.store = store
     }
 
-    /// Internal initializer for use by the ops module (cross-module designated init).
-    @usableFromInline
-    package init(_buffer: consuming Buffer<Storage<Element>.Contiguous<Memory.Heap<Element>>>.Linear) {
-        self._buffer = _buffer
+    /// Consumes the array, yielding its storage column.
+    ///
+    /// Declared in the defining module (deliberately NOT `@inlinable`): partial
+    /// consumption of a non-frozen struct is same-module-only, and this is the one
+    /// place the wrapper may be unwrapped by value.
+    public consuming func take() -> S {
+        store
     }
 }
 
-// MARK: - Conditional Copyable
+// MARK: - Conditional Conformances (co-located per [COPY-FIX-004])
 
-/// `Array` is `Copyable` when its elements are `Copyable`.
-/// Uses ManagedBuffer storage, so no deinit needed in the struct itself.
-extension Array: Copyable where Element: Copyable {}
+/// The S5 chain: `Array<Shared<E, B>>` is `Copyable` exactly when `Shared` is — i.e. when the
+/// ELEMENT is. The direct (move-only buffer) columns never satisfy this, by design.
+extension Array: Copyable where S: Copyable {}
 
-// MARK: - Sendable
+extension Array: Sendable where S: Sendable & ~Copyable {}
 
-extension Array: @unchecked Sendable where Element: Sendable {}
+// MARK: - Column-pinned construction
+
+extension Array where S: ~Copyable {
+    /// Creates an empty MOVE-ONLY array (the default ownership column).
+    @inlinable
+    public init<E: ~Copyable>(initialCapacity: Index_Primitives.Index<E>.Count = .zero)
+    where S == Buffer<Storage<Memory.Allocator<Memory.Heap>.System>.Contiguous<E>>.Linear {
+        self.init(store: S(minimumCapacity: initialCapacity))
+    }
+
+    /// Creates an empty CoW (value-semantic) array on the `Shared` column.
+    ///
+    /// The element must be statically `Copyable` HERE: the construction site is where the
+    /// column's clone strategy is captured (`Shared`'s constructors split on element
+    /// copyability — see `prepareForMutation`'s backstop).
+    @inlinable
+    public init<E>(initialCapacity: Index_Primitives.Index<E>.Count = .zero)
+    where S == Shared<E, Buffer<Storage<Memory.Allocator<Memory.Heap>.System>.Contiguous<E>>.Linear> {
+        self.init(
+            store: Shared(
+                Buffer<Storage<Memory.Allocator<Memory.Heap>.System>.Contiguous<E>>.Linear(
+                    minimumCapacity: initialCapacity
+                )
+            )
+        )
+    }
+
+    /// Creates an empty statically-unique array of move-only elements on the `Shared` column
+    /// (the boxed flavor of the move-only regime — useful when the box's O(1) move matters).
+    @inlinable
+    public init<E: ~Copyable>(initialCapacity: Index_Primitives.Index<E>.Count = .zero)
+    where S == Shared<E, Buffer<Storage<Memory.Allocator<Memory.Heap>.System>.Contiguous<E>>.Linear> {
+        self.init(
+            store: Shared(
+                Buffer<Storage<Memory.Allocator<Memory.Heap>.System>.Contiguous<E>>.Linear(
+                    minimumCapacity: initialCapacity
+                )
+            )
+        )
+    }
+}

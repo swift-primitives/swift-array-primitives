@@ -14,7 +14,7 @@ public import Hash_Primitives_Standard_Library_Integration
 
 // MARK: - Hash.Protocol Conformance
 
-extension Array.Fixed: Hash.`Protocol` where Element: Hash.`Protocol` & ~Copyable {
+extension Array.Fixed: Hash.`Protocol` where S: ~Copyable, S.Element: Hash.`Protocol` {
     /// Hashes the count and elements of this fixed-capacity array, in order, over
     /// the span (`Span: Hash.Protocol`, hash-primitives Standard Library Integration).
     @inlinable

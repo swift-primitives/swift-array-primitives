@@ -31,7 +31,7 @@ public protocol __ArrayProtocol: Collection.Bidirectional & ~Copyable {
 
 // MARK: - Namespace Typealias
 
-extension Array where Element: ~Copyable {
+extension Array where S: ~Copyable {
     /// Protocol unifying element access across all `Array` variants.
     ///
     /// `Array.Protocol` (accessed as `Array.Protocol`) refines `Collection.Bidirectional`

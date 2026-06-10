@@ -14,7 +14,7 @@ public import Equation_Primitives_Standard_Library_Integration
 
 // MARK: - Equation.Protocol Conformance
 
-extension Array.Fixed: Equation.`Protocol` where Element: Equation.`Protocol` & ~Copyable {
+extension Array.Fixed: Equation.`Protocol` where S: ~Copyable, S.Element: Equation.`Protocol` {
     /// Compares two fixed-capacity arrays for element-wise, ordered-sequence
     /// equality, over the span (`Span: Equation.Protocol`, equation-primitives
     /// Standard Library Integration).

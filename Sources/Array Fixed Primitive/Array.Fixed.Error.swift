@@ -7,12 +7,12 @@
 
 public import Array_Primitive
 
-extension Array.Fixed {
+extension Array.Fixed where S: ~Copyable {
     /// Errors that can occur during fixed array operations.
     public enum Error: Swift.Error, Sendable, Equatable {
-        case invalidCount(Array.Index.Count)
+        case invalidCount(Array<S>.Index.Count)
 
         /// The index is out of bounds.
-        case indexOutOfBounds(index: Array.Index, count: Array.Index.Count)
+        case indexOutOfBounds(index: Array<S>.Index, count: Array<S>.Index.Count)
     }
 }

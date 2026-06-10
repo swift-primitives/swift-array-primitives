@@ -9,17 +9,15 @@
 //
 // ===----------------------------------------------------------------------===//
 
-public import Buffer_Linear_Primitives
-public import Index_Primitives
+public import Array_Fixed_Primitives
 
-// MARK: - swap across Array variants
+// MARK: - swap on Array.Fixed
 //
-// Each variant delegates to the underlying Buffer.Linear* variant's
-// `swap(at:with:)`. Labeled form (`swap(at:with:)`) matches the Buffer.Linear
-// API one layer down and complies with [API-NAME-002] (the method name is
-// `swap`, a single word; `at:` / `with:` are standard argument labels).
+// The base Array's `swap(at:with:)` is COLUMN-GENERIC (gate + seam dance) and lives in
+// `Array ~Copyable.swift`. `Array.Fixed` wraps the bounded buffer directly, so it
+// delegates to the buffer's `swap(at:with:)`.
 
-extension Array where Element: ~Copyable {
+extension Array.Fixed where S: ~Copyable {
 
     /// Exchanges the elements at the two given positions.
     ///
@@ -28,20 +26,7 @@ extension Array where Element: ~Copyable {
     ///
     /// - Complexity: O(1)
     @inlinable
-    public mutating func swap(at i: Array.Index, with j: Array.Index) {
+    public mutating func swap(at i: Array<S>.Index, with j: Array<S>.Index) {
         _buffer.swap(at: i, with: j)
     }
 }
-
-extension Array.Fixed where Element: ~Copyable {
-
-    /// Exchanges the elements at the two given positions.
-    ///
-    /// - Complexity: O(1)
-    @inlinable
-    public mutating func swap(at i: Array.Index, with j: Array.Index) {
-        _buffer.swap(at: i, with: j)
-    }
-}
-
-

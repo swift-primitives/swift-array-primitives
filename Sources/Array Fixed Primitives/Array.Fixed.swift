@@ -9,19 +9,17 @@
 //
 // ===----------------------------------------------------------------------===//
 
-// Note: Array.Fixed is declared INSIDE the Array struct body (in Array.swift)
-// due to Swift's ~Copyable constraint propagation rules. This file contains
+// Note: Array.Fixed is declared in Array Fixed Primitive. This file contains
 // only extensions that require internal access to _buffer.
 
 public import Array_Fixed_Primitive
 public import Memory_Heap_Primitives
+public import Memory_Allocator_Primitive
 public import Storage_Contiguous_Primitives
-public import Storage_Contiguous_Primitives
-public import Index_Primitives
 
 // MARK: - Initialization (Checked)
 
-extension Array.Fixed {
+extension Array.Fixed where S: ~Copyable {
     /// Creates a fixed array with the specified count, initializing each element.
     ///
     /// - Parameters:
@@ -30,24 +28,24 @@ extension Array.Fixed {
     /// - Throws: `Error.invalidCount` if count is negative.
     @inlinable
     public init(
-        count: Array.Index.Count,
-        initializingWith initializer: (Array.Index) -> Element
-    ) throws(Array.Fixed.Error) {
+        count: Array<S>.Index.Count,
+        initializingWith initializer: (Array<S>.Index) -> S.Element
+    ) throws(Array<S>.Fixed.Error) {
         guard count >= .zero else {
             throw .invalidCount(count)
         }
 
         if count == .zero {
-            self.init(_buffer: Buffer<Storage<Element>.Contiguous<Memory.Heap<Element>>>.Linear.Bounded(minimumCapacity: .zero))
+            self.init(_buffer: Buffer<Storage<Memory.Allocator<Memory.Heap>.System>.Contiguous<S.Element>>.Linear.Bounded(minimumCapacity: .zero))
             return
         }
 
-        let buffer = Buffer<Storage<Element>.Contiguous<Memory.Heap<Element>>>.Linear.Bounded(
+        let buffer = Buffer<Storage<Memory.Allocator<Memory.Heap>.System>.Contiguous<S.Element>>.Linear.Bounded(
             minimumCapacity: count,
             initializingCount: count,
             with: { ptr in
                 for i in 0..<Int(bitPattern: count) {
-                    let index = Array.Index(Ordinal(UInt(i)))
+                    let index = Array<S>.Index(Ordinal(UInt(i)))
                     ptr.append(initializer(index))
                 }
             }
@@ -58,7 +56,7 @@ extension Array.Fixed {
 
 // MARK: - Initialization (Unchecked)
 
-extension Array.Fixed {
+extension Array.Fixed where S: ~Copyable {
     /// Creates a fixed array with the specified count without validation.
     ///
     /// Use this when the count has already been validated by an invariant.
@@ -71,22 +69,22 @@ extension Array.Fixed {
     @inlinable
     public init(
         __unchecked: Void,
-        count: Array.Index.Count,
-        initializingWith initializer: (Array.Index) -> Element
+        count: Array<S>.Index.Count,
+        initializingWith initializer: (Array<S>.Index) -> S.Element
     ) {
         // Count is unsigned, always non-negative by construction
 
         if count == .zero {
-            self.init(_buffer: Buffer<Storage<Element>.Contiguous<Memory.Heap<Element>>>.Linear.Bounded(minimumCapacity: .zero))
+            self.init(_buffer: Buffer<Storage<Memory.Allocator<Memory.Heap>.System>.Contiguous<S.Element>>.Linear.Bounded(minimumCapacity: .zero))
             return
         }
 
-        let buffer = Buffer<Storage<Element>.Contiguous<Memory.Heap<Element>>>.Linear.Bounded(
+        let buffer = Buffer<Storage<Memory.Allocator<Memory.Heap>.System>.Contiguous<S.Element>>.Linear.Bounded(
             minimumCapacity: count,
             initializingCount: count,
             with: { ptr in
                 for i in 0..<Int(bitPattern: count) {
-                    let index = Array.Index(Ordinal(UInt(i)))
+                    let index = Array<S>.Index(Ordinal(UInt(i)))
                     ptr.append(initializer(index))
                 }
             }

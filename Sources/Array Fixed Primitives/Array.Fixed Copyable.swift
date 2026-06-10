@@ -9,88 +9,31 @@
 //
 // ===----------------------------------------------------------------------===//
 public import Array_Fixed_Primitive
-public import Memory_Heap_Primitives
-public import Storage_Contiguous_Primitives
-public import Storage_Contiguous_Primitives
-public import Array_Protocol_Primitives
-public import Buffer_Linear_Bounded_Primitives
-public import Collection_Primitives
 import Index_Primitives
-public import Sequence_Primitives
 
-// MARK: - Sequenceable (single-pass, consuming, Copyable-only)
+// MARK: - Sequenceable: WITHDRAWN at the W4 reshape (upstream cause)
 //
-// Buffer.Linear.Bounded.Scalar backs Sequenceable. No Swift.Sequence: the iteration
-// family is ~Copyable end-to-end. (Span.`Protocol` + Iterable — the
-// multipass borrowing surface — moved to `Array.Fixed ~Copyable.swift` (Piece 7a / D4),
-// relaxed to `~Copyable`.)
+// `Buffer.Linear.Bounded.Scalar` — the consuming iterator that backed this conformance —
+// is declared `where S: Copyable` upstream, and the W4 `Storage.Contiguous` substrate is
+// move-only (R-1), so the bounded Scalar lane is dead until buffer-linear reshapes it.
+// Multipass borrowing iteration (Span.`Protocol` + Iterable, `Array.Fixed ~Copyable.swift`)
+// remains the iteration surface. Re-admit when the bounded Scalar columnizes.
 
-extension Array.Fixed: Sequenceable where Element: Copyable {
-    @_implements(Sequenceable, Iterator)
-    public typealias SequenceableIterator = Buffer<Storage<Element>.Contiguous<Memory.Heap<Element>>>.Linear.Bounded.Scalar
-
-    @inlinable
-    public consuming func makeIterator() -> Buffer<Storage<Element>.Contiguous<Memory.Heap<Element>>>.Linear.Bounded.Scalar {
-        _buffer.makeIterator()
-    }
-
-    /// Returns the count as the underestimated count since we know the exact size.
-    @inlinable
-    public var underestimatedCount: Int { Int(bitPattern: count) }
-}
-
-extension Array.Fixed where Element: Copyable {
-    /// Accesses the element at the given typed index (copy semantics for Copyable elements).
-    ///
-    /// - Parameter index: The typed index of the element to access.
-    /// - Precondition: `index` must be in bounds.
-    @inlinable
-    public subscript(_ index: Index) -> Element {
-        get {
-            precondition(index < count, "Index out of bounds")
-            return _buffer[index]
-        }
-        set {
-            precondition(index < count, "Index out of bounds")
-            _buffer[index] = newValue
-        }
-    }
-}
-
-// MARK: - CoW-aware MutableSpan (Copyable elements)
-
-extension Array.Fixed where Element: Copyable {
-    /// Mutable span with copy-on-write semantics.
-    ///
-    /// Forwards `Buffer.Linear.Bounded`'s form-α `mutableSpan()` *method* (D1).
-    @inlinable
-    public var mutableSpan: Swift.MutableSpan<Element> {
-        @_lifetime(&self)
-        mutating get {
-            _buffer.mutableSpan()
-        }
-    }
-}
-
-extension Array.Fixed where Element: Copyable {
+extension Array.Fixed where S: ~Copyable, S.Element: Copyable {
     /// Returns element at index offset from given base index.
     @inlinable
     public func element(
         at base: Index,
         offsetBy offset: Index.Offset
-    ) -> Element? {
+    ) -> S.Element? {
         guard let newIndex = try? (base + offset) else { return nil }
         guard newIndex < count else { return nil }
         return _buffer[newIndex]
     }
-}
 
-// MARK: - Safe Element Access (Copyable elements only)
-
-extension Array.Fixed where Element: Copyable {
     /// Returns the element at the typed index, or nil if out of bounds.
     @inlinable
-    public func element(at index: Index) -> Element? {
+    public func element(at index: Index) -> S.Element? {
         guard index < count else { return nil }
         return _buffer[index]
     }

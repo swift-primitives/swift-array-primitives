@@ -10,15 +10,15 @@
 // ===----------------------------------------------------------------------===//
 
 public import Array_Primitive
-public import Hash_Primitives_Standard_Library_Integration
 
-// MARK: - Hash.Protocol Conformance
+// MARK: - Hashable (the S5 chain)
 
-extension Array: Hash.`Protocol` where Element: Hash.`Protocol` & ~Copyable {
-    /// Hashes the count and elements of this array, in order, over the span
-    /// (`Span: Hash.Protocol`, hash-primitives Standard Library Integration).
+/// Element-keyed hashing chains through the COLUMN (see `Array+Equatable.swift`):
+/// `Shared` hashes count + live elements in order, so equal arrays hash equal across
+/// distinct boxes and capacities.
+extension Array: Hashable where S: Hashable {
     @inlinable
-    public borrowing func hash(into hasher: inout Hasher) {
-        span.hash(into: &hasher)
+    public func hash(into hasher: inout Hasher) {
+        store.hash(into: &hasher)
     }
 }

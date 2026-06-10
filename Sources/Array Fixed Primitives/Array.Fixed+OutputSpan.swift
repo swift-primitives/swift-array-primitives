@@ -11,21 +11,20 @@
 
 public import Array_Fixed_Primitive
 public import Memory_Heap_Primitives
+public import Memory_Allocator_Primitive
 public import Storage_Contiguous_Primitives
-public import Storage_Contiguous_Primitives
-public import Index_Primitives
 
 // MARK: - Array.Fixed + OutputSpan-based initializer
 
-extension Array.Fixed where Element: ~Copyable {
+extension Array.Fixed where S: ~Copyable {
 
     /// Creates a fixed array with the specified capacity, initialized via an
-    /// `OutputSpan<Element>` closure.
+    /// `OutputSpan` closure.
     ///
     /// This initializer matches the shape of `Swift.Array.init(capacity:initializingWith:)`
-    /// and SE-0527's proposed `RigidArray` construction idiom, enabling ~Copyable
-    /// elements to be placed directly into storage without requiring a per-index
-    /// closure that returns elements by value.
+    /// and SE-0527's `RigidArray` construction idiom, enabling ~Copyable elements to be
+    /// placed directly into storage without requiring a per-index closure that returns
+    /// elements by value.
     ///
     /// ## Invariant enforcement
     ///
@@ -46,17 +45,17 @@ extension Array.Fixed where Element: ~Copyable {
     ///   - capacity: The number of elements the array will hold. The `OutputSpan`
     ///       passed to the initializer covers exactly this many slots.
     ///   - initializer: A closure that populates all `capacity` slots via an
-    ///       `OutputSpan<Element>`. Called at most once.
+    ///       `OutputSpan`. Called at most once.
     ///
     /// - Precondition: `initializer` must append exactly `capacity` elements.
     ///     Partial initialization triggers a runtime error.
     /// - Throws: Any error thrown by `initializer`, with typed-throws preservation.
     @inlinable
-    public init<E: Swift.Error>(
-        capacity: Array.Index.Count,
-        initializingWith initializer: (inout Swift.OutputSpan<Element>) throws(E) -> Void
-    ) throws(E) {
-        let buffer = try Buffer<Storage<Element>.Contiguous<Memory.Heap<Element>>>.Linear.Bounded(
+    public init<Failure: Swift.Error>(
+        capacity: Array<S>.Index.Count,
+        initializingWith initializer: (inout Swift.OutputSpan<S.Element>) throws(Failure) -> Void
+    ) throws(Failure) {
+        let buffer = try Buffer<Storage<Memory.Allocator<Memory.Heap>.System>.Contiguous<S.Element>>.Linear.Bounded(
             capacity: capacity,
             initializingWith: initializer
         )
