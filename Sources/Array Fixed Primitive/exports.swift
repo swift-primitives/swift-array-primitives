@@ -1,6 +1,4 @@
 // exports.swift
-// Array Fixed Primitive declares `Array.Fixed` + its Error; re-exports the root
-// namespace + the bounded backing it composes.
-
-@_exported public import Array_Primitive
-@_exported public import Buffer_Linear_Primitives
+// Array Fixed Primitive declares the top-level `Fixed<S>` (the always-full column
+// discipline) + its Error. Per the exports-narrowing ruling (audit #9, 2026-06-10),
+// nothing is re-exported: consumers import the column-vocabulary modules explicitly.

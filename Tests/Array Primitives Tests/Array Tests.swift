@@ -1,4 +1,12 @@
 import Array_Primitives
+import Buffer_Primitive
+import Buffer_Linear_Primitive
+import Buffer_Linear_Primitives
+import Buffer_Linear_Bounded_Primitives
+import Storage_Contiguous_Primitives
+import Memory_Heap_Primitives
+import Memory_Allocator_Primitive
+import Shared_Primitive
 import Index_Primitives
 import Tagged_Primitives_Standard_Library_Integration
 import Ordinal_Primitives_Standard_Library_Integration
@@ -40,6 +48,12 @@ private typealias MoveArray<E: ~Copyable> = Array<HeapColumn<E>>
 
 /// The explicit CoW value-semantic array (`Shared` column).
 private typealias CoWArray<E: ~Copyable> = Array<SharedColumn<E>>
+
+/// The non-growable bounded column + the always-full discipline over it.
+private typealias BoundedHeapColumn<E: ~Copyable> =
+    Buffer<Storage<Memory.Allocator<Memory.Heap>.System>.Contiguous<E>>.Linear.Bounded
+
+private typealias FixedArray<E: ~Copyable> = Fixed<BoundedHeapColumn<E>>
 
 @Suite(.serialized)
 struct ArrayTests {
@@ -438,7 +452,7 @@ struct ArrayFixedTests {
 
     @Test
     func `checked init populates every slot; properties hold`() throws {
-        let f = try MoveArray<Int>.Fixed(count: Index<Int>.Count(3)) { _ in 7 }
+        let f = try FixedArray<Int>(count: Index<Int>.Count(3)) { _ in 7 }
         let count = f.count
         #expect(count == Index<Int>.Count(3))
         let isEmpty = f.isEmpty
@@ -451,7 +465,7 @@ struct ArrayFixedTests {
 
     @Test
     func `repeating + subscript read-write + swap`() {
-        var f = MoveArray<Int>.Fixed(repeating: 1, count: Index<Int>.Count(3))
+        var f = FixedArray<Int>(repeating: 1, count: Index<Int>.Count(3))
         f[0] = 10
         f[2] = 30
         f.swap(at: 0, with: 2)
@@ -464,7 +478,7 @@ struct ArrayFixedTests {
 
     @Test
     func `OutputSpan init enforces full population and reads back via span`() {
-        let f = MoveArray<Int>.Fixed(capacity: Index<Int>.Count(3)) { span in
+        let f = FixedArray<Int>(capacity: Index<Int>.Count(3)) { span in
             span.append(1)
             span.append(2)
             span.append(3)
@@ -479,9 +493,9 @@ struct ArrayFixedTests {
 
     @Test
     func `mutableSpan writes through; index defaults navigate`() throws {
-        var f = try MoveArray<Int>.Fixed(count: Index<Int>.Count(2)) { _ in 5 }
+        var f = try FixedArray<Int>(count: Index<Int>.Count(2)) { _ in 5 }
         do {
-            var m = f.mutableSpan
+            var m = f.mutableSpan()
             m[1] = 50
         }
         let e1 = f[1]
@@ -499,7 +513,7 @@ struct ArrayFixedTests {
     func `move-only elements live in Fixed and tear down once`() throws {
         Probe2.reset()
         do {
-            let f = try MoveArray<Item2>.Fixed(count: Index<Item2>.Count(2)) { _ in Item2(9) }
+            let f = try FixedArray<Item2>(count: Index<Item2>.Count(2)) { _ in Item2(9) }
             f.withElement(at: 0) { item in
                 #expect(item.id == 9)
             }
