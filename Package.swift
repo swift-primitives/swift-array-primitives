@@ -23,9 +23,10 @@ let package = Package(
         // MARK: - Bounded variant: DELETED (Q3-B ruling 2026-06-10 — dead surface; the
         // compile-time-dimensioned story lives at Index<E>.Bounded<N> + the inline column)
 
-        // MARK: - Fixed variant (the top-level column-generic Fixed<S>)
-        .library(name: "Array Fixed Primitive", targets: ["Array Fixed Primitive"]),
-        .library(name: "Array Fixed Primitives", targets: ["Array Fixed Primitives"]),
+        // MARK: - Fixed variant: EXTRACTED to swift-fixed-primitives (W5-1, G2 ruling —
+        // the truth-rename: Fixed<S> is a top-level family peer, not an Array variant;
+        // modules `Fixed Primitive(+s)`). __ArrayProtocol stays HERE; Fixed's conformance
+        // to it was withdrawn at extraction.
 
         // MARK: - Static variant
 
@@ -58,8 +59,6 @@ let package = Package(
         .package(url: "https://github.com/swift-primitives/swift-cardinal-primitives.git", branch: "main"),
         .package(url: "https://github.com/swift-primitives/swift-tagged-primitives.git", branch: "main"),
         .package(url: "https://github.com/swift-primitives/swift-ordinal-primitives.git", branch: "main"),
-        .package(url: "https://github.com/swift-primitives/swift-equation-primitives.git", branch: "main"),
-        .package(url: "https://github.com/swift-primitives/swift-hash-primitives.git", branch: "main"),
         .package(url: "https://github.com/swift-primitives/swift-memory-heap-primitives.git", branch: "main"),
         // W4: the ADT tier is generic over the storage COLUMN (Store.Protocol & Buffer.Protocol seam);
         // the CoW column is the Shared combinator.
@@ -97,41 +96,6 @@ let package = Package(
             ]
         ),
 
-        // MARK: - Fixed type (top-level Fixed<S>: the always-full column discipline)
-        .target(
-            name: "Array Fixed Primitive",
-            dependencies: [
-                .product(name: "Store Protocol Primitives", package: "swift-store-primitives"),
-                .product(name: "Buffer Protocol Primitives", package: "swift-buffer-primitives"),
-                .product(name: "Index Primitives", package: "swift-index-primitives"),
-            ]
-        ),
-
-        // MARK: - Fixed ops
-        .target(
-            name: "Array Fixed Primitives",
-            dependencies: [
-                "Array Fixed Primitive",
-                "Array Protocol Primitives",
-                .product(name: "Store Protocol Primitives", package: "swift-store-primitives"),
-                .product(name: "Buffer Protocol Primitives", package: "swift-buffer-primitives"),
-                .product(name: "Buffer Primitive", package: "swift-buffer-primitives"),
-                .product(name: "Buffer Linear Primitive", package: "swift-buffer-linear-primitives"),
-                .product(name: "Span Protocol Primitives", package: "swift-span-primitives"),
-                .product(name: "Storage Contiguous Primitives", package: "swift-storage-primitives"),
-                .product(name: "Memory Allocator Primitive", package: "swift-memory-allocation-primitives"),
-                .product(name: "Memory Heap Primitives", package: "swift-memory-heap-primitives"),
-                .product(name: "Memory Iterator Primitives", package: "swift-memory-iterator-primitives"),
-                .product(name: "Buffer Linear Bounded Primitives", package: "swift-buffer-linear-primitives"),
-                .product(name: "Collection Primitives", package: "swift-collection-primitives"),
-                .product(name: "Index Primitives", package: "swift-index-primitives"),
-                .product(name: "Iterable", package: "swift-iterator-primitives"),
-                .product(name: "Iterator Chunk Primitives", package: "swift-iterator-primitives"),
-                .product(name: "Equation Primitives Standard Library Integration", package: "swift-equation-primitives"),
-                .product(name: "Hash Primitives Standard Library Integration", package: "swift-hash-primitives"),
-            ]
-        ),
-
         // MARK: - Static type
 
         // MARK: - Static ops
@@ -146,7 +110,6 @@ let package = Package(
             dependencies: [
                 "Array Primitive",
                 "Array Protocol Primitives",
-                "Array Fixed Primitives",
                 .product(name: "Store Protocol Primitives", package: "swift-store-primitives"),
                 .product(name: "Shared Primitive", package: "swift-shared-primitives"),
                 .product(name: "Memory Allocator Primitive", package: "swift-memory-allocation-primitives"),
@@ -166,8 +129,6 @@ let package = Package(
                 .product(name: "Ordinal Primitives", package: "swift-ordinal-primitives"),
                 .product(name: "Cardinal Primitives", package: "swift-cardinal-primitives"),
                 .product(name: "Standard Library Extensions", package: "swift-standard-library-extensions"),
-                .product(name: "Equation Primitives Standard Library Integration", package: "swift-equation-primitives"),
-                .product(name: "Hash Primitives Standard Library Integration", package: "swift-hash-primitives"),
             ]
         ),
 

@@ -2,7 +2,6 @@ import Array_Primitives
 import Buffer_Primitive
 import Buffer_Linear_Primitive
 import Buffer_Linear_Primitives
-import Buffer_Linear_Bounded_Primitives
 import Storage_Contiguous_Primitives
 import Memory_Heap_Primitives
 import Memory_Allocator_Primitive
@@ -48,12 +47,6 @@ private typealias MoveArray<E: ~Copyable> = Array<HeapColumn<E>>
 
 /// The explicit CoW value-semantic array (`Shared` column).
 private typealias CoWArray<E: ~Copyable> = Array<SharedColumn<E>>
-
-/// The non-growable bounded column + the always-full discipline over it.
-private typealias BoundedHeapColumn<E: ~Copyable> =
-    Buffer<Storage<Memory.Allocator<Memory.Heap>.System>.Contiguous<E>>.Linear.Bounded
-
-private typealias FixedArray<E: ~Copyable> = Fixed<BoundedHeapColumn<E>>
 
 /// Generic borrow-through-call reads via the lattice bound — compiles ONLY with the
 /// element-unbounded conformances (the Audit-#5 relaxation, W5-1; the R2 probe shape).
@@ -476,99 +469,6 @@ struct ArrayTests {
         requireSendable(b)
         #expect(Bool(true))
     }
-}
-
-// MARK: - Array.Fixed (the fixed-count, always-full discipline)
-
-@Suite(.serialized)
-struct ArrayFixedTests {
-
-    @Test
-    func `checked init populates every slot; properties hold`() throws {
-        let f = try FixedArray<Int>(count: Index<Int>.Count(3)) { _ in 7 }
-        let count = f.count
-        #expect(count == Index<Int>.Count(3))
-        let isEmpty = f.isEmpty
-        #expect(!isEmpty)
-        let free = f.freeCapacity
-        #expect(free == Index<Int>.Count(0))        // always-full invariant
-        let e1 = f.withElement(at: 1) { $0 }
-        #expect(e1 == 7)
-    }
-
-    @Test
-    func `repeating + subscript read-write + swap`() {
-        var f = FixedArray<Int>(repeating: 1, count: Index<Int>.Count(3))
-        f[0] = 10
-        f[2] = 30
-        f.swap(at: 0, with: 2)
-        let e0 = f[0], e2 = f[2]
-        #expect(e0 == 30)
-        #expect(e2 == 10)
-        let opt = f.element(at: 1)
-        #expect(opt == 1)
-    }
-
-    @Test
-    func `OutputSpan init enforces full population and reads back via span`() {
-        let f = FixedArray<Int>(capacity: Index<Int>.Count(3)) { span in
-            span.append(1)
-            span.append(2)
-            span.append(3)
-        }
-        var sum = 0
-        do {
-            let span = f.span
-            for i in 0..<span.count { sum += span[i] }
-        }
-        #expect(sum == 6)
-    }
-
-    @Test
-    func `mutableSpan writes through; index defaults navigate`() throws {
-        var f = try FixedArray<Int>(count: Index<Int>.Count(2)) { _ in 5 }
-        do {
-            var m = f.mutableSpan()
-            m[1] = 50
-        }
-        let e1 = f[1]
-        #expect(e1 == 50)
-        var walked: [Int] = []
-        var i = f.startIndex
-        while i < f.endIndex {
-            walked.append(f[i])
-            i = f.index(after: i)
-        }
-        #expect(walked == [5, 50])
-    }
-
-    @Test
-    func `move-only elements live in Fixed and tear down once`() throws {
-        Probe2.reset()
-        do {
-            let f = try FixedArray<Item2>(count: Index<Item2>.Count(2)) { _ in Item2(9) }
-            f.withElement(at: 0) { item in
-                #expect(item.id == 9)
-            }
-            _ = consume f
-        }
-        let count = Probe2.destroyedCount
-        #expect(count == 2)
-    }
-}
-
-/// Separate recorder for the Fixed suite (suites are serialized internally, not across).
-private enum Probe2 {
-    nonisolated(unsafe) static var _destroyed: Int = 0
-    static func reset() { unsafe _destroyed = 0 }
-    static func record() { unsafe _destroyed += 1 }
-    static var destroyedCount: Int { unsafe _destroyed }
-}
-
-private struct Item2: ~Copyable {
-    let id: Int
-    init(_ id: Int) { self.id = id }
-    deinit { Probe2.record() }
 }
 
 private func requireSendable<T: Sendable & ~Copyable>(_ value: borrowing T) {}

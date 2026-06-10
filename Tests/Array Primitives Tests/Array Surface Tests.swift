@@ -21,10 +21,6 @@ private typealias HeapColumn<E: ~Copyable> =
 private typealias SharedColumn<E: ~Copyable> = Shared<E, HeapColumn<E>>
 private typealias MoveArray<E: ~Copyable> = Array<HeapColumn<E>>
 
-private typealias BoundedHeapColumn<E: ~Copyable> =
-    Buffer<Storage<Memory.Allocator<Memory.Heap>.System>.Contiguous<E>>.Linear.Bounded
-
-private typealias FixedArray<E: ~Copyable> = Fixed<BoundedHeapColumn<E>>
 private typealias CoWArray<E: ~Copyable> = Array<SharedColumn<E>>
 
 // MARK: - The seam-ledger laws (audit #2): both columns must be lawful
@@ -135,25 +131,5 @@ struct ArraySurfaceTests {
     }
 }
 
-// MARK: - Fixed: span-keyed institute conformances (audit #4)
-
-@Suite
-struct ArrayFixedSemanticsTests {
-
-    @Test
-    func `Fixed equality and hashing are span-keyed and capacity-independent`() throws {
-        let f1 = try FixedArray<Int>(count: Index<Int>.Count(3)) { _ in 7 }
-        let f2 = try FixedArray<Int>(count: Index<Int>.Count(3)) { _ in 7 }
-        let equal = (f1 == f2)                       // Equation.Protocol over the span
-        #expect(equal)
-        var h1 = Hasher(), h2 = Hasher()
-        f1.hash(into: &h1)
-        f2.hash(into: &h2)
-        #expect(h1.finalize() == h2.finalize())      // Hash.Protocol over the span
-
-        var f3 = try FixedArray<Int>(count: Index<Int>.Count(3)) { _ in 7 }
-        f3[1] = 8
-        let diverged = (f1 != f3)
-        #expect(diverged)
-    }
-}
+// The Fixed span-keyed-conformance suite (audit #4) moved to swift-fixed-primitives
+// with the W5-1 extraction.
