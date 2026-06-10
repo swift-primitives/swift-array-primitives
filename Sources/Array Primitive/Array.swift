@@ -40,6 +40,7 @@ public import Index_Primitives
 ///
 /// This shadows `Swift.Array`. Bare `Array` resolves to this type when any module in the
 /// ecosystem is imported; use `Swift.Array` or `[T]` syntax for the stdlib array.
+@frozen
 public struct Array<S: Store.`Protocol` & Buffer.`Protocol` & ~Copyable>: ~Copyable
 where S.Count == Index_Primitives.Index<S.Element>.Count {
 
@@ -57,9 +58,10 @@ where S.Count == Index_Primitives.Index<S.Element>.Count {
 
     /// Consumes the array, yielding its storage column.
     ///
-    /// Declared in the defining module (deliberately NOT `@inlinable`): partial
-    /// consumption of a non-frozen struct is same-module-only, and this is the one
-    /// place the wrapper may be unwrapped by value.
+    /// `@inlinable` is enabled by `@frozen` (the Q4 sweep): cross-module partial
+    /// consumption of a frozen struct is legal, so the unwrap specializes at the
+    /// call site.
+    @inlinable
     public consuming func take() -> S {
         store
     }

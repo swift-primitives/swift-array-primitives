@@ -31,6 +31,7 @@ public import Index_Primitives
 ///
 /// Copyability flows from the column (S5): a `Shared`-wrapped bounded column yields a CoW
 /// value-semantic fixed array with zero `Fixed`-side machinery.
+@frozen
 public struct Fixed<S: Store.`Protocol` & Buffer.`Protocol` & ~Copyable>: ~Copyable
 where S.Count == Index_Primitives.Index<S.Element>.Count {
 
