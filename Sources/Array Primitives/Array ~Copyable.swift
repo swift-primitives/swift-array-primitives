@@ -27,10 +27,9 @@ public import Span_Protocol_Primitives
 //
 // `Collection.Protocol` refines `Iterable`, whose multipass borrowing iterator is
 // vended by the memory→Iterable bridge over `Span.Protocol` — so the lattice holds
-// exactly where the COLUMN vends a span (`S: Span.Protocol`: the direct buffer
-// columns). The `Shared` column reaches its elements through the generic subscript
-// and the scoped `withSpan` forms instead; its protocol-lattice membership arrives
-// with a `Shared: Span.Protocol` conformance, recorded as future work.
+// exactly where the COLUMN vends a span (`S: Span.Protocol`). Since
+// shared-primitives c27eaa7 (the W5 lifetime-laundered span) that includes the
+// `Shared` column — the CoW ADTs ride the same lattice as the direct columns.
 //
 // NO element bound (Audit-#5 relaxation, W5-1): the lattice protocols admit
 // `~Copyable` elements and every witness reads borrowing (`_read`/`borrowing get` —

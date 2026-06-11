@@ -42,11 +42,10 @@ extension Array where S: ~Copyable {
 // MARK: - Span.Protocol (span-vending columns) → Iterable bridge → Sequenceable
 // ============================================================================
 //
-// The conformances chain through the COLUMN: the direct buffer columns conform to
-// `Span.Protocol` (and `Sequenceable`), so the ADT forwards; the `Shared` column does
-// not (a returning span cannot cross the class hop — its views are the scoped
-// `withSpan` forms), so the lattice ends at the column boundary there. Recorded as
-// future work alongside a `Shared: Span.Protocol` unsafe-laundered span.
+// The conformances chain through the COLUMN: every span-vending column conforms to
+// `Span.Protocol`, so the ADT forwards. Since shared-primitives c27eaa7 (W5, the
+// lifetime-laundered span across the box hop) the `Shared` column conforms too —
+// `Array<Shared<E, B>>` joins this whole lattice with no array-side code.
 
 extension Array: Span.`Protocol` where S: Span.`Protocol` & ~Copyable {
     /// Read-only span of the array elements, forwarded from the column.
