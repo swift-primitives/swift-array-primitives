@@ -1,6 +1,6 @@
 # .github/metadata.yaml
 # Triaged 2026-04-29 — anomaly-fix pass after wave-4 PR-branch triage didn't apply.
-description: "Array types for Swift."
+description: "Array<S> — a growable array generic over its storage column; copyability flows from the column (move-only by default, opt-in copy-on-write via Shared)."
 topics:
   - primitives
   - array
