@@ -31,7 +31,4 @@ uniqueness on the `Shared` column and is free on move-only columns. Only growth 
 construction pin per column. `Array: Equatable/Hashable where S: Equatable/Hashable` chains
 element-keyed semantics through the `Shared` carrier.
 
-`Array.Fixed` is the fixed-count, always-fully-initialized discipline; `Array.Bounded<N>`
-carries the compile-time-dimensioned index type.
-
 ## Topics

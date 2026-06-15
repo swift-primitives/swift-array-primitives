@@ -1,8 +1,20 @@
 # Array Primitives
 
 ![Development Status](https://img.shields.io/badge/status-active--development-blue.svg)
+[![CI](https://github.com/swift-primitives/swift-array-primitives/actions/workflows/ci.yml/badge.svg)](https://github.com/swift-primitives/swift-array-primitives/actions/workflows/ci.yml)
 
-The **array discipline** over the `Array` namespace: growable, fixed, static, small-buffer-optimized, bounded, and inline variants, all supporting noncopyable (`~Copyable`) elements.
+A growable array generic over its storage **column** — `Array<S>` composes any contiguous buffer column, and copyability flows from the column rather than from per-array machinery. The element-generic surface (subscript, `count`, `append`, `remove`, `swap`, span access) is written once against the column seam; only growth and construction specialize per column.
+
+The two ratified columns answer the ownership question at the type level. `Column.Heap<E>` is the move-only default — the array owns its heap storage outright and is consumed or borrowed, never silently copied. `Column.Shared<E>` is the explicit copy-on-write column — the array becomes `Copyable` exactly when its element is, so value semantics are a visible choice rather than an implicit cost.
+
+---
+
+## Key Features
+
+- **Column-generic storage** — one `Array<S>` type composes any storage column; the backing is a type parameter, not a separate type per policy.
+- **Copyability from the column** — move-only by default (`Column.Heap`), opt-in copy-on-write (`Column.Shared`); no hidden retain traffic on the move-only path.
+- **Noncopyable elements** — full `~Copyable` element support on the move-only column.
+- **Contiguous and span-friendly** — amortized O(1) `append`, direct `MutableSpan` access, and a C-interop buffer escape hatch.
 
 ---
 
@@ -10,33 +22,28 @@ The **array discipline** over the `Array` namespace: growable, fixed, static, sm
 
 ```swift
 import Array_Primitives
+import Column_Primitives
 
-// Growable, heap-backed — copy-on-write when Element is Copyable.
-var events = Array<String>()
-events.append("login")
-events.append("purchase")
-let count = events.count                         // 2
-_ = events.remove.last()                         // "purchase"
+// Move-only by default: the array owns its heap storage outright — no implicit copies.
+var log = Array<Column.Heap<Int>>()
+log.append(200)
+log.append(404)
+let entries = log.count                 // 2
 
-// Small-buffer optimization — inline until it overflows, then spills to the heap.
-var recentIDs = Array<Int>.Small<8>()
-for id in 1001...1010 { recentIDs.append(id) }  // 10th append spills to heap
-let first = recentIDs.span[0]                    // 1001
-
-// Fixed — all elements initialized at construction; count never changes.
-let slots = try Array<Int>.Fixed(count: 4) { $0.rawValue }
-var values: [Int] = []
-slots.forEach { values.append($0) }             // [0, 1, 2, 3]
-
-// Static — inline storage, variable count, no heap allocation.
-var buffer = Array<UInt8>.Static<16>()
-try buffer.append(0xFF)
-try buffer.append(0x0A)
+// Opt in to copy-on-write value semantics with the Shared column:
+var snapshot = Array<Column.Shared<Int>>()
+snapshot.append(200)
+let archived = snapshot                 // shares storage (O(1)) — no copy yet
+snapshot.append(404)                    // forks here; `archived` still holds [200]
 ```
+
+Storage is chosen by the column type parameter, so the same `Array<S>` covers more than these two — `Column.Inline<E, n>`, for example, keeps elements in the value itself with no heap allocation. Small-buffer storage (inline until it spills) awaits a future `Column.Small`.
 
 ---
 
 ## Installation
+
+Add the dependency to your `Package.swift`:
 
 ```swift
 dependencies: [
@@ -44,51 +51,56 @@ dependencies: [
 ]
 ```
 
+Add a product to your target:
+
 ```swift
 .target(
     name: "App",
     dependencies: [
-        // The umbrella — the whole package.
-        .product(name: "Array Primitives", package: "swift-array-primitives"),
-        // …or depend on just the variant you use, e.g.:
-        // .product(name: "Array Small Primitives", package: "swift-array-primitives"),
-        // .product(name: "Array Fixed Primitives", package: "swift-array-primitives"),
+        .product(name: "Array Primitives", package: "swift-array-primitives")
     ]
 )
 ```
 
-The package is pre-1.0 — depend on `branch: "main"` until `0.1.0` is tagged. Requires Swift 6.3
-and macOS 26 / iOS 26 / tvOS 26 / watchOS 26 / visionOS 26 (or the matching Linux toolchain).
-
----
-
-## Variants
-
-| Type | Storage | Reach for it when |
-|------|---------|-------------------|
-| `Array<Element>` | heap, growable (CoW) | the size isn't known up front |
-| `Array<Element>.Bounded<N>` | heap, compile-time dimension | you need type-safe index separation between arrays of different sizes |
-| `Array<Element>.Fixed` | heap, fixed count | all elements are known at creation and the count must never change |
-| `Array<Element>.Static<N>` | inline, fixed capacity | the maximum is small and known at compile time, and no heap allocation is acceptable |
-| `Array<Element>.Small<N>` | inline → heap | usually short-lived or small, occasionally larger (SBO) |
-| `Array<Element>.Inline<N>` | inline, always full | all N slots must be initialized; typealias to `Swift.InlineArray` |
-
-`Array`, `Array.Bounded`, `Array.Fixed`, and `Array.Small` support noncopyable (`~Copyable`)
-elements. `Array.Static` is unconditionally `~Copyable` due to inline storage deinit requirements.
-`Array.Inline` inherits `Swift.InlineArray`'s element constraints.
+The package is pre-1.0 — depend on `branch: "main"` until `0.1.0` is tagged. Requires Swift 6.3 and macOS 26 / iOS 26 / tvOS 26 / watchOS 26 / visionOS 26 (or the corresponding Linux / Windows toolchain).
 
 ---
 
 ## Architecture
 
-Each variant ships as **two modules**: a lean type module (e.g., `Array Small Primitive`) that
-declares the value type and its storage, and a conformances module (e.g., `Array Small Primitives`)
-that adds `Collection`, `Sequence`, and property-view conformances — kept separate so they never
-constrain noncopyable use-sites. Importing `Array Primitives` (the umbrella) brings the whole
-package; importing a single variant's conformances module brings in just that variant.
+| Product | Contents | When to import |
+|---------|----------|----------------|
+| `Array Primitives` | Umbrella — `Array<S>`, the column constructors, and the `Collection` / `Sequence` conformances | Most consumers |
+| `Array Primitive` | The `Array<S>` value type and its column-pinned surface, without the conformances | Move-only use that must not pull in conformance machinery |
+| `Array Protocol Primitives` | The array seam protocol that `Array<S>` conforms to | Writing code generic over array-like storage |
 
 ---
 
+## Platform Support
+
+| Platform         | CI  | Status       |
+|------------------|-----|--------------|
+| macOS 26         | Yes | Full support |
+| Linux            | Yes | Full support |
+| Windows          | Yes | Full support |
+| iOS/tvOS/watchOS | —   | Supported    |
+| Swift Embedded   | —   | Pending (nightly-toolchain follow-up) |
+
+---
+
+## Related Packages
+
+- [`swift-column-primitives`](https://github.com/swift-primitives/swift-column-primitives) — the column vocabulary (`Column.Heap`, `Column.Shared`, …) the array composes.
+- [`swift-shared-primitives`](https://github.com/swift-primitives/swift-shared-primitives) — the copy-on-write box behind the `Shared` column.
+- [`swift-fixed-primitives`](https://github.com/swift-primitives/swift-fixed-primitives) — the fixed-count discipline over a capacity-capped column.
+
+---
+
+## Community
+
+<!-- BEGIN: discussion -->
+<!-- END: discussion -->
+
 ## License
 
-Apache License 2.0. See [LICENSE](LICENSE.md) for details.
+Apache 2.0. See [LICENSE.md](LICENSE.md).
