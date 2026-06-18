@@ -62,7 +62,6 @@ let package = Package(
         .package(url: "https://github.com/swift-primitives/swift-memory-heap-primitives.git", branch: "main"),
         // W4: the ADT tier is generic over the storage COLUMN (Store.Protocol & Buffer.Protocol seam);
         // the CoW column is the Shared combinator.
-        .package(url: "https://github.com/swift-primitives/swift-store-primitives.git", branch: "main"),
         .package(url: "https://github.com/swift-primitives/swift-shared-primitives.git", branch: "main"),
         .package(url: "https://github.com/swift-primitives/swift-memory-allocation-primitives.git", branch: "main"),
     ],
@@ -75,7 +74,7 @@ let package = Package(
                 .product(name: "Buffer Primitive", package: "swift-buffer-primitives"),
                 .product(name: "Buffer Protocol Primitives", package: "swift-buffer-primitives"),
                 .product(name: "Buffer Linear Primitive", package: "swift-buffer-linear-primitives"),
-                .product(name: "Store Protocol Primitives", package: "swift-store-primitives"),
+                .product(name: "Store Protocol Primitives", package: "swift-storage-primitives"),
                 .product(name: "Shared Primitive", package: "swift-shared-primitives"),
                 .product(name: "Storage Contiguous Primitives", package: "swift-storage-primitives"),
                 .product(name: "Memory Heap Primitives", package: "swift-memory-heap-primitives"),
@@ -110,7 +109,7 @@ let package = Package(
             dependencies: [
                 "Array Primitive",
                 "Array Protocol Primitives",
-                .product(name: "Store Protocol Primitives", package: "swift-store-primitives"),
+                .product(name: "Store Protocol Primitives", package: "swift-storage-primitives"),
                 .product(name: "Shared Primitive", package: "swift-shared-primitives"),
                 .product(name: "Memory Allocator Primitive", package: "swift-memory-allocation-primitives"),
                 .product(name: "Buffer Protocol Primitives", package: "swift-buffer-primitives"),
