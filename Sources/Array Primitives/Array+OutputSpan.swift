@@ -39,8 +39,8 @@ extension Array where S: ~Copyable {
         capacity: Index_Primitives.Index<E>.Count,
         initializingWith initializer: (inout Swift.OutputSpan<E>) throws(Failure) -> Void
     ) throws(Failure)
-    where S == Buffer<Storage<Memory.Allocator<Memory.Heap>.System>.Contiguous<E>>.Linear {
-        self.init(store: try Buffer<Storage<Memory.Allocator<Memory.Heap>.System>.Contiguous<E>>.Linear(
+    where S == Buffer<Storage<Memory.Allocator<Memory.Heap>>.Contiguous<E>>.Linear {
+        self.init(store: try Buffer<Storage<Memory.Allocator<Memory.Heap>>.Contiguous<E>>.Linear(
             capacity: capacity,
             initializingWith: initializer
         ))
@@ -58,7 +58,7 @@ extension Array where S: ~Copyable {
         addingCapacity: Index_Primitives.Index<E>.Count,
         initializingWith initializer: (inout Swift.OutputSpan<E>) throws(Failure) -> Void
     ) throws(Failure)
-    where S == Buffer<Storage<Memory.Allocator<Memory.Heap>.System>.Contiguous<E>>.Linear {
+    where S == Buffer<Storage<Memory.Allocator<Memory.Heap>>.Contiguous<E>>.Linear {
         try store.append(
             addingCapacity: addingCapacity,
             initializingWith: initializer
@@ -77,7 +77,7 @@ extension Array where S: ~Copyable {
     public mutating func edit<E: ~Copyable, Failure: Swift.Error, R: ~Copyable>(
         _ body: (inout Swift.OutputSpan<E>) throws(Failure) -> R
     ) throws(Failure) -> R
-    where S == Buffer<Storage<Memory.Allocator<Memory.Heap>.System>.Contiguous<E>>.Linear {
+    where S == Buffer<Storage<Memory.Allocator<Memory.Heap>>.Contiguous<E>>.Linear {
         try store.edit(body)
     }
 }

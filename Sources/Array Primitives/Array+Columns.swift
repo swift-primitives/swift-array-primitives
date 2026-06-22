@@ -34,7 +34,7 @@ extension Array where S: ~Copyable {
     /// - Complexity: O(1) amortized.
     @inlinable
     public mutating func append<E: ~Copyable>(_ element: consuming E)
-    where S == Buffer<Storage<Memory.Allocator<Memory.Heap>.System>.Contiguous<E>>.Linear {
+    where S == Buffer<Storage<Memory.Allocator<Memory.Heap>>.Contiguous<E>>.Linear {
         store.append(element)
     }
 
@@ -43,14 +43,14 @@ extension Array where S: ~Copyable {
     /// - Complexity: O(1) amortized (O(n) when a copy must be made first).
     @inlinable
     public mutating func append<E>(_ element: consuming E)
-    where S == Shared<E, Buffer<Storage<Memory.Allocator<Memory.Heap>.System>.Contiguous<E>>.Linear> {
+    where S == Shared<E, Buffer<Storage<Memory.Allocator<Memory.Heap>>.Contiguous<E>>.Linear> {
         store.append(element)
     }
 
     /// Appends an element on the statically-unique (~Copyable element) `Shared` column.
     @inlinable
     public mutating func append<E: ~Copyable>(_ element: consuming E)
-    where S == Shared<E, Buffer<Storage<Memory.Allocator<Memory.Heap>.System>.Contiguous<E>>.Linear> {
+    where S == Shared<E, Buffer<Storage<Memory.Allocator<Memory.Heap>>.Contiguous<E>>.Linear> {
         store.appendAssumingUnique(element)
     }
 }
@@ -63,7 +63,7 @@ extension Array where S: ~Copyable {
     /// Removes all elements (direct move-only column).
     @inlinable
     public mutating func removeAll<E: ~Copyable>(keepingCapacity: Bool = false)
-    where S == Buffer<Storage<Memory.Allocator<Memory.Heap>.System>.Contiguous<E>>.Linear {
+    where S == Buffer<Storage<Memory.Allocator<Memory.Heap>>.Contiguous<E>>.Linear {
         store.removeAll(keepingCapacity: keepingCapacity)
     }
 
@@ -73,10 +73,10 @@ extension Array where S: ~Copyable {
     /// old box keep their elements untouched, and no deep copy is ever needed.
     @inlinable
     public mutating func removeAll<E>(keepingCapacity: Bool = false)
-    where S == Shared<E, Buffer<Storage<Memory.Allocator<Memory.Heap>.System>.Contiguous<E>>.Linear> {
+    where S == Shared<E, Buffer<Storage<Memory.Allocator<Memory.Heap>>.Contiguous<E>>.Linear> {
         let capacity: Index_Primitives.Index<E>.Count = keepingCapacity ? store.capacity : .zero
         self.store = Shared(
-            Buffer<Storage<Memory.Allocator<Memory.Heap>.System>.Contiguous<E>>.Linear(
+            Buffer<Storage<Memory.Allocator<Memory.Heap>>.Contiguous<E>>.Linear(
                 minimumCapacity: capacity
             )
         )
@@ -91,14 +91,14 @@ extension Array where S: ~Copyable {
     /// Ensures at least `minimumCapacity` slots are allocated (direct column).
     @inlinable
     public mutating func reserveCapacity<E: ~Copyable>(_ minimumCapacity: Index_Primitives.Index<E>.Count)
-    where S == Buffer<Storage<Memory.Allocator<Memory.Heap>.System>.Contiguous<E>>.Linear {
+    where S == Buffer<Storage<Memory.Allocator<Memory.Heap>>.Contiguous<E>>.Linear {
         store.reserveCapacity(minimumCapacity)
     }
 
     /// Ensures at least `minimumCapacity` slots are allocated (`Shared` column; uniquely).
     @inlinable
     public mutating func reserveCapacity<E>(_ minimumCapacity: Index_Primitives.Index<E>.Count)
-    where S == Shared<E, Buffer<Storage<Memory.Allocator<Memory.Heap>.System>.Contiguous<E>>.Linear> {
+    where S == Shared<E, Buffer<Storage<Memory.Allocator<Memory.Heap>>.Contiguous<E>>.Linear> {
         store.reserveCapacity(minimumCapacity)
     }
 
@@ -107,7 +107,7 @@ extension Array where S: ~Copyable {
     /// - Precondition: `newCapacity >= count`
     @inlinable
     public mutating func reallocate<E: ~Copyable>(capacity newCapacity: Index_Primitives.Index<E>.Count)
-    where S == Buffer<Storage<Memory.Allocator<Memory.Heap>.System>.Contiguous<E>>.Linear {
+    where S == Buffer<Storage<Memory.Allocator<Memory.Heap>>.Contiguous<E>>.Linear {
         store.reallocate(capacity: newCapacity)
     }
 
@@ -116,7 +116,7 @@ extension Array where S: ~Copyable {
     /// - Precondition: `newCapacity >= count`
     @inlinable
     public mutating func reallocate<E>(capacity newCapacity: Index_Primitives.Index<E>.Count)
-    where S == Shared<E, Buffer<Storage<Memory.Allocator<Memory.Heap>.System>.Contiguous<E>>.Linear> {
+    where S == Shared<E, Buffer<Storage<Memory.Allocator<Memory.Heap>>.Contiguous<E>>.Linear> {
         store.reallocate(capacity: newCapacity)
     }
 }
@@ -131,7 +131,7 @@ extension Array where S: ~Copyable {
     /// - Complexity: O(`count`)
     @inlinable
     public func clone<E>() -> Self
-    where S == Buffer<Storage<Memory.Allocator<Memory.Heap>.System>.Contiguous<E>>.Linear {
+    where S == Buffer<Storage<Memory.Allocator<Memory.Heap>>.Contiguous<E>>.Linear {
         Self(store: store.clone())
     }
 
@@ -141,7 +141,7 @@ extension Array where S: ~Copyable {
     /// - Complexity: O(`count`)
     @inlinable
     public func clone<E>(capacity: Index_Primitives.Index<E>.Count) -> Self
-    where S == Buffer<Storage<Memory.Allocator<Memory.Heap>.System>.Contiguous<E>>.Linear {
+    where S == Buffer<Storage<Memory.Allocator<Memory.Heap>>.Contiguous<E>>.Linear {
         Self(store: store.clone(capacity: capacity))
     }
 }
@@ -155,7 +155,7 @@ extension Array where S: ~Copyable {
     @inlinable
     @_lifetime(&self)
     public mutating func mutableSpan<E: ~Copyable>() -> Swift.MutableSpan<E>
-    where S == Buffer<Storage<Memory.Allocator<Memory.Heap>.System>.Contiguous<E>>.Linear {
+    where S == Buffer<Storage<Memory.Allocator<Memory.Heap>>.Contiguous<E>>.Linear {
         store.mutableSpan
     }
 
@@ -165,7 +165,7 @@ extension Array where S: ~Copyable {
     public func withSpan<E, R, Failure: Swift.Error>(
         _ body: (Swift.Span<E>) throws(Failure) -> R
     ) throws(Failure) -> R
-    where S == Shared<E, Buffer<Storage<Memory.Allocator<Memory.Heap>.System>.Contiguous<E>>.Linear> {
+    where S == Shared<E, Buffer<Storage<Memory.Allocator<Memory.Heap>>.Contiguous<E>>.Linear> {
         try store.withSpan(body)
     }
 
@@ -174,7 +174,7 @@ extension Array where S: ~Copyable {
     public mutating func withMutableSpan<E, R, Failure: Swift.Error>(
         _ body: (inout Swift.MutableSpan<E>) throws(Failure) -> R
     ) throws(Failure) -> R
-    where S == Shared<E, Buffer<Storage<Memory.Allocator<Memory.Heap>.System>.Contiguous<E>>.Linear> {
+    where S == Shared<E, Buffer<Storage<Memory.Allocator<Memory.Heap>>.Contiguous<E>>.Linear> {
         try store.withMutableSpan(body)
     }
 }
@@ -197,7 +197,7 @@ extension Array where S: ~Copyable {
     public func withUnsafeBufferPointer<E, R, Failure: Swift.Error>(
         _ body: (UnsafeBufferPointer<E>) throws(Failure) -> R
     ) throws(Failure) -> R
-    where S == Buffer<Storage<Memory.Allocator<Memory.Heap>.System>.Contiguous<E>>.Linear {
+    where S == Buffer<Storage<Memory.Allocator<Memory.Heap>>.Contiguous<E>>.Linear {
         try unsafe store.withUnsafeBufferPointer(body)
     }
 }

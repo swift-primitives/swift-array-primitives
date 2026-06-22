@@ -81,7 +81,7 @@ extension Array where S: ~Copyable {
     /// Creates an empty MOVE-ONLY array (the default ownership column).
     @inlinable
     public init<E: ~Copyable>(initialCapacity: Index_Primitives.Index<E>.Count = .zero)
-    where S == Buffer<Storage<Memory.Allocator<Memory.Heap>.System>.Contiguous<E>>.Linear {
+    where S == Buffer<Storage<Memory.Allocator<Memory.Heap>>.Contiguous<E>>.Linear {
         self.init(store: S(minimumCapacity: initialCapacity))
     }
 
@@ -92,10 +92,10 @@ extension Array where S: ~Copyable {
     /// copyability — see `prepareForMutation`'s backstop).
     @inlinable
     public init<E>(initialCapacity: Index_Primitives.Index<E>.Count = .zero)
-    where S == Shared<E, Buffer<Storage<Memory.Allocator<Memory.Heap>.System>.Contiguous<E>>.Linear> {
+    where S == Shared<E, Buffer<Storage<Memory.Allocator<Memory.Heap>>.Contiguous<E>>.Linear> {
         self.init(
             store: Shared(
-                Buffer<Storage<Memory.Allocator<Memory.Heap>.System>.Contiguous<E>>.Linear(
+                Buffer<Storage<Memory.Allocator<Memory.Heap>>.Contiguous<E>>.Linear(
                     minimumCapacity: initialCapacity
                 )
             )
@@ -106,10 +106,10 @@ extension Array where S: ~Copyable {
     /// (the boxed flavor of the move-only regime — useful when the box's O(1) move matters).
     @inlinable
     public init<E: ~Copyable>(initialCapacity: Index_Primitives.Index<E>.Count = .zero)
-    where S == Shared<E, Buffer<Storage<Memory.Allocator<Memory.Heap>.System>.Contiguous<E>>.Linear> {
+    where S == Shared<E, Buffer<Storage<Memory.Allocator<Memory.Heap>>.Contiguous<E>>.Linear> {
         self.init(
             store: Shared(
-                Buffer<Storage<Memory.Allocator<Memory.Heap>.System>.Contiguous<E>>.Linear(
+                Buffer<Storage<Memory.Allocator<Memory.Heap>>.Contiguous<E>>.Linear(
                     minimumCapacity: initialCapacity
                 )
             )

@@ -16,7 +16,7 @@ import Testing
 // surface gaps the column-keyed core suite left open.
 
 private typealias HeapColumn<E: ~Copyable> =
-    Buffer<Storage<Memory.Allocator<Memory.Heap>.System>.Contiguous<E>>.Linear
+    Buffer<Storage<Memory.Allocator<Memory.Heap>>.Contiguous<E>>.Linear
 
 private typealias SharedColumn<E: ~Copyable> = Shared<E, HeapColumn<E>>
 private typealias MoveArray<E: ~Copyable> = Array<HeapColumn<E>>
