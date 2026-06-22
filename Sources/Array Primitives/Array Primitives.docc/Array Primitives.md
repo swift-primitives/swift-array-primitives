@@ -15,10 +15,10 @@ The two ratified columns:
 
 ```swift
 // Zero-cost MOVE-ONLY (the default ownership column):
-Array<Buffer<Storage<Memory.Allocator<Memory.Heap>.System>.Contiguous<FD>>.Linear>
+Array<Buffer<Storage<Memory.Allocator<Memory.Heap>>.Contiguous<FD>>.Linear>
 
 // Explicit copy-on-write VALUE SEMANTICS (the Shared column):
-Array<Shared<Int, Buffer<Storage<Memory.Allocator<Memory.Heap>.System>.Contiguous<Int>>.Linear>>
+Array<Shared<Int, Buffer<Storage<Memory.Allocator<Memory.Heap>>.Contiguous<Int>>.Linear>>
 ```
 
 `Array: Copyable where S: Copyable` — the `Shared` column is `Copyable` exactly when its
