@@ -79,6 +79,7 @@ let package = Package(
                 .product(name: "Storage Contiguous Primitives", package: "swift-storage-primitives"),
                 .product(name: "Memory Heap Primitives", package: "swift-memory-heap-primitives"),
                 .product(name: "Memory Allocator Primitive", package: "swift-memory-allocation-primitives"),
+                .product(name: "Memory Allocator Protocol Primitives", package: "swift-memory-allocation-primitives"),
                 .product(name: "Index Primitives", package: "swift-index-primitives"),
             ]
         ),
@@ -112,6 +113,7 @@ let package = Package(
                 .product(name: "Store Protocol Primitives", package: "swift-storage-primitives"),
                 .product(name: "Shared Primitive", package: "swift-shared-primitives"),
                 .product(name: "Memory Allocator Primitive", package: "swift-memory-allocation-primitives"),
+                .product(name: "Memory Allocator Protocol Primitives", package: "swift-memory-allocation-primitives"),
                 .product(name: "Buffer Protocol Primitives", package: "swift-buffer-primitives"),
                 .product(name: "Span Protocol Primitives", package: "swift-span-primitives"),
                 .product(name: "Storage Contiguous Primitives", package: "swift-storage-primitives"),

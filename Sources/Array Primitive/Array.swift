@@ -16,6 +16,7 @@ public import Store_Protocol_Primitives
 public import Storage_Contiguous_Primitives
 public import Memory_Heap_Primitives
 public import Memory_Allocator_Primitive
+public import Memory_Allocator_Protocol_Primitives
 public import Shared_Primitive
 public import Index_Primitives
 
@@ -78,10 +79,15 @@ extension Array: Sendable where S: Sendable & ~Copyable {}
 // MARK: - Column-pinned construction
 
 extension Array where S: ~Copyable {
-    /// Creates an empty MOVE-ONLY array (the default ownership column).
+    /// Creates an empty MOVE-ONLY array (the default ownership column, any growable backing).
+    ///
+    /// Generic over the fresh-byte-construction capability `Memory.Growable`, so this serves the
+    /// dense-heap column (`Memory.Heap`) AND the inline⊕heap small column (`Memory.Small<n>`)
+    /// uniformly. For the small column, `initialCapacity` sizes the inline budget; growth past it
+    /// re-runs the spill decision and relocates into a heap region.
     @inlinable
-    public init<E: ~Copyable>(initialCapacity: Index_Primitives.Index<E>.Count = .zero)
-    where S == Buffer<Storage<Memory.Allocator<Memory.Heap>>.Contiguous<E>>.Linear {
+    public init<E: ~Copyable, Resource: Memory.Growable & ~Copyable>(initialCapacity: Index_Primitives.Index<E>.Count = .zero)
+    where S == Buffer<Storage<Memory.Allocator<Resource>>.Contiguous<E>>.Linear {
         self.init(store: S(minimumCapacity: initialCapacity))
     }
 

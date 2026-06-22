@@ -21,6 +21,7 @@ public import Buffer_Linear_Primitives
 public import Storage_Contiguous_Primitives
 public import Memory_Heap_Primitives
 public import Memory_Allocator_Primitive
+public import Memory_Allocator_Protocol_Primitives
 public import Shared_Primitive
 public import Index_Primitives
 
@@ -29,12 +30,17 @@ public import Index_Primitives
 // ============================================================================
 
 extension Array where S: ~Copyable {
-    /// Appends an element to the array (direct move-only column).
+    /// Appends an element to the array (direct move-only column, any growable backing).
+    ///
+    /// Generic over the fresh-byte-construction capability `Memory.Growable`, so this serves the
+    /// dense-heap column (`Memory.Heap`) AND the inline⊕heap small column (`Memory.Small<n>`)
+    /// uniformly — for the small column, growth past the inline budget re-runs the spill decision
+    /// and relocates into a heap region (never a trap).
     ///
     /// - Complexity: O(1) amortized.
     @inlinable
-    public mutating func append<E: ~Copyable>(_ element: consuming E)
-    where S == Buffer<Storage<Memory.Allocator<Memory.Heap>>.Contiguous<E>>.Linear {
+    public mutating func append<E: ~Copyable, Resource: Memory.Growable & ~Copyable>(_ element: consuming E)
+    where S == Buffer<Storage<Memory.Allocator<Resource>>.Contiguous<E>>.Linear {
         store.append(element)
     }
 
