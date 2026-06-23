@@ -1,6 +1,6 @@
 # SE-0527 RigidArray/UniqueArray Alignment
 
-> **Dissolution note (2026-06-23)**: `Memory.Contiguous` was dissolved — the typed contiguous tier is now `Storage.Contiguous`, the read-capability protocol is `Span.Protocol` (the renamed/relocated `Memory.Contiguous.Protocol`), and owned raw bytes are `Memory.Heap`. References below are retained as the pre-dissolution design record; see `swift-institute/Research/memory-contiguous-dissolution.md`.
+> **Note:** `Memory.Contiguous` was dissolved 2026-06-23 → `Storage.Contiguous` (typed) / `Span.Protocol` (read capability) / `Memory.Heap` (raw bytes). See `swift-institute/Research/memory-contiguous-dissolution.md`.
 
 <!--
 ---
@@ -184,7 +184,7 @@ Plus corresponding additions on `Buffer.Linear.Small<N>` and `Buffer.Linear.Inli
 
 **Reference implementation**: `Swift.Array.init(capacity:initializingWith:)` at `stdlib/public/core/Array.swift:1633` and `Swift.Array.append(addingCapacity:initializingWith:)` at `:1664` demonstrate the exact throw-safety pattern: `defer { let count = span.finalize(for: buffer); span = OutputSpan(); commit(count) }`. The `finalize` + reset-to-empty-span dance ensures the OutputSpan's deinit does not double-deinitialize elements that have already been committed to the buffer. On throw, `defer` runs with whatever count the span had at throw time, so partial initialization is preserved (matching SE-0527's semantics verbatim).
 
-**Cross-package access path**: `OutputSpan.init(buffer: UnsafeMutableBufferPointer<Element>, initializedCount: Int)` is `public @unsafe @_alwaysEmitIntoClient` (OutputSpan.swift:136). Our `Package.swift` has `.strictMemorySafety()` enabled, so call sites will need explicit `unsafe` expressions, consistent with existing uses in `Buffer.Linear+Memory.Contiguous.Protocol.swift`.
+**Cross-package access path**: `OutputSpan.init(buffer: UnsafeMutableBufferPointer<Element>, initializedCount: Int)` is `public @unsafe @_alwaysEmitIntoClient` (OutputSpan.swift:136). Our `Package.swift` has `.strictMemorySafety()` enabled, so call sites will need explicit `unsafe` expressions, consistent with existing uses in `Buffer.Linear+Span.Protocol.swift`.
 
 ### Adoption gating
 
