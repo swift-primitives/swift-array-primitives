@@ -1,3 +1,9 @@
+// SUPERSEDED (2026-06-23): Memory.Contiguous was dissolved — the read-capability
+//   protocol is now Span.Protocol (the renamed/relocated Memory.Contiguous.Protocol),
+//   the typed contiguous tier is Storage.Contiguous. The constraint-poisoning finding
+//   below is preserved as the historical record; see
+//   swift-institute/Research/memory-contiguous-dissolution.md.
+//
 // Experiment: Memory.Contiguous.Protocol Conformance Constraint Poisoning
 //
 // Hypothesis: Set.Ordered can conform to Memory.Contiguous.Protocol without

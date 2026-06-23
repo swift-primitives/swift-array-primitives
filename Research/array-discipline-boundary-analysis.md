@@ -168,7 +168,7 @@ The array's primary contribution: making the indexed-contiguous-storage a **citi
 | Element init/move/deinit lifecycle | Via `Storage` |
 | Initialization state tracking | `Storage.Initialization` |
 | Raw pointer access | `pointer(at:)` |
-| Contiguous memory guarantee | `Memory.Contiguous.Protocol` |
+| Contiguous memory guarantee | `Span.Protocol` |
 | Header state machine | `isEmpty`, `isFull` |
 | Unchecked subscript | Direct pointer arithmetic |
 
