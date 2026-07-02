@@ -25,7 +25,7 @@ public import Index_Primitives
 // recorded as future work — its construction path is covered by the pinned
 // `Array(initialCapacity:)` + `append` ops.
 
-extension Array where S: ~Copyable {
+extension __Array where S: ~Copyable {
 
     /// Creates a growable array with the given initial capacity, initialized via an
     /// `OutputSpan<E>` closure (direct column).

@@ -20,6 +20,7 @@ public import Array_Protocol_Primitives
 public import Buffer_Protocol_Primitives
 public import Store_Protocol_Primitives
 public import Span_Protocol_Primitives
+public import Index_Primitives
 
 // ============================================================================
 // MARK: - Collection Conformances (the span-bridged lattice)
@@ -37,23 +38,38 @@ public import Span_Protocol_Primitives
 // Element-RETURNING conveniences stay `S.Element: Copyable`-gated in their own
 // extensions.
 
+// The Collection lattice conformances restate the SEAM bound (`Store.Protocol &
+// Buffer.Protocol` + the element-domain count constraint) alongside `Span.Protocol`:
+// without it, `count`/`Index`/subscript would silently resolve to the Span-gated
+// protocol defaults instead of the seam-bound witnesses (a recurring silent break
+// observed across the W1 clusters). Matching the conformance condition to what the
+// witnesses require keeps the real O(1) `count` and the typed `Index` in play.
+
 // MARK: Collection.Protocol
 
-extension Array: Collection.`Protocol` where S: Span.`Protocol` & ~Copyable {}
+extension __Array: Collection.`Protocol`
+where S: Span.`Protocol` & Store.`Protocol` & Buffer.`Protocol` & ~Copyable,
+    S.Count == Index_Primitives.Index<S.Element>.Count {}
 
 // MARK: Collection.Bidirectional
 
-extension Array: Collection.Bidirectional where S: Span.`Protocol` & ~Copyable {}
+extension __Array: Collection.Bidirectional
+where S: Span.`Protocol` & Store.`Protocol` & Buffer.`Protocol` & ~Copyable,
+    S.Count == Index_Primitives.Index<S.Element>.Count {}
 
-// MARK: Array.Protocol
+// MARK: Array.Protocol (the hoisted __ArrayProtocol; `Array.Protocol` is the front-door
+// accessor and cannot be spelled bare on the generic alias)
 
-extension Array: Array.`Protocol` where S: Span.`Protocol` & ~Copyable {}
+extension __Array: __ArrayProtocol
+where S: Span.`Protocol` & Store.`Protocol` & Buffer.`Protocol` & ~Copyable,
+    S.Count == Index_Primitives.Index<S.Element>.Count {}
 
 // ============================================================================
 // MARK: - Properties (generic: Buffer.Protocol count + seam capacity)
 // ============================================================================
 
-extension Array where S: ~Copyable {
+extension __Array where S: ~Copyable, S: Store.`Protocol` & Buffer.`Protocol`,
+    S.Count == Index_Primitives.Index<S.Element>.Count {
     /// The number of elements in the array.
     @inlinable
     public var count: Index.Count {
@@ -81,7 +97,8 @@ extension Array where S: ~Copyable {
 // MARK: - Element Access (generic: the seam subscript)
 // ============================================================================
 
-extension Array where S: ~Copyable {
+extension __Array where S: ~Copyable, S: Store.`Protocol` & Buffer.`Protocol`,
+    S.Count == Index_Primitives.Index<S.Element>.Count {
     /// Accesses the element at the given typed index.
     ///
     /// The mutating access runs the column's semantic mutation gate FIRST
@@ -113,7 +130,9 @@ extension Array where S: ~Copyable {
     }
 }
 
-extension Array where S: ~Copyable, S.Element: Copyable {
+extension __Array where S: ~Copyable, S.Element: Copyable,
+    S: Store.`Protocol` & Buffer.`Protocol`,
+    S.Count == Index_Primitives.Index<S.Element>.Count {
     /// Returns the element at the typed index, or nil if out of bounds.
     @inlinable
     public func element(at index: Index) -> S.Element? {
@@ -137,7 +156,8 @@ extension Array where S: ~Copyable, S.Element: Copyable {
 // MARK: - Mutating Operations (generic: gate + seam)
 // ============================================================================
 
-extension Array where S: ~Copyable {
+extension __Array where S: ~Copyable, S: Store.`Protocol` & Buffer.`Protocol`,
+    S.Count == Index_Primitives.Index<S.Element>.Count {
     /// Removes and returns the last element.
     ///
     /// - Precondition: The array must not be empty.
@@ -209,7 +229,7 @@ extension Array where S: ~Copyable {
 // MARK: - Cloning (generic on the CoW column)
 // ============================================================================
 
-extension Array where S: Copyable {
+extension __Array where S: Copyable, S: Store.`Protocol` {
     /// Returns an independent copy of this array with its own storage.
     ///
     /// On the `Shared` (CoW) column the fresh value shares the box with `self` at the

@@ -10,8 +10,9 @@
 // ===----------------------------------------------------------------------===//
 
 public import Index_Primitives
+public import Store_Protocol_Primitives
 
-extension Array where S: ~Copyable {
+extension __Array where S: Store.`Protocol` & ~Copyable {
     /// Type-safe index for array elements — typed by the COLUMN's element (the user element
     /// on both ratified columns), preventing cross-collection index confusion.
     public typealias Index = Index_Primitives.Index<S.Element>

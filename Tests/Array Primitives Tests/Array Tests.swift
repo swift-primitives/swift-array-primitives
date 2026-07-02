@@ -42,11 +42,12 @@ private typealias HeapColumn<E: ~Copyable> =
 
 private typealias SharedColumn<E: ~Copyable> = Shared<E, HeapColumn<E>>
 
-/// The default move-only array (zero-cost ownership column).
-private typealias MoveArray<E: ~Copyable> = Array<HeapColumn<E>>
+/// The default move-only array — the CANONICAL front door ([DS-028]).
+private typealias MoveArray<E: ~Copyable> = Array<E>
 
-/// The explicit CoW value-semantic array (`Shared` column).
-private typealias CoWArray<E: ~Copyable> = Array<SharedColumn<E>>
+/// The explicit CoW value-semantic array (`Shared` column — no front door yet;
+/// spelled through the carrier).
+private typealias CoWArray<E: ~Copyable> = __Array<SharedColumn<E>>
 
 /// Generic borrow-through-call reads via the lattice bound — compiles ONLY with the
 /// element-unbounded conformances (the Audit-#5 relaxation, W5-1; the R2 probe shape).

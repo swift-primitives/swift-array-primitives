@@ -19,9 +19,9 @@ private typealias HeapColumn<E: ~Copyable> =
     Buffer<Storage<Memory.Allocator<Memory.Heap>>.Contiguous<E>>.Linear
 
 private typealias SharedColumn<E: ~Copyable> = Shared<E, HeapColumn<E>>
-private typealias MoveArray<E: ~Copyable> = Array<HeapColumn<E>>
+private typealias MoveArray<E: ~Copyable> = Array<E>
 
-private typealias CoWArray<E: ~Copyable> = Array<SharedColumn<E>>
+private typealias CoWArray<E: ~Copyable> = __Array<SharedColumn<E>>
 
 // MARK: - The seam-ledger laws (audit #2): both columns must be lawful
 

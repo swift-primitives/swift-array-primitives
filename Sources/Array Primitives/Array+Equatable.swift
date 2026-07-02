@@ -18,7 +18,7 @@ public import Array_Primitive
 /// capacity-independent — so `Array<Shared<Int, …>> == Array<Shared<Int, …>>` compares
 /// elements. Move-only columns are never `Equatable`, by design (R-1: copyability — and
 /// with it value-semantic comparison — flows from the column).
-extension Array: Equatable where S: Equatable {
+extension __Array: Equatable where S: Equatable {
     @inlinable
     public static func == (lhs: Self, rhs: Self) -> Bool {
         lhs.store == rhs.store

@@ -14,6 +14,9 @@ public import Buffer_Linear_Primitives
 public import Iterable
 public import Iterator_Chunk_Primitives
 public import Span_Protocol_Primitives
+public import Store_Protocol_Primitives
+public import Buffer_Protocol_Primitives
+public import Index_Primitives
 
 // ============================================================================
 // MARK: - Institute Collection Conformances (chained through the COLUMN)
@@ -23,7 +26,12 @@ public import Span_Protocol_Primitives
 // rationale — in `Array ~Copyable.swift`.
 
 // NO element bound (Audit-#5 relaxation, W5-1 — see `Array ~Copyable.swift`).
-extension Array: Collection.Access.Random where S: Span.`Protocol` & ~Copyable {}
+// Restates the seam bound alongside `Span.Protocol` so the random-access witnesses
+// resolve to the seam-bound implementations, not the Span-gated defaults (finding
+// shared across the W1 clusters).
+extension __Array: Collection.Access.Random
+where S: Span.`Protocol` & Store.`Protocol` & Buffer.`Protocol` & ~Copyable,
+    S.Count == Index_Primitives.Index<S.Element>.Count {}
 
 // Collection.Remove.Last: WITHDRAWN at the W4 reshape. Its generic witness would mutate
 // through the seam without per-column CoW pinning; the semantic `removeLast()` (gated,
@@ -34,7 +42,7 @@ extension Array: Collection.Access.Random where S: Span.`Protocol` & ~Copyable {
 // MARK: - Dynamic typealias
 // ============================================================================
 
-extension Array where S: ~Copyable {
+extension __Array where S: ~Copyable {
     public typealias Dynamic = Self
 }
 
@@ -47,7 +55,7 @@ extension Array where S: ~Copyable {
 // lifetime-laundered span across the box hop) the `Shared` column conforms too —
 // `Array<Shared<E, B>>` joins this whole lattice with no array-side code.
 
-extension Array: Span.`Protocol` where S: Span.`Protocol` & ~Copyable {
+extension __Array: Span.`Protocol` where S: Span.`Protocol` & ~Copyable {
     /// Read-only span of the array elements, forwarded from the column.
     @inlinable
     public var span: Swift.Span<S.Element> {
@@ -61,7 +69,7 @@ extension Array: Span.`Protocol` where S: Span.`Protocol` & ~Copyable {
 // Iterable — the multipass borrowing `makeIterator()` is vended by the memory→Iterable
 // bridge over the Span.`Protocol` conformance above, yielding `Iterator.Chunk` (which
 // admits ~Copyable elements — D4; no element bound per the Audit-#5 relaxation).
-extension Array: Iterable where S: Span.`Protocol` & ~Copyable {
+extension __Array: Iterable where S: Span.`Protocol` & ~Copyable {
     @_implements(Iterable, Iterator)
     public typealias IterableIterator = Iterator_Primitive.Iterator.Chunk<S.Element>
 }
@@ -69,7 +77,7 @@ extension Array: Iterable where S: Span.`Protocol` & ~Copyable {
 // `S.Iterator: Escapable` makes the forwarded iterator returnable from the consuming
 // `makeIterator()` without a lifetime annotation rooted in (consumed) `self`; both
 // ratified columns' iterators are Escapable values.
-extension Array: Sequenceable where S: Sequenceable & ~Copyable, S.Iterator: Escapable {
+extension __Array: Sequenceable where S: Sequenceable & ~Copyable, S.Iterator: Escapable {
     @_implements(Sequenceable, Iterator)
     public typealias SequenceableIterator = S.Iterator
 

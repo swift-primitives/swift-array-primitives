@@ -29,7 +29,7 @@ public import Index_Primitives
 // MARK: - Append (growth)
 // ============================================================================
 
-extension Array where S: ~Copyable {
+extension __Array where S: ~Copyable {
     /// Appends an element to the array (direct move-only column, any growable backing).
     ///
     /// Generic over the fresh-byte-construction capability `Memory.Growable`, so this serves the
@@ -65,11 +65,15 @@ extension Array where S: ~Copyable {
 // MARK: - Remove All (storage rebinding)
 // ============================================================================
 
-extension Array where S: ~Copyable {
-    /// Removes all elements (direct move-only column).
+extension __Array where S: ~Copyable {
+    /// Removes all elements (direct move-only column, any growable backing).
+    ///
+    /// Allocation-generic per [DS-029] form 2: `Buffer.Linear.removeAll(keepingCapacity:)`
+    /// is R-generic, so this one op serves the dense-heap column (`Memory.Heap`) AND the
+    /// inline⊕heap small column (`Memory.Small<n>`) uniformly.
     @inlinable
-    public mutating func removeAll<E: ~Copyable>(keepingCapacity: Bool = false)
-    where S == Buffer<Storage<Memory.Allocator<Memory.Heap>>.Contiguous<E>>.Linear {
+    public mutating func removeAll<E: ~Copyable, Resource: Memory.Growable & ~Copyable>(keepingCapacity: Bool = false)
+    where S == Buffer<Storage<Memory.Allocator<Resource>>.Contiguous<E>>.Linear {
         store.removeAll(keepingCapacity: keepingCapacity)
     }
 
@@ -93,11 +97,15 @@ extension Array where S: ~Copyable {
 // MARK: - Capacity (growth / reshape)
 // ============================================================================
 
-extension Array where S: ~Copyable {
-    /// Ensures at least `minimumCapacity` slots are allocated (direct column).
+extension __Array where S: ~Copyable {
+    /// Ensures at least `minimumCapacity` slots are allocated (direct column, any growable
+    /// backing).
+    ///
+    /// Allocation-generic per [DS-029] form 2: `Buffer.Linear.reserveCapacity` is R-generic,
+    /// so this covers heap AND small columns uniformly.
     @inlinable
-    public mutating func reserveCapacity<E: ~Copyable>(_ minimumCapacity: Index_Primitives.Index<E>.Count)
-    where S == Buffer<Storage<Memory.Allocator<Memory.Heap>>.Contiguous<E>>.Linear {
+    public mutating func reserveCapacity<E: ~Copyable, Resource: Memory.Growable & ~Copyable>(_ minimumCapacity: Index_Primitives.Index<E>.Count)
+    where S == Buffer<Storage<Memory.Allocator<Resource>>.Contiguous<E>>.Linear {
         store.reserveCapacity(minimumCapacity)
     }
 
@@ -131,7 +139,7 @@ extension Array where S: ~Copyable {
 // MARK: - Cloning (direct column; the generic `clone()` covers the CoW column)
 // ============================================================================
 
-extension Array where S: ~Copyable {
+extension __Array where S: ~Copyable {
     /// Returns an independent copy of this array sized to exactly fit `count` (direct column).
     ///
     /// - Complexity: O(`count`)
@@ -156,7 +164,7 @@ extension Array where S: ~Copyable {
 // MARK: - Spans
 // ============================================================================
 
-extension Array where S: ~Copyable {
+extension __Array where S: ~Copyable {
     /// Mutable span of the array elements (direct column; form-α method).
     @inlinable
     @_lifetime(&self)
@@ -193,7 +201,7 @@ extension Array where S: ~Copyable {
 // ============================================================================
 
 @_spi(Unsafe)
-extension Array where S: ~Copyable {
+extension __Array where S: ~Copyable {
     /// Provides read-only access to the underlying contiguous storage.
     ///
     /// - Warning: This is an escape hatch for C interop. Prefer `span` for safe access.

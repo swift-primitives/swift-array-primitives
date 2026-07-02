@@ -11,8 +11,6 @@
 
 public import Buffer_Primitive
 public import Buffer_Linear_Primitive
-public import Buffer_Protocol_Primitives
-public import Store_Protocol_Primitives
 public import Storage_Contiguous_Primitives
 public import Memory_Heap_Primitives
 public import Memory_Allocator_Primitive
@@ -24,12 +22,12 @@ public import Index_Primitives
 
 /// A growable array — the semantic ADT over an explicit storage COLUMN.
 ///
-/// The ratified two-column design (`PROPOSAL-tower-perfected-design.md` §1.3): `Array` is
+/// The ratified two-column design (`PROPOSAL-tower-perfected-design.md` §1.3): `__Array` is
 /// generic over `S`, and **copyability flows from the column** (S5):
 ///
 /// ```swift
-/// Array<            Buffer<Storage<…System>.Contiguous<FD >>.Linear >    // zero-cost MOVE-ONLY (default)
-/// Array<Shared<Int, Buffer<Storage<…System>.Contiguous<Int>>.Linear>>   // explicit CoW value semantics
+/// __Array<            Buffer<Storage<…System>.Contiguous<FD >>.Linear >    // zero-cost MOVE-ONLY (default)
+/// __Array<Shared<Int, Buffer<Storage<…System>.Contiguous<Int>>.Linear>>   // explicit CoW value semantics
 /// ```
 ///
 /// Both columns expose the USER element as `S.Element` (the direct buffer's element IS the
@@ -37,13 +35,23 @@ public import Index_Primitives
 /// element-generic surface (subscript, `count`, iteration) lives here generically; only
 /// construction, growth, and CoW-checked mutation pin per column (mechanic #2). The
 /// element-keyed semantics chain from the `Shared` carrier:
-/// `Array<S>: Equatable where S: Equatable`.
+/// `__Array<S>: Equatable where S: Equatable`.
 ///
-/// This shadows `Swift.Array`. Bare `Array` resolves to this type when any module in the
-/// ecosystem is imported; use `Swift.Array` or `[T]` syntax for the stdlib array.
+/// ## Carrier (hoisted per [API-IMPL-009]/[PKG-NAME-006])
+///
+/// `__Array` is the bound-free carrier ([DS-025]): its column parameter `S` is bound
+/// `~Copyable` **only**; every capability (observability, the seam element ops,
+/// construction/growth) attaches by conditional `@inlinable` extension keyed on the
+/// seams the column conforms. The PUBLIC spelling of the family is the front-door alias
+/// `Array<E>` (canonical), declared in `Array.FrontDoor.swift` ([DS-028]); the hoisted
+/// name never appears in consumer signatures.
+///
+/// The canonical `Array<E>` front door shadows `Swift.Array`: bare `Array` resolves to it
+/// when any module in the ecosystem is imported; use `Swift.Array` or `[T]` syntax for the
+/// stdlib array.
+@_documentation(visibility: public)
 @frozen
-public struct Array<S: Store.`Protocol` & Buffer.`Protocol` & ~Copyable>: ~Copyable
-where S.Count == Index_Primitives.Index<S.Element>.Count {
+public struct __Array<S: ~Copyable>: ~Copyable {
 
     /// The storage column — a move-only buffer (the default ownership column) or a `Shared`
     /// CoW column. The ADT is a thin semantic discipline over it; it carries NO deinit
@@ -70,15 +78,15 @@ where S.Count == Index_Primitives.Index<S.Element>.Count {
 
 // MARK: - Conditional Conformances (co-located per [COPY-FIX-004])
 
-/// The S5 chain: `Array<Shared<E, B>>` is `Copyable` exactly when `Shared` is — i.e. when the
+/// The S5 chain: `__Array<Shared<E, B>>` is `Copyable` exactly when `Shared` is — i.e. when the
 /// ELEMENT is. The direct (move-only buffer) columns never satisfy this, by design.
-extension Array: Copyable where S: Copyable {}
+extension __Array: Copyable where S: Copyable {}
 
-extension Array: Sendable where S: Sendable & ~Copyable {}
+extension __Array: Sendable where S: Sendable & ~Copyable {}
 
 // MARK: - Column-pinned construction
 
-extension Array where S: ~Copyable {
+extension __Array where S: ~Copyable {
     /// Creates an empty MOVE-ONLY array (the default ownership column, any growable backing).
     ///
     /// Generic over the fresh-byte-construction capability `Memory.Growable`, so this serves the

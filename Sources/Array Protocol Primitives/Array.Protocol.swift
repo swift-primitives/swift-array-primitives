@@ -17,6 +17,7 @@
 public import Array_Primitive
 public import Collection_Primitives
 
+@_documentation(visibility: public)
 public protocol __ArrayProtocol: Collection.Bidirectional & ~Copyable {
     /// The number of elements in the array, as the array's typed count.
     ///
@@ -31,7 +32,7 @@ public protocol __ArrayProtocol: Collection.Bidirectional & ~Copyable {
 
 // MARK: - Namespace Typealias
 
-extension Array where S: ~Copyable {
+extension __Array where S: ~Copyable {
     /// Protocol unifying element access across all `Array` variants.
     ///
     /// `Array.Protocol` (accessed as `Array.Protocol`) refines `Collection.Bidirectional`

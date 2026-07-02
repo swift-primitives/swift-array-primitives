@@ -16,7 +16,7 @@ public import Array_Primitive
 /// Element-keyed hashing chains through the COLUMN (see `Array+Equatable.swift`):
 /// `Shared` hashes count + live elements in order, so equal arrays hash equal across
 /// distinct boxes and capacities.
-extension Array: Hashable where S: Hashable {
+extension __Array: Hashable where S: Hashable {
     @inlinable
     public func hash(into hasher: inout Hasher) {
         store.hash(into: &hasher)
