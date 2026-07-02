@@ -30,7 +30,8 @@ let package = Package(
 
         // MARK: - Static variant
 
-        // MARK: - Small variant
+        // MARK: - Small variant ([DS-027].1: own product, NOT umbrella-re-exported)
+        .library(name: "Array Small Primitive", targets: ["Array Small Primitive"]),
 
         // MARK: - Umbrella
         .library(name: "Array Primitives", targets: ["Array Primitives"]),
@@ -39,9 +40,9 @@ let package = Package(
         .library(name: "Array Primitives Test Support", targets: ["Array Primitives Test Support"]),
     ],
     dependencies: [
-        // swift-memory-small-primitives DROPPED at the W4 reshape: still spells the pre-W3
-        // tower (un-migrated straggler); it was only listed preemptively for the never-built
-        // Array.Small. Re-add when that variant lands on the new tower.
+        // swift-memory-small-primitives: re-added at W1.5 for the `Array Small Primitive`
+        // variant target ONLY ([DS-027].1) — `Array<Byte>.Small<n>`'s Memory.Small<n> leaf.
+        .package(url: "https://github.com/swift-primitives/swift-memory-small-primitives.git", branch: "main"),
         .package(url: "https://github.com/swift-primitives/swift-span-primitives.git", branch: "main"),
         .package(url: "https://github.com/swift-primitives/swift-memory-iterator-primitives.git", branch: "main"),
         .package(url: "https://github.com/swift-primitives/swift-standard-library-extensions.git", branch: "main"),
@@ -100,7 +101,21 @@ let package = Package(
 
         // MARK: - Static ops
 
-        // MARK: - Small type
+        // MARK: - Small type ([DS-027].1: own product, NO umbrella re-export — keeps json's
+        //         variant closure lean; the 7 heap-only consumers gain nothing. The
+        //         Memory.Small<n> leaf dep lands on THIS target only.)
+        .target(
+            name: "Array Small Primitive",
+            dependencies: [
+                "Array Primitive",
+                .product(name: "Buffer Primitive", package: "swift-buffer-primitives"),
+                .product(name: "Buffer Linear Primitive", package: "swift-buffer-linear-primitives"),
+                .product(name: "Store Protocol Primitives", package: "swift-storage-primitives"),
+                .product(name: "Storage Contiguous Primitives", package: "swift-storage-primitives"),
+                .product(name: "Memory Allocator Primitive", package: "swift-memory-allocation-primitives"),
+                .product(name: "Memory Small Primitives", package: "swift-memory-small-primitives"),
+            ]
+        ),
 
         // MARK: - Small ops
 
