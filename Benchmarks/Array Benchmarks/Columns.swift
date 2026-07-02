@@ -28,7 +28,7 @@ import Cardinal_Primitives
 // bench re-derives the aliases the same way consumers currently do.
 
 typealias HeapColumn<E: ~Copyable> =
-    Buffer<Storage<Memory.Allocator<Memory.Heap>.System>.Contiguous<E>>.Linear
+    Buffer<Storage<Memory.Allocator<Memory.Heap>>.Contiguous<E>>.Linear
 
 typealias SharedColumn<E: ~Copyable> = Shared<E, HeapColumn<E>>
 
