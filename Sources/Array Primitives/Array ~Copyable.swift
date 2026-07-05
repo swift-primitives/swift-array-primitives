@@ -20,7 +20,6 @@ public import Array_Protocol_Primitives
 public import Buffer_Protocol_Primitives
 public import Store_Protocol_Primitives
 public import Span_Protocol_Primitives
-public import Index_Primitives
 
 // ============================================================================
 // MARK: - Collection Conformances (the span-bridged lattice)
@@ -48,28 +47,24 @@ public import Index_Primitives
 // MARK: Collection.Protocol
 
 extension __Array: Collection.`Protocol`
-where S: Span.`Protocol` & Store.`Protocol` & Buffer.`Protocol` & ~Copyable,
-    S.Count == Index_Primitives.Index<S.Element>.Count {}
+where S: Span.`Protocol` & Store.`Protocol` & Buffer.`Protocol` & ~Copyable {}
 
 // MARK: Collection.Bidirectional
 
 extension __Array: Collection.Bidirectional
-where S: Span.`Protocol` & Store.`Protocol` & Buffer.`Protocol` & ~Copyable,
-    S.Count == Index_Primitives.Index<S.Element>.Count {}
+where S: Span.`Protocol` & Store.`Protocol` & Buffer.`Protocol` & ~Copyable {}
 
 // MARK: Array.Protocol (the hoisted __ArrayProtocol; `Array.Protocol` is the front-door
 // accessor and cannot be spelled bare on the generic alias)
 
 extension __Array: __ArrayProtocol
-where S: Span.`Protocol` & Store.`Protocol` & Buffer.`Protocol` & ~Copyable,
-    S.Count == Index_Primitives.Index<S.Element>.Count {}
+where S: Span.`Protocol` & Store.`Protocol` & Buffer.`Protocol` & ~Copyable {}
 
 // ============================================================================
 // MARK: - Properties (generic: Buffer.Protocol count + seam capacity)
 // ============================================================================
 
-extension __Array where S: ~Copyable, S: Store.`Protocol` & Buffer.`Protocol`,
-    S.Count == Index_Primitives.Index<S.Element>.Count {
+extension __Array where S: ~Copyable, S: Store.`Protocol` & Buffer.`Protocol` {
     /// The number of elements in the array.
     @inlinable
     public var count: Index.Count {
@@ -97,8 +92,7 @@ extension __Array where S: ~Copyable, S: Store.`Protocol` & Buffer.`Protocol`,
 // MARK: - Element Access (generic: the seam subscript)
 // ============================================================================
 
-extension __Array where S: ~Copyable, S: Store.`Protocol` & Buffer.`Protocol`,
-    S.Count == Index_Primitives.Index<S.Element>.Count {
+extension __Array where S: ~Copyable, S: Store.`Protocol` & Buffer.`Protocol` {
     /// Accesses the element at the given typed index.
     ///
     /// The mutating access runs the column's semantic mutation gate FIRST
@@ -131,8 +125,7 @@ extension __Array where S: ~Copyable, S: Store.`Protocol` & Buffer.`Protocol`,
 }
 
 extension __Array where S: ~Copyable, S.Element: Copyable,
-    S: Store.`Protocol` & Buffer.`Protocol`,
-    S.Count == Index_Primitives.Index<S.Element>.Count {
+    S: Store.`Protocol` & Buffer.`Protocol` {
     /// Returns the element at the typed index, or nil if out of bounds.
     @inlinable
     public func element(at index: Index) -> S.Element? {
@@ -156,8 +149,7 @@ extension __Array where S: ~Copyable, S.Element: Copyable,
 // MARK: - Mutating Operations (generic: gate + seam)
 // ============================================================================
 
-extension __Array where S: ~Copyable, S: Store.`Protocol` & Buffer.`Protocol`,
-    S.Count == Index_Primitives.Index<S.Element>.Count {
+extension __Array where S: ~Copyable, S: Store.`Protocol` & Buffer.`Protocol` {
     /// Removes and returns the last element, or `nil` if the array is empty.
     ///
     /// Returns `Element?` — the tower-wide remove-from-empty convention

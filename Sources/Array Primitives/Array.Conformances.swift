@@ -16,7 +16,6 @@ public import Iterator_Chunk_Primitives
 public import Span_Protocol_Primitives
 public import Store_Protocol_Primitives
 public import Buffer_Protocol_Primitives
-public import Index_Primitives
 
 // ============================================================================
 // MARK: - Institute Collection Conformances (chained through the COLUMN)
@@ -30,8 +29,7 @@ public import Index_Primitives
 // resolve to the seam-bound implementations, not the Span-gated defaults (finding
 // shared across the W1 clusters).
 extension __Array: Collection.Access.Random
-where S: Span.`Protocol` & Store.`Protocol` & Buffer.`Protocol` & ~Copyable,
-    S.Count == Index_Primitives.Index<S.Element>.Count {}
+where S: Span.`Protocol` & Store.`Protocol` & Buffer.`Protocol` & ~Copyable {}
 
 // Collection.Remove.Last: WITHDRAWN at the W4 reshape. Its generic witness would mutate
 // through the seam without per-column CoW pinning; the semantic `pop()` (gated,
