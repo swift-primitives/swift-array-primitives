@@ -132,7 +132,7 @@ struct ArrayTests {
         a.append(1)
         a.append(2)
         let b = a                                   // share the box
-        a[0] = 100                                  // generic _modify → prepareForMutation()
+        a[0] = 100                                  // generic _modify → unshare()
         let aSees = a[0], bSees = b[0]
         #expect(aSees == 100)
         #expect(bSees == 1)                         // sibling untouched: uniqueness was restored

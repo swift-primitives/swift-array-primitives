@@ -103,7 +103,7 @@ extension __Array where S: ~Copyable {
     ///
     /// The element must be statically `Copyable` HERE: the construction site is where the
     /// column's clone strategy is captured (`Shared`'s constructors split on element
-    /// copyability — see `prepareForMutation`'s backstop).
+    /// copyability — see `unshare`'s backstop).
     @inlinable
     public init<E>(initialCapacity: Index_Primitives.Index<E>.Count = .zero)
     where S == Shared<E, Buffer<Storage<Memory.Allocator<Memory.Heap>>.Contiguous<E>>.Linear> {

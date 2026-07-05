@@ -10,7 +10,7 @@
 // ===----------------------------------------------------------------------===//
 
 // The COLUMN-GENERIC surface of the base Array: everything expressible through the
-// seam (`Store.Protocol`: subscript/initialize/move/capacity + the `prepareForMutation()`
+// seam (`Store.Protocol`: subscript/initialize/move/capacity + the `unshare()`
 // gate) and the count surface (`Buffer.Protocol`) lives here ONCE, for every column.
 // Semantic mutations call the gate before their first write, so the same generic body
 // is copy-on-write-correct on the `Shared` column and free on the move-only columns.
@@ -102,7 +102,7 @@ extension __Array where S: ~Copyable, S: Store.`Protocol` & Buffer.`Protocol`,
     /// Accesses the element at the given typed index.
     ///
     /// The mutating access runs the column's semantic mutation gate FIRST
-    /// (`prepareForMutation()`), so in-place writes are copy-on-write-correct on the
+    /// (`unshare()`), so in-place writes are copy-on-write-correct on the
     /// `Shared` column and free on the statically-unique columns.
     ///
     /// - Parameter index: The typed index of the element to access.
@@ -115,7 +115,7 @@ extension __Array where S: ~Copyable, S: Store.`Protocol` & Buffer.`Protocol`,
         }
         _modify {
             precondition(index < count, "Index out of bounds")
-            store.prepareForMutation()
+            store.unshare()
             yield &store[index]
         }
     }
@@ -165,7 +165,7 @@ extension __Array where S: ~Copyable, S: Store.`Protocol` & Buffer.`Protocol`,
     @inlinable
     public mutating func removeLast() -> S.Element {
         precondition(!isEmpty, "Cannot remove from an empty array")
-        store.prepareForMutation()
+        store.unshare()
         let end: Index = count.map(Ordinal.init)
         let last = try! end.predecessor.exact()
         return store.move(at: last)
@@ -180,7 +180,7 @@ extension __Array where S: ~Copyable, S: Store.`Protocol` & Buffer.`Protocol`,
     @inlinable
     public mutating func remove(at index: Index) -> S.Element {
         precondition(index < count, "Index out of bounds")
-        store.prepareForMutation()
+        store.unshare()
         let end: Index = count.map(Ordinal.init)
         let removed = store.move(at: index)
         var dst = index
@@ -203,7 +203,7 @@ extension __Array where S: ~Copyable, S: Store.`Protocol` & Buffer.`Protocol`,
     public mutating func swap(at i: Index, with j: Index) {
         precondition(i < count && j < count, "Index out of bounds")
         guard i != j else { return }
-        store.prepareForMutation()
+        store.unshare()
         let a = store.move(at: i)
         let b = store.move(at: j)
         store.initialize(at: i, to: b)
@@ -216,7 +216,7 @@ extension __Array where S: ~Copyable, S: Store.`Protocol` & Buffer.`Protocol`,
     /// loop terminates when the column reports empty.
     @inlinable
     public mutating func drain(_ body: (consuming S.Element) -> Void) {
-        store.prepareForMutation()
+        store.unshare()
         var slot: Index = .zero
         while !isEmpty {
             body(store.move(at: slot))
@@ -240,7 +240,7 @@ extension __Array where S: Copyable, S: Store.`Protocol` {
     @inlinable
     public borrowing func clone() -> Self {
         var result = copy self
-        result.store.prepareForMutation()
+        result.store.unshare()
         return result
     }
 }

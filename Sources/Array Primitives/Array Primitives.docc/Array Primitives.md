@@ -26,7 +26,7 @@ element is, so value semantics are an explicit, visible choice at the type.
 
 The element-generic surface (subscript, `count`, `withElement`, `removeLast`, `remove(at:)`,
 `swap`, `drain`, `clone`) is written ONCE against the seam: mutating paths run the column's
-semantic mutation gate (`prepareForMutation()`) before their first write, which restores
+semantic mutation gate (`unshare()`) before their first write, which restores
 uniqueness on the `Shared` column and is free on move-only columns. Only growth and
 construction pin per column. `Array: Equatable/Hashable where S: Equatable/Hashable` chains
 element-keyed semantics through the `Shared` carrier.
