@@ -33,7 +33,8 @@ public import Memory_Allocator_Primitive
 /// Allocation variants are consumer-pulled and land as they gain live consumers. The
 /// `Array<Byte>.Small<24>` inline-budget variant ([DS-027].1) lands in its own
 /// `Array Small Primitive` target/product (units: `Small<n>` = bytes); the `Shared` (CoW)
-/// column is spelled through the carrier until a consumer pulls a front door for it.
+/// ownership variant is the `Array<E>.Shared` front door (`Array.Shared.swift`, [DS-028]
+/// law 2 — in this canonical target, since the CoW-column module is already in its closure).
 ///
 /// This shadows `Swift.Array`: bare `Array` resolves to this alias when any ecosystem
 /// module is imported; use `Swift.Array` or `[T]` syntax for the stdlib array.

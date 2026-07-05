@@ -51,7 +51,7 @@ extension __Array where S: ~Copyable {
 // The conformances chain through the COLUMN: every span-vending column conforms to
 // `Span.Protocol`, so the ADT forwards. Since shared-primitives c27eaa7 (W5, the
 // lifetime-laundered span across the box hop) the `Shared` column conforms too —
-// `Array<Shared<E, B>>` joins this whole lattice with no array-side code.
+// `Array<Ownership.Shared<E, B>>` joins this whole lattice with no array-side code.
 
 extension __Array: Span.`Protocol` where S: Span.`Protocol` & ~Copyable {
     /// Read-only span of the array elements, forwarded from the column.

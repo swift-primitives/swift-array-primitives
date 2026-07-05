@@ -22,7 +22,7 @@ enum Main {
         print("=== swift-array-primitives — family-tier proving benchmark (W1) ===")
         print("config: sizes=\(Bench.sizes) samples=\(Bench.samples) warmup=\(Bench.warmup)")
         print("targets/sample: element=\(Bench.elementOpsTarget) span=\(Bench.spanOpsTarget) structure=\(Bench.structureOpsTarget) copiedSlots=\(Bench.copiedSlotsTarget)")
-        print("subjects: tower.direct=Array<HeapColumn> · tower.cow=Array<Shared<E,HeapColumn>> · stdlib=Swift.Array")
+        print("subjects: tower.direct=Array<HeapColumn> · tower.cow=Array<Ownership.Shared<E,HeapColumn>> · stdlib=Swift.Array")
         print("")
         Bench.globalWarmup()
 

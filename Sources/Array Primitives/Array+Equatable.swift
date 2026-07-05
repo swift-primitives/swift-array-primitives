@@ -15,7 +15,7 @@ public import Array_Primitive
 
 /// Element-keyed equality chains through the COLUMN: `Shared` carries `Equatable` exactly
 /// when its (direct) `Element` parameter does — element-wise over live elements,
-/// capacity-independent — so `Array<Shared<Int, …>> == Array<Shared<Int, …>>` compares
+/// capacity-independent — so `Array<Ownership.Shared<Int, …>> == Array<Ownership.Shared<Int, …>>` compares
 /// elements. Move-only columns are never `Equatable`, by design (R-1: copyability — and
 /// with it value-semantic comparison — flows from the column).
 extension __Array: Equatable where S: Equatable {

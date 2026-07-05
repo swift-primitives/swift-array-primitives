@@ -15,7 +15,7 @@ public import Storage_Contiguous_Primitives
 public import Memory_Heap_Primitives
 public import Memory_Allocator_Primitive
 public import Memory_Allocator_Protocol_Primitives
-public import Shared_Primitive
+public import Ownership_Shared_Primitive
 public import Index_Primitives
 
 // MARK: - Array (the ADT tier — generic over the COLUMN)
@@ -27,7 +27,7 @@ public import Index_Primitives
 ///
 /// ```swift
 /// __Array<            Buffer<Storage<…System>.Contiguous<FD >>.Linear >    // zero-cost MOVE-ONLY (default)
-/// __Array<Shared<Int, Buffer<Storage<…System>.Contiguous<Int>>.Linear>>   // explicit CoW value semantics
+/// __Array<Ownership.Shared<Int, Buffer<Storage<…System>.Contiguous<Int>>.Linear>>   // explicit CoW value semantics
 /// ```
 ///
 /// Both columns expose the USER element as `S.Element` (the direct buffer's element IS the
@@ -78,7 +78,7 @@ public struct __Array<S: ~Copyable>: ~Copyable {
 
 // MARK: - Conditional Conformances (co-located per [COPY-FIX-004])
 
-/// The S5 chain: `__Array<Shared<E, B>>` is `Copyable` exactly when `Shared` is — i.e. when the
+/// The S5 chain: `__Array<Ownership.Shared<E, B>>` is `Copyable` exactly when `Shared` is — i.e. when the
 /// ELEMENT is. The direct (move-only buffer) columns never satisfy this, by design.
 extension __Array: Copyable where S: Copyable {}
 
@@ -106,9 +106,9 @@ extension __Array where S: ~Copyable {
     /// copyability — see `unshare`'s backstop).
     @inlinable
     public init<E>(initialCapacity: Index_Primitives.Index<E>.Count = .zero)
-    where S == Shared<E, Buffer<Storage<Memory.Allocator<Memory.Heap>>.Contiguous<E>>.Linear> {
+    where S == Ownership.Shared<E, Buffer<Storage<Memory.Allocator<Memory.Heap>>.Contiguous<E>>.Linear> {
         self.init(
-            store: Shared(
+            store: Ownership.Shared(
                 Buffer<Storage<Memory.Allocator<Memory.Heap>>.Contiguous<E>>.Linear(
                     minimumCapacity: initialCapacity
                 )
@@ -120,9 +120,9 @@ extension __Array where S: ~Copyable {
     /// (the boxed flavor of the move-only regime — useful when the box's O(1) move matters).
     @inlinable
     public init<E: ~Copyable>(initialCapacity: Index_Primitives.Index<E>.Count = .zero)
-    where S == Shared<E, Buffer<Storage<Memory.Allocator<Memory.Heap>>.Contiguous<E>>.Linear> {
+    where S == Ownership.Shared<E, Buffer<Storage<Memory.Allocator<Memory.Heap>>.Contiguous<E>>.Linear> {
         self.init(
-            store: Shared(
+            store: Ownership.Shared(
                 Buffer<Storage<Memory.Allocator<Memory.Heap>>.Contiguous<E>>.Linear(
                     minimumCapacity: initialCapacity
                 )

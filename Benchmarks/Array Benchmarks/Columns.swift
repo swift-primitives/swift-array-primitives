@@ -15,7 +15,7 @@ import Buffer_Linear_Primitive
 import Storage_Contiguous_Primitives
 import Memory_Heap_Primitives
 import Memory_Allocator_Primitive
-import Shared_Primitive
+import Ownership_Shared_Primitive
 import Index_Primitives
 import Tagged_Primitives_Standard_Library_Integration
 import Ordinal_Primitives
@@ -30,7 +30,7 @@ import Cardinal_Primitives
 typealias HeapColumn<E: ~Copyable> =
     Buffer<Storage<Memory.Allocator<Memory.Heap>>.Contiguous<E>>.Linear
 
-typealias SharedColumn<E: ~Copyable> = Shared<E, HeapColumn<E>>
+typealias SharedColumn<E: ~Copyable> = Ownership.Shared<E, HeapColumn<E>>
 
 typealias MoveArray<E: ~Copyable> = Array<HeapColumn<E>>
 
