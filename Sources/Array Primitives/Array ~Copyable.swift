@@ -158,13 +158,19 @@ extension __Array where S: ~Copyable, S.Element: Copyable,
 
 extension __Array where S: ~Copyable, S: Store.`Protocol` & Buffer.`Protocol`,
     S.Count == Index_Primitives.Index<S.Element>.Count {
-    /// Removes and returns the last element.
+    /// Removes and returns the last element, or `nil` if the array is empty.
     ///
-    /// - Precondition: The array must not be empty.
+    /// Returns `Element?` — the tower-wide remove-from-empty convention
+    /// ([API-NAME-008]; adt-tower.md §4.7, §9.3 — the landed `Queue.dequeue()`
+    /// model). The empty check returns `nil` BEFORE `unshare()`, so gating
+    /// happens only on the non-empty path (an empty array is never detached).
+    /// Consuming an `Element?` is available even for `~Copyable` elements
+    /// (unlike a borrow).
+    ///
     /// - Complexity: O(1)
     @inlinable
-    public mutating func removeLast() -> S.Element {
-        precondition(!isEmpty, "Cannot remove from an empty array")
+    public mutating func pop() -> S.Element? {
+        if isEmpty { return nil }
         store.unshare()
         let end: Index = count.map(Ordinal.init)
         let last = try! end.predecessor.exact()

@@ -141,13 +141,13 @@ struct ArrayTests {
     // MARK: - Generic mutations through the gate + seam (both columns)
 
     @Test
-    func `removeLast and remove(at:) shift correctly on the direct column`() {
+    func `pop and remove(at:) shift correctly on the direct column`() {
         var a = MoveArray<Int>(initialCapacity: 4)
         a.append(1)
         a.append(2)
         a.append(3)
         a.append(4)
-        let last = a.removeLast()
+        let last = a.pop()
         #expect(last == 4)
         let removed = a.remove(at: 1)               // [1, 2, 3] → remove 2 → [1, 3]
         #expect(removed == 2)
@@ -248,7 +248,10 @@ struct ArrayTests {
             a.append(Item(2, value: 20))
             let v = a.withElement(at: 1) { $0.value }
             #expect(v == 20)
-            let taken = a.removeLast()
+            guard let taken = a.pop() else {
+                Issue.record("pop returned nil on a non-empty array")
+                return
+            }
             let tid = taken.id
             #expect(tid == 2)
             _ = consume taken

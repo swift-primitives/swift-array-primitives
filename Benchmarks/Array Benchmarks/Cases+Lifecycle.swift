@@ -23,7 +23,7 @@ import Ordinal_Primitives_Standard_Library_Integration
 import Cardinal_Primitives
 
 extension Bench {
-    /// `pushPop.cycle`: n appends into pre-sized storage, then n `removeLast`
+    /// `pushPop.cycle`: n appends into pre-sized storage, then n `pop`
     /// pops, per rep (per-op = one push or one pop; the `append.reserved`
     /// numbers act as the build-only control for separating the pop cost).
     ///
@@ -48,7 +48,7 @@ extension Bench {
                     for _ in 0..<reps {
                         var a = MoveArray<Int>(initialCapacity: capacity)
                         for i in 0..<n { a.append(i &+ seed) }
-                        for _ in 0..<n { acc &+= a.removeLast() }
+                        for _ in 0..<n { acc &+= a.pop()! }
                     }
                     sink(acc)
                 }
@@ -61,7 +61,7 @@ extension Bench {
                     for _ in 0..<reps {
                         var c = CoWArray<Int>(initialCapacity: capacity)
                         for i in 0..<n { c.append(i &+ seed) }
-                        for _ in 0..<n { acc &+= c.removeLast() }
+                        for _ in 0..<n { acc &+= c.pop()! }
                     }
                     sink(acc)
                 }

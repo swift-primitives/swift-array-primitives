@@ -34,7 +34,7 @@ where S: Span.`Protocol` & Store.`Protocol` & Buffer.`Protocol` & ~Copyable,
     S.Count == Index_Primitives.Index<S.Element>.Count {}
 
 // Collection.Remove.Last: WITHDRAWN at the W4 reshape. Its generic witness would mutate
-// through the seam without per-column CoW pinning; the semantic `removeLast()` (gated,
+// through the seam without per-column CoW pinning; the semantic `pop()` (gated,
 // generic) and the column-pinned growth ops replace it. Re-admit if the protocol gains
 // a gate-aware default.
 
