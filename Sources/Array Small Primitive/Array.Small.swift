@@ -24,7 +24,7 @@ public import Store_Protocol_Primitives
 
 // MARK: - Array<E>.Small<n> — the inline-budget allocation variant ([DS-028] law 1)
 
-extension __Array where S: ~Copyable, S: __ColumnDirect {
+extension __Array where S: ~Copyable, S: Store.Direct {
     /// `Array<E>.Small<n>` — the small (inline⊕heap) allocation front door.
     ///
     /// An axis-CHANGING front-door alias ([DS-028] law 1): it re-points the allocation axis
