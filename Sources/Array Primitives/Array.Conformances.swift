@@ -11,11 +11,11 @@
 public import Array_Primitive
 public import Array_Protocol_Primitives
 public import Buffer_Linear_Primitives
+public import Buffer_Protocol_Primitives
 public import Iterable
 public import Iterator_Chunk_Primitives
 public import Span_Protocol_Primitives
 public import Store_Protocol_Primitives
-public import Buffer_Protocol_Primitives
 
 // ============================================================================
 // MARK: - Institute Collection Conformances (chained through the COLUMN)
@@ -41,6 +41,8 @@ where S: Span.`Protocol` & Store.`Protocol` & Buffer.`Protocol` & ~Copyable {}
 // ============================================================================
 
 extension __Array where S: ~Copyable {
+    /// `Self`, exposed under the `Dynamic` spelling for parity with sibling
+    /// container families that distinguish a dynamic variant from `Self`.
     public typealias Dynamic = Self
 }
 
@@ -68,7 +70,9 @@ extension __Array: Span.`Protocol` where S: Span.`Protocol` & ~Copyable {
 // bridge over the Span.`Protocol` conformance above, yielding `Iterator.Chunk` (which
 // admits ~Copyable elements — D4; no element bound per the Audit-#5 relaxation).
 extension __Array: Iterable where S: Span.`Protocol` & ~Copyable {
-    @_implements(Iterable, Iterator)
+    /// The multipass borrowing iterator, vended by the memory→Iterable bridge over
+    /// the column's `Span.Protocol` conformance.
+    @_implements(Iterable,Iterator)
     public typealias IterableIterator = Iterator_Primitive.Iterator.Chunk<S.Element>
 }
 
@@ -76,9 +80,11 @@ extension __Array: Iterable where S: Span.`Protocol` & ~Copyable {
 // `makeIterator()` without a lifetime annotation rooted in (consumed) `self`; both
 // ratified columns' iterators are Escapable values.
 extension __Array: Sequenceable where S: Sequenceable & ~Copyable, S.Iterator: Escapable {
-    @_implements(Sequenceable, Iterator)
+    /// The column's own iterator, forwarded unchanged.
+    @_implements(Sequenceable,Iterator)
     public typealias SequenceableIterator = S.Iterator
 
+    /// Consumes the array, yielding the column's iterator.
     @inlinable
     public consuming func makeIterator() -> S.Iterator {
         take().makeIterator()

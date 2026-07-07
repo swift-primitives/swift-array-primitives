@@ -9,11 +9,11 @@
 //
 // ===----------------------------------------------------------------------===//
 
-public import Buffer_Primitive
 public import Buffer_Linear_Primitive
-public import Storage_Contiguous_Primitives
-public import Memory_Heap_Primitives
+public import Buffer_Primitive
 public import Memory_Allocator_Primitive
+public import Memory_Heap_Primitives
+public import Storage_Contiguous_Primitives
 
 // MARK: - Array<E> — the CANONICAL front door ([DS-028])
 

@@ -18,8 +18,8 @@
 public import Array_Primitive
 public import Array_Protocol_Primitives
 public import Buffer_Protocol_Primitives
-public import Store_Protocol_Primitives
 public import Span_Protocol_Primitives
+public import Store_Protocol_Primitives
 
 // ============================================================================
 // MARK: - Collection Conformances (the span-bridged lattice)
@@ -124,8 +124,12 @@ extension __Array where S: ~Copyable, S: Store.`Protocol` & Buffer.`Protocol` {
     }
 }
 
-extension __Array where S: ~Copyable, S.Element: Copyable,
-    S: Store.`Protocol` & Buffer.`Protocol` {
+extension __Array
+where
+    S: ~Copyable,
+    S.Element: Copyable,
+    S: Store.`Protocol` & Buffer.`Protocol`
+{
     /// Returns the element at the typed index, or nil if out of bounds.
     @inlinable
     public func element(at index: Index) -> S.Element? {
@@ -139,7 +143,12 @@ extension __Array where S: ~Copyable, S.Element: Copyable,
         at base: Index,
         offsetBy offset: Index.Offset
     ) -> S.Element? {
-        guard let newIndex = try? (base + offset) else { return nil }
+        let newIndex: Index
+        do throws(Ordinal.Error) {
+            newIndex = try base + offset
+        } catch {
+            return nil
+        }
         guard newIndex < count else { return nil }
         return store[newIndex]
     }
@@ -165,6 +174,10 @@ extension __Array where S: ~Copyable, S: Store.`Protocol` & Buffer.`Protocol` {
         if isEmpty { return nil }
         store.unshare()
         let end: Index = count.map(Ordinal.init)
+        // WHY: isEmpty returned false above, so count ≥ 1 and end ≥ 1 — predecessor
+        // is always in-bounds.
+        // swift-format-ignore: NeverUseForceTry
+        // swiftlint:disable:next force_try
         let last = try! end.predecessor.exact()
         return store.move(at: last)
     }

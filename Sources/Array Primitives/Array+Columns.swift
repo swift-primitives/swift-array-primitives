@@ -15,15 +15,15 @@
 // CoW-checked inside `Shared`). The pins are `where ==` clauses on METHODS (mechanic #2:
 // extensions cannot introduce free element parameters; methods can).
 public import Array_Primitive
-public import Buffer_Primitive
 public import Buffer_Linear_Primitive
 public import Buffer_Linear_Primitives
-public import Storage_Contiguous_Primitives
-public import Memory_Heap_Primitives
+public import Buffer_Primitive
+public import Index_Primitives
 public import Memory_Allocator_Primitive
 public import Memory_Allocator_Protocol_Primitives
+public import Memory_Heap_Primitives
 public import Ownership_Shared_Primitive
-public import Index_Primitives
+public import Storage_Contiguous_Primitives
 
 // ============================================================================
 // MARK: - Append (growth)

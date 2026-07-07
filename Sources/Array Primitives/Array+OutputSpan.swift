@@ -10,12 +10,12 @@
 // ===----------------------------------------------------------------------===//
 
 public import Array_Primitive
-public import Buffer_Primitive
 public import Buffer_Linear_Primitive
-public import Storage_Contiguous_Primitives
-public import Memory_Heap_Primitives
-public import Memory_Allocator_Primitive
+public import Buffer_Primitive
 public import Index_Primitives
+public import Memory_Allocator_Primitive
+public import Memory_Heap_Primitives
+public import Storage_Contiguous_Primitives
 
 // MARK: - Array + OutputSpan-based init / append / edit (direct column)
 //
@@ -40,10 +40,12 @@ extension __Array where S: ~Copyable {
         initializingWith initializer: (inout Swift.OutputSpan<E>) throws(Failure) -> Void
     ) throws(Failure)
     where S == Buffer<Storage<Memory.Allocator<Memory.Heap>>.Contiguous<E>>.Linear {
-        self.init(store: try Buffer<Storage<Memory.Allocator<Memory.Heap>>.Contiguous<E>>.Linear(
-            capacity: capacity,
-            initializingWith: initializer
-        ))
+        self.init(
+            store: try Buffer<Storage<Memory.Allocator<Memory.Heap>>.Contiguous<E>>.Linear(
+                capacity: capacity,
+                initializingWith: initializer
+            )
+        )
     }
 
     /// Appends `addingCapacity` elements via an `OutputSpan` closure, growing storage if

@@ -19,6 +19,7 @@ public import Array_Primitive
 /// elements. Move-only columns are never `Equatable`, by design (R-1: copyability — and
 /// with it value-semantic comparison — flows from the column).
 extension __Array: Equatable where S: Equatable {
+    /// Compares by forwarding to the column's own `Equatable` conformance.
     @inlinable
     public static func == (lhs: Self, rhs: Self) -> Bool {
         lhs.store == rhs.store

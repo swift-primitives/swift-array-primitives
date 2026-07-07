@@ -9,14 +9,14 @@
 //
 // ===----------------------------------------------------------------------===//
 
-public import Buffer_Primitive
 public import Buffer_Linear_Primitive
-public import Storage_Contiguous_Primitives
-public import Memory_Heap_Primitives
+public import Buffer_Primitive
+public import Index_Primitives
 public import Memory_Allocator_Primitive
 public import Memory_Allocator_Protocol_Primitives
+public import Memory_Heap_Primitives
 public import Ownership_Shared_Primitive
-public import Index_Primitives
+public import Storage_Contiguous_Primitives
 
 // MARK: - Array (the ADT tier — generic over the COLUMN)
 
@@ -54,7 +54,9 @@ public import Index_Primitives
 public struct __Array<S: ~Copyable>: ~Copyable {
 
     /// The storage column — a move-only buffer (the default ownership column) or a `Shared`
-    /// CoW column. The ADT is a thin semantic discipline over it; it carries NO deinit
+    /// CoW column.
+    ///
+    /// The ADT is a thin semantic discipline over it; it carries NO deinit
     /// (teardown lives in the leaf's oracle / the shared box's drain).
     @usableFromInline
     package var store: S

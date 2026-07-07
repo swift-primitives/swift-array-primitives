@@ -1,14 +1,14 @@
 import Array_Primitives
-import Buffer_Primitive
 import Buffer_Linear_Primitive
 import Buffer_Linear_Primitives
-import Storage_Contiguous_Primitives
-import Memory_Heap_Primitives
-import Memory_Allocator_Primitive
-import Ownership_Shared_Primitive
+import Buffer_Primitive
 import Index_Primitives
-import Tagged_Primitives_Standard_Library_Integration
+import Memory_Allocator_Primitive
+import Memory_Heap_Primitives
 import Ordinal_Primitives_Standard_Library_Integration
+import Ownership_Shared_Primitive
+import Storage_Contiguous_Primitives
+import Tagged_Primitives_Standard_Library_Integration
 import Testing
 
 // MARK: - Fixtures
@@ -17,7 +17,10 @@ import Testing
 private struct Item: ~Copyable {
     let id: Int
     var value: Int
-    init(_ id: Int, value: Int = 0) { self.id = id; self.value = value }
+    init(_ id: Int, value: Int = 0) {
+        self.id = id
+        self.value = value
+    }
     deinit { Probe.recordDestroy(id) }
 }
 
@@ -42,8 +45,13 @@ private typealias HeapColumn<E: ~Copyable> =
 
 private typealias SharedColumn<E: ~Copyable> = Ownership.Shared<E, HeapColumn<E>>
 
+// `Array<E>` here is the institute's own typealias (shadows `Swift.Array`); `[E]`
+// sugar is hardwired to `Swift.Array` and would silently change the type.
+// swift-format-ignore: UseShorthandTypeNames
+// swiftlint:disable syntactic_sugar
 /// The default move-only array — the CANONICAL front door ([DS-028]).
 private typealias MoveArray<E: ~Copyable> = Array<E>
+// swiftlint:enable syntactic_sugar
 
 /// The explicit CoW value-semantic array (`Shared` column — no front door yet;
 /// spelled through the carrier).
@@ -96,12 +104,12 @@ struct ArrayTests {
         var a = MoveArray<Int>(initialCapacity: 2)
         a.append(10)
         a.append(20)
-        a.append(30)                                // growth past initial capacity
+        a.append(30)  // growth past initial capacity
         let count = a.count
         #expect(count == Index<Int>.Count(3))
         let e1 = a[1]
         #expect(e1 == 20)
-        a[1] = 25                                   // _modify (gate is a no-op here)
+        a[1] = 25  // _modify (gate is a no-op here)
         let e1b = a[1]
         #expect(e1b == 25)
         let opt = a.element(at: 2)
@@ -117,11 +125,12 @@ struct ArrayTests {
         var a = CoWArray<Int>(initialCapacity: 2)
         a.append(1)
         a.append(2)
-        let b = a                                   // S5: Array is Copyable because S is
+        let b = a  // S5: Array is Copyable because S is
         let bCount = b.count
         #expect(bCount == Index<Int>.Count(2))
-        a.append(3)                                 // CoW restore inside Shared.append
-        let aCount = a.count, bCount2 = b.count
+        a.append(3)  // CoW restore inside Shared.append
+        let aCount = a.count
+        let bCount2 = b.count
         #expect(aCount == Index<Int>.Count(3))
         #expect(bCount2 == Index<Int>.Count(2))
     }
@@ -131,11 +140,12 @@ struct ArrayTests {
         var a = CoWArray<Int>(initialCapacity: 2)
         a.append(1)
         a.append(2)
-        let b = a                                   // share the box
-        a[0] = 100                                  // generic _modify → unshare()
-        let aSees = a[0], bSees = b[0]
+        let b = a  // share the box
+        a[0] = 100  // generic _modify → unshare()
+        let aSees = a[0]
+        let bSees = b[0]
         #expect(aSees == 100)
-        #expect(bSees == 1)                         // sibling untouched: uniqueness was restored
+        #expect(bSees == 1)  // sibling untouched: uniqueness was restored
     }
 
     // MARK: - Generic mutations through the gate + seam (both columns)
@@ -149,11 +159,12 @@ struct ArrayTests {
         a.append(4)
         let last = a.pop()
         #expect(last == 4)
-        let removed = a.remove(at: 1)               // [1, 2, 3] → remove 2 → [1, 3]
+        let removed = a.remove(at: 1)  // [1, 2, 3] → remove 2 → [1, 3]
         #expect(removed == 2)
         let count = a.count
         #expect(count == Index<Int>.Count(2))
-        let e0 = a[0], e1 = a[1]
+        let e0 = a[0]
+        let e1 = a[1]
         #expect(e0 == 1)
         #expect(e1 == 3)
     }
@@ -167,10 +178,12 @@ struct ArrayTests {
         let b = a
         let removed = a.remove(at: 0)
         #expect(removed == 1)
-        let aCount = a.count, bCount = b.count
+        let aCount = a.count
+        let bCount = b.count
         #expect(aCount == Index<Int>.Count(2))
         #expect(bCount == Index<Int>.Count(3))
-        let a0 = a[0], b0 = b[0]
+        let a0 = a[0]
+        let b0 = b[0]
         #expect(a0 == 2)
         #expect(b0 == 1)
     }
@@ -182,10 +195,11 @@ struct ArrayTests {
         a.append(2)
         a.append(3)
         a.swap(at: 0, with: 2)
-        let e0 = a[0], e2 = a[2]
+        let e0 = a[0]
+        let e2 = a[2]
         #expect(e0 == 3)
         #expect(e2 == 1)
-        a.swap(at: 1, with: 1)                      // same-index no-op
+        a.swap(at: 1, with: 1)  // same-index no-op
         let e1 = a[1]
         #expect(e1 == 2)
     }
@@ -212,9 +226,10 @@ struct ArrayTests {
         var seen: [Int] = []
         a.drain { seen.append($0) }
         #expect(seen == [5, 6])
-        let aEmpty = a.isEmpty, bCount = b.count
+        let aEmpty = a.isEmpty
+        let bCount = b.count
         #expect(aEmpty)
-        #expect(bCount == Index<Int>.Count(2))      // the gate cloned before draining
+        #expect(bCount == Index<Int>.Count(2))  // the gate cloned before draining
     }
 
     @Test
@@ -232,9 +247,10 @@ struct ArrayTests {
         c.append(1)
         let d = c
         c.removeAll()
-        let cEmpty = c.isEmpty, dCount = d.count
+        let cEmpty = c.isEmpty
+        let dCount = d.count
         #expect(cEmpty)
-        #expect(dCount == Index<Int>.Count(1))      // detach, not drain: sibling intact
+        #expect(dCount == Index<Int>.Count(1))  // detach, not drain: sibling intact
     }
 
     // MARK: - Move-only elements (direct column end-to-end)
@@ -259,7 +275,7 @@ struct ArrayTests {
             #expect(mid == [2])
         }
         let ds = Probe.destroyedSorted
-        #expect(ds == [1, 2])                       // the remaining element died with the array
+        #expect(ds == [1, 2])  // the remaining element died with the array
     }
 
     // MARK: - Cloning
@@ -271,7 +287,8 @@ struct ArrayTests {
         a.append(2)
         var c = a.clone()
         c[0] = 99
-        let a0 = a[0], c0 = c[0]
+        let a0 = a[0]
+        let c0 = c[0]
         #expect(a0 == 1)
         #expect(c0 == 99)
     }
@@ -283,7 +300,8 @@ struct ArrayTests {
         a.append(5)
         var c = a.clone()
         c[0] = 40
-        let a0 = a[0], c0 = c[0]
+        let a0 = a[0]
+        let c0 = c[0]
         #expect(a0 == 4)
         #expect(c0 == 40)
         let cCount = c.count
@@ -308,7 +326,7 @@ struct ArrayTests {
         var c = CoWArray<Int>(initialCapacity: 1)
         c.append(2)
         let sibling = c
-        c.reserveCapacity(Index<Int>.Count(8))      // uniquely, behind the gate
+        c.reserveCapacity(Index<Int>.Count(8))  // uniquely, behind the gate
         let cCapacityOK = c.capacity >= Index<Int>.Count(8)
         #expect(cCapacityOK)
         let siblingValue = sibling[0]
@@ -352,7 +370,8 @@ struct ArrayTests {
         a.withMutableSpan { span in
             span[0] = 100
         }
-        let aSees = a[0], bSees = b[0]
+        let aSees = a[0]
+        let bSees = b[0]
         #expect(aSees == 100)
         #expect(bSees == 1)
     }
@@ -367,13 +386,14 @@ struct ArrayTests {
         var b = CoWArray<Int>(initialCapacity: 8)
         b.append(1)
         b.append(2)
-        #expect(a == b)                             // element-wise, capacity-independent
+        #expect(a == b)  // element-wise, capacity-independent
         b.append(3)
         #expect(a != b)
-        var h1 = Hasher(), h2 = Hasher()
+        var h1 = Hasher()
+        var h2 = Hasher()
         a.hash(into: &h1)
         var a2 = a
-        a2[0] = 1                                   // forces divergence (same elements)
+        a2[0] = 1  // forces divergence (same elements)
         a2.hash(into: &h2)
         #expect(h1.finalize() == h2.finalize())
     }
@@ -410,14 +430,14 @@ struct ArrayTests {
             a.append(Item(1, value: 10))
             a.append(Item(2, value: 20))
             a.append(Item(3, value: 30))
-            let total = latticeSum(a)               // generic Collection.Protocol dispatch
+            let total = latticeSum(a)  // generic Collection.Protocol dispatch
             #expect(total == 60)
             var walked = 0
-            a.forEach { walked += $0.value }        // Iterable terminal over the span bridge
+            a.forEach { walked += $0.value }  // Iterable terminal over the span bridge
             #expect(walked == 60)
         }
         let ds = Probe.destroyedSorted
-        #expect(ds == [1, 2, 3])                    // borrowing reads moved nothing out
+        #expect(ds == [1, 2, 3])  // borrowing reads moved nothing out
     }
 
     // MARK: - OutputSpan construction lanes (direct column)
@@ -429,7 +449,7 @@ struct ArrayTests {
             span.append(2)
         }
         let count = a.count
-        #expect(count == Index<Int>.Count(2))       // no full-population requirement
+        #expect(count == Index<Int>.Count(2))  // no full-population requirement
         a.append(addingCapacity: Index<Int>.Count(2)) { span in
             span.append(3)
         }
@@ -457,7 +477,7 @@ struct ArrayTests {
         var b = MoveArray<Int>(initialCapacity: 2)
         b.append(7)
         b.append(8)
-        var it = b.makeIterator()                   // consuming, via the S chain
+        var it = b.makeIterator()  // consuming, via the S chain
         var seen: [Int] = []
         while let x = it.next() { seen.append(x) }
         #expect(seen == [7, 8])

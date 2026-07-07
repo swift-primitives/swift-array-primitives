@@ -11,12 +11,12 @@
 
 // MARK: - Array.Protocol (Hoisted as __ArrayProtocol)
 
-/// Protocol unifying element access across all Array variants.
-///
-/// See ``Array.`Protocol``` for documentation.
 public import Array_Primitive
 public import Collection_Primitives
 
+/// Protocol unifying element access across all Array variants.
+///
+/// See ``Array.`Protocol``` for documentation.
 @_documentation(visibility: public)
 public protocol __ArrayProtocol: Collection.Bidirectional & ~Copyable {
     /// The number of elements in the array, as the array's typed count.

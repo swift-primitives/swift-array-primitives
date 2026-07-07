@@ -1,15 +1,15 @@
 @_spi(Unsafe) import Array_Primitives
-import Buffer_Primitives_Test_Support
-import Buffer_Primitive
-import Buffer_Linear_Primitive
 import Buffer_Linear_Bounded_Primitives
-import Storage_Contiguous_Primitives
-import Memory_Heap_Primitives
-import Memory_Allocator_Primitive
-import Ownership_Shared_Primitive
+import Buffer_Linear_Primitive
+import Buffer_Primitive
+import Buffer_Primitives_Test_Support
 import Index_Primitives
-import Tagged_Primitives_Standard_Library_Integration
+import Memory_Allocator_Primitive
+import Memory_Heap_Primitives
 import Ordinal_Primitives_Standard_Library_Integration
+import Ownership_Shared_Primitive
+import Storage_Contiguous_Primitives
+import Tagged_Primitives_Standard_Library_Integration
 import Testing
 
 // The W4 audit backfill: the seam-ledger laws on both ratified columns, and the
@@ -19,6 +19,10 @@ private typealias HeapColumn<E: ~Copyable> =
     Buffer<Storage<Memory.Allocator<Memory.Heap>>.Contiguous<E>>.Linear
 
 private typealias SharedColumn<E: ~Copyable> = Ownership.Shared<E, HeapColumn<E>>
+// `Array<E>` here is the institute's own typealias (shadows `Swift.Array`); `[E]`
+// sugar is hardwired to `Swift.Array` and would silently change the type.
+// swift-format-ignore: UseShorthandTypeNames
+// swiftlint:disable:next syntactic_sugar
 private typealias MoveArray<E: ~Copyable> = Array<E>
 
 private typealias CoWArray<E: ~Copyable> = __Array<SharedColumn<E>>
@@ -120,12 +124,13 @@ struct ArraySurfaceTests {
         var b = CoWArray<Int>(initialCapacity: 4)
         b.append(1)
         #expect(a == b)
-        var ha = Hasher(), hb = Hasher()
+        var ha = Hasher()
+        var hb = Hasher()
         a.hash(into: &ha)
         b.hash(into: &hb)
         #expect(ha.finalize() == hb.finalize())
         b.append(2)
-        #expect(a != b)                              // length-discriminating
+        #expect(a != b)  // length-discriminating
         let prefixSame = (a[0] == b[0])
         #expect(prefixSame)
     }

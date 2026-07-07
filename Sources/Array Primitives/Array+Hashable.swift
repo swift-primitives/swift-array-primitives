@@ -17,6 +17,7 @@ public import Array_Primitive
 /// `Shared` hashes count + live elements in order, so equal arrays hash equal across
 /// distinct boxes and capacities.
 extension __Array: Hashable where S: Hashable {
+    /// Hashes by forwarding to the column's own `Hashable` conformance.
     @inlinable
     public func hash(into hasher: inout Hasher) {
         store.hash(into: &hasher)
