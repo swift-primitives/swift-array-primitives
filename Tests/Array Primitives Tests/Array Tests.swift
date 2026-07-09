@@ -32,7 +32,9 @@ private final class Payload {
 }
 
 /// Serialized destruction recorder (the suite below is `.serialized`).
-private enum Probe {
+private enum Probe {}
+
+extension Probe {
     nonisolated(unsafe) static var _destroyed: [Int] = []
     static func reset() { unsafe _destroyed = [] }
     static func recordDestroy(_ id: Int) { unsafe _destroyed.append(id) }
