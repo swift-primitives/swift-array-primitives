@@ -73,7 +73,7 @@ where C.Element == Item, C.Index == Index<Item> {
 }
 
 @Suite(.serialized)
-struct ArrayTests {
+struct `Array Tests` {
 
     // MARK: - Construction + properties (both columns)
 

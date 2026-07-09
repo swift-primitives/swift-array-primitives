@@ -30,7 +30,7 @@ private typealias CoWArray<E: ~Copyable> = __Array<SharedColumn<E>>
 // MARK: - The seam-ledger laws (audit #2): both columns must be lawful
 
 @Suite
-struct ArraySeamLawTests {
+struct `Array Seam Law Tests` {
 
     @Test
     func `the direct heap column obeys the seam ledger laws`() {
@@ -54,7 +54,7 @@ struct ArraySeamLawTests {
 // MARK: - Surface backfill (audit #4)
 
 @Suite(.serialized)
-struct ArraySurfaceTests {
+struct `Array Surface Tests` {
 
     @Test
     func `element(at:offsetBy:) resolves valid offsets and rejects out-of-bounds`() {
