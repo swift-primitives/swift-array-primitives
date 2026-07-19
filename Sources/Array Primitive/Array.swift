@@ -80,7 +80,7 @@ public struct __Array<S: ~Copyable>: ~Copyable {
 
 // MARK: - Conditional Conformances (co-located per [COPY-FIX-004])
 
-/// The S5 chain: `__Array<Ownership.Shared<E, B>>` is `Copyable` exactly when `Shared` is — i.e. when the
+/// The S5 chain: `__Array<Ownership.Shared<E, B>>` is `Copyable` exactly when `Shared` is — that is, when the
 /// ELEMENT is. The direct (move-only buffer) columns never satisfy this, by design.
 extension __Array: Copyable where S: Copyable {}
 
