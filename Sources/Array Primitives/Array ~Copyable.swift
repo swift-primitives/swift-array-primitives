@@ -228,7 +228,7 @@ extension __Array where S: ~Copyable, S: Store.`Protocol` & Buffer.`Protocol` {
     /// - Precondition: `position < count`; the caller already ran `unshare()`.
     /// - Complexity: O(`count` − `position`)
     @inlinable
-    internal mutating func _removeShiftingDown(at position: Index) -> S.Element {
+    package mutating func _removeShiftingDown(at position: Index) -> S.Element {
         var frontier: Index.Count = count.subtract.saturating(.one)
         var carry = store.move(at: frontier.map(Ordinal.init))
         while position < frontier.map(Ordinal.init) {

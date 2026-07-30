@@ -15,6 +15,10 @@ import Testing
 // The W4 audit backfill: the seam-ledger laws on both ratified columns, and the
 // surface gaps the column-keyed core suite left open.
 
+// swift-linter:disable:next unification typealias
+// REASON: Test-local `private` alias with no API surface, standing in for a 68-character
+// four-level generic that recurs dozens of times in this file. No consumer call site is
+// affected, so the indirection harm [API-NAME-004] guards against does not obtain.
 private typealias HeapColumn<E: ~Copyable> =
     Buffer<Storage<Memory.Allocator<Memory.Heap>>.Contiguous<E>>.Linear
 
@@ -31,23 +35,27 @@ private typealias CoWArray<E: ~Copyable> = __Array<SharedColumn<E>>
 
 @Suite
 struct `Array Seam Law Tests` {
+    @Suite struct Unit {}
+    @Suite struct `Edge Case` {}
 
-    @Test
-    func `the direct heap column obeys the seam ledger laws`() {
-        let violations = Seam.Ledger.violations(
-            makeEmpty: { HeapColumn<Int>(minimumCapacity: Index<Int>.Count(4)) },
-            element: { $0 }
-        )
-        #expect(violations.isEmpty, "\(violations)")
-    }
+    @Suite struct Integration {
+        @Test
+        func `the direct heap column obeys the seam ledger laws`() {
+            let violations = Seam.Ledger.violations(
+                makeEmpty: { HeapColumn<Int>(minimumCapacity: Index<Int>.Count(4)) },
+                element: { $0 }
+            )
+            #expect(violations.isEmpty, "\(violations)")
+        }
 
-    @Test
-    func `the Shared CoW column obeys the seam ledger laws`() {
-        let violations = Seam.Ledger.violations(
-            makeEmpty: { SharedColumn<Int>(HeapColumn<Int>(minimumCapacity: Index<Int>.Count(4))) },
-            element: { $0 }
-        )
-        #expect(violations.isEmpty, "\(violations)")
+        @Test
+        func `the Shared CoW column obeys the seam ledger laws`() {
+            let violations = Seam.Ledger.violations(
+                makeEmpty: { SharedColumn<Int>(HeapColumn<Int>(minimumCapacity: Index<Int>.Count(4))) },
+                element: { $0 }
+            )
+            #expect(violations.isEmpty, "\(violations)")
+        }
     }
 }
 
@@ -55,84 +63,89 @@ struct `Array Seam Law Tests` {
 
 @Suite(.serialized)
 struct `Array Surface Tests` {
-
-    @Test
-    func `element(at:offsetBy:) resolves valid offsets and rejects out-of-bounds`() {
-        var a = MoveArray<Int>(initialCapacity: 3)
-        a.append(10)
-        a.append(20)
-        a.append(30)
-        let base: MoveArray<Int>.Index = 0
-        let plusTwo = a.element(at: base, offsetBy: 2)
-        #expect(plusTwo == 30)
-        let beyond = a.element(at: base, offsetBy: 3)
-        #expect(beyond == nil)
-        let fromMiddle: MoveArray<Int>.Index = 1
-        let backOne = a.element(at: fromMiddle, offsetBy: -1)
-        #expect(backOne == 10)
-    }
-
-    @Test
-    func `the SPI pointer lane reads the direct column`() {
-        var a = MoveArray<Int>(initialCapacity: 3)
-        a.append(1)
-        a.append(2)
-        a.append(3)
-        let sum = unsafe a.withUnsafeBufferPointer { buffer in
-            unsafe buffer.reduce(0, +)
+    @Suite struct Unit {
+        @Test
+        func `the SPI pointer lane reads the direct column`() {
+            var a = MoveArray<Int>(initialCapacity: 3)
+            a.append(1)
+            a.append(2)
+            a.append(3)
+            let sum = unsafe a.withUnsafeBufferPointer { buffer in
+                unsafe buffer.reduce(0, +)
+            }
+            #expect(sum == 6)
         }
-        #expect(sum == 6)
     }
 
-    @Test
-    func `growth from zero capacity is sound on both columns`() {
-        var a = MoveArray<Int>(initialCapacity: .zero)
-        a.append(1)
-        a.append(2)
-        a.append(3)
-        let aCount = a.count
-        #expect(aCount == Index<Int>.Count(3))
-        let aLast = a[2]
-        #expect(aLast == 3)
+    @Suite struct `Edge Case` {
+        @Test
+        func `element(at:offsetBy:) resolves valid offsets and rejects out-of-bounds`() {
+            var a = MoveArray<Int>(initialCapacity: 3)
+            a.append(10)
+            a.append(20)
+            a.append(30)
+            let base: MoveArray<Int>.Index = 0
+            let plusTwo = a.element(at: base, offsetBy: 2)
+            #expect(plusTwo == 30)
+            let beyond = a.element(at: base, offsetBy: 3)
+            #expect(beyond == nil)
+            let fromMiddle: MoveArray<Int>.Index = 1
+            let backOne = a.element(at: fromMiddle, offsetBy: -1)
+            #expect(backOne == 10)
+        }
 
-        var c = CoWArray<Int>(initialCapacity: .zero)
-        c.append(7)
-        c.append(8)
-        let cCount = c.count
-        #expect(cCount == Index<Int>.Count(2))
-        let c0 = c[0]
-        #expect(c0 == 7)
+        @Test
+        func `growth from zero capacity is sound on both columns`() {
+            var a = MoveArray<Int>(initialCapacity: .zero)
+            a.append(1)
+            a.append(2)
+            a.append(3)
+            let aCount = a.count
+            #expect(aCount == Index<Int>.Count(3))
+            let aLast = a[2]
+            #expect(aLast == 3)
+
+            var c = CoWArray<Int>(initialCapacity: .zero)
+            c.append(7)
+            c.append(8)
+            let cCount = c.count
+            #expect(cCount == Index<Int>.Count(2))
+            let c0 = c[0]
+            #expect(c0 == 7)
+        }
     }
 
-    @Test
-    func `take then rewrap preserves contents`() {
-        var a = MoveArray<Int>(initialCapacity: 2)
-        a.append(4)
-        a.append(5)
-        let column = a.take()
-        let b = Array(store: column)
-        let bCount = b.count
-        #expect(bCount == Index<Int>.Count(2))
-        let b1 = b[1]
-        #expect(b1 == 5)
-    }
+    @Suite struct Integration {
+        @Test
+        func `take then rewrap preserves contents`() {
+            var a = MoveArray<Int>(initialCapacity: 2)
+            a.append(4)
+            a.append(5)
+            let column = a.take()
+            let b = Array(store: column)
+            let bCount = b.count
+            #expect(bCount == Index<Int>.Count(2))
+            let b1 = b[1]
+            #expect(b1 == 5)
+        }
 
-    @Test
-    func `equal CoW arrays hash equal; unequal lengths compare unequal`() {
-        var a = CoWArray<Int>(initialCapacity: 2)
-        a.append(1)
-        var b = CoWArray<Int>(initialCapacity: 4)
-        b.append(1)
-        #expect(a == b)
-        var ha = Hasher()
-        var hb = Hasher()
-        a.hash(into: &ha)
-        b.hash(into: &hb)
-        #expect(ha.finalize() == hb.finalize())
-        b.append(2)
-        #expect(a != b)  // length-discriminating
-        let prefixSame = (a[0] == b[0])
-        #expect(prefixSame)
+        @Test
+        func `equal CoW arrays hash equal; unequal lengths compare unequal`() {
+            var a = CoWArray<Int>(initialCapacity: 2)
+            a.append(1)
+            var b = CoWArray<Int>(initialCapacity: 4)
+            b.append(1)
+            #expect(a == b)
+            var ha = Hasher()
+            var hb = Hasher()
+            a.hash(into: &ha)
+            b.hash(into: &hb)
+            #expect(ha.finalize() == hb.finalize())
+            b.append(2)
+            #expect(a != b)  // length-discriminating
+            let prefixSame = (a[0] == b[0])
+            #expect(prefixSame)
+        }
     }
 }
 

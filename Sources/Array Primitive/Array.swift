@@ -67,6 +67,9 @@ public struct __Array<S: ~Copyable>: ~Copyable {
         self.store = store
     }
 
+}
+
+extension __Array where S: ~Copyable {
     /// Consumes the array, yielding its storage column.
     ///
     /// `@inlinable` is enabled by `@frozen` (the Q4 sweep): cross-module partial
@@ -96,6 +99,12 @@ extension __Array where S: ~Copyable {
     /// uniformly. For the small column, `initialCapacity` sizes the inline budget; growth past it
     /// re-runs the spill decision and relocates into a heap region.
     @inlinable
+    // swift-linter:disable:next phantom suppression
+    // REASON: `E` is not a phantom — the declaration's own `where` clause binds it into
+    // `Storage.Contiguous<E>`, which stores values of `E`. `Contiguous` constrains its
+    // element `~Copyable` only and requires escapability, so the prescribed
+    // `~Copyable & ~Escapable` bound is not compilable here. The rule's `usedAsStoredValue`
+    // text heuristic does not inspect same-signature `where`-clause bindings.
     public init<E: ~Copyable, Resource: Memory.Growable & ~Copyable>(initialCapacity: Index_Primitives.Index<E>.Count = .zero)
     where S == Buffer<Storage<Memory.Allocator<Resource>>.Contiguous<E>>.Linear {
         self.init(store: S(minimumCapacity: initialCapacity))
@@ -121,6 +130,12 @@ extension __Array where S: ~Copyable {
     /// Creates an empty statically-unique array of move-only elements on the `Shared` column
     /// (the boxed flavor of the move-only regime — useful when the box's O(1) move matters).
     @inlinable
+    // swift-linter:disable:next phantom suppression
+    // REASON: `E` is not a phantom — the declaration's own `where` clause binds it into
+    // `Storage.Contiguous<E>`, which stores values of `E`. `Contiguous` constrains its
+    // element `~Copyable` only and requires escapability, so the prescribed
+    // `~Copyable & ~Escapable` bound is not compilable here. The rule's `usedAsStoredValue`
+    // text heuristic does not inspect same-signature `where`-clause bindings.
     public init<E: ~Copyable>(initialCapacity: Index_Primitives.Index<E>.Count = .zero)
     where S == Ownership.Shared<E, Buffer<Storage<Memory.Allocator<Memory.Heap>>.Contiguous<E>>.Linear> {
         self.init(

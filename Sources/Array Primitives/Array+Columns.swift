@@ -72,6 +72,10 @@ extension __Array where S: ~Copyable {
     /// is R-generic, so this one op serves the dense-heap column (`Memory.Heap`) AND the
     /// inline⊕heap small column (`Memory.Small<n>`) uniformly.
     @inlinable
+    // swift-linter:disable:next bool public parameter
+    // REASON: Signature parity with `Swift.Array.removeAll(keepingCapacity: Bool = false)`.
+    // The front-door `Array<E>` deliberately shadows `Swift.Array` per [DS-028]; an enum
+    // parameter here would break the source-compatibility contract shadowing exists to keep.
     public mutating func removeAll<E: ~Copyable, Resource: Memory.Growable & ~Copyable>(keepingCapacity: Bool = false)
     where S == Buffer<Storage<Memory.Allocator<Resource>>.Contiguous<E>>.Linear {
         store.removeAll(keepingCapacity: keepingCapacity)
@@ -82,6 +86,10 @@ extension __Array where S: ~Copyable {
     /// Detaches to a fresh box rather than draining in place: sibling values sharing the
     /// old box keep their elements untouched, and no deep copy is ever needed.
     @inlinable
+    // swift-linter:disable:next bool public parameter
+    // REASON: Signature parity with `Swift.Array.removeAll(keepingCapacity: Bool = false)`.
+    // The front-door `Array<E>` deliberately shadows `Swift.Array` per [DS-028]; an enum
+    // parameter here would break the source-compatibility contract shadowing exists to keep.
     public mutating func removeAll<E>(keepingCapacity: Bool = false)
     where S == Ownership.Shared<E, Buffer<Storage<Memory.Allocator<Memory.Heap>>.Contiguous<E>>.Linear> {
         let capacity: Index_Primitives.Index<E>.Count = keepingCapacity ? store.capacity : .zero
@@ -104,6 +112,12 @@ extension __Array where S: ~Copyable {
     /// Allocation-generic per [DS-029] form 2: `Buffer.Linear.reserveCapacity` is R-generic,
     /// so this covers heap AND small columns uniformly.
     @inlinable
+    // swift-linter:disable:next phantom suppression
+    // REASON: `E` is not a phantom — the declaration's own `where` clause binds it into
+    // `Storage.Contiguous<E>`, which stores values of `E`. `Contiguous` constrains its
+    // element `~Copyable` only and requires escapability, so the prescribed
+    // `~Copyable & ~Escapable` bound is not compilable here. The rule's `usedAsStoredValue`
+    // text heuristic does not inspect same-signature `where`-clause bindings.
     public mutating func reserveCapacity<E: ~Copyable, Resource: Memory.Growable & ~Copyable>(_ minimumCapacity: Index_Primitives.Index<E>.Count)
     where S == Buffer<Storage<Memory.Allocator<Resource>>.Contiguous<E>>.Linear {
         store.reserveCapacity(minimumCapacity)
@@ -120,6 +134,12 @@ extension __Array where S: ~Copyable {
     ///
     /// - Precondition: `newCapacity >= count`
     @inlinable
+    // swift-linter:disable:next phantom suppression
+    // REASON: `E` is not a phantom — the declaration's own `where` clause binds it into
+    // `Storage.Contiguous<E>`, which stores values of `E`. `Contiguous` constrains its
+    // element `~Copyable` only and requires escapability, so the prescribed
+    // `~Copyable & ~Escapable` bound is not compilable here. The rule's `usedAsStoredValue`
+    // text heuristic does not inspect same-signature `where`-clause bindings.
     public mutating func reallocate<E: ~Copyable>(capacity newCapacity: Index_Primitives.Index<E>.Count)
     where S == Buffer<Storage<Memory.Allocator<Memory.Heap>>.Contiguous<E>>.Linear {
         store.reallocate(capacity: newCapacity)

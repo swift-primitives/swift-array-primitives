@@ -35,6 +35,12 @@ extension __Array where S: ~Copyable {
     /// On throw, partially-initialized elements are deinitialized by the `OutputSpan`'s
     /// deinit; the array is not constructed; the error propagates.
     @inlinable
+    // swift-linter:disable:next phantom suppression
+    // REASON: `E` is not a phantom — the declaration's own `where` clause binds it into
+    // `Storage.Contiguous<E>`, which stores values of `E`. `Contiguous` constrains its
+    // element `~Copyable` only and requires escapability, so the prescribed
+    // `~Copyable & ~Escapable` bound is not compilable here. The rule's `usedAsStoredValue`
+    // text heuristic does not inspect same-signature `where`-clause bindings.
     public init<E: ~Copyable, Failure: Swift.Error>(
         capacity: Index_Primitives.Index<E>.Count,
         initializingWith initializer: (inout Swift.OutputSpan<E>) throws(Failure) -> Void
@@ -56,6 +62,12 @@ extension __Array where S: ~Copyable {
     /// Elements appended before a throw **remain committed** to the array (append-style
     /// semantics, distinct from init-style destroy-on-throw).
     @inlinable
+    // swift-linter:disable:next phantom suppression
+    // REASON: `E` is not a phantom — the declaration's own `where` clause binds it into
+    // `Storage.Contiguous<E>`, which stores values of `E`. `Contiguous` constrains its
+    // element `~Copyable` only and requires escapability, so the prescribed
+    // `~Copyable & ~Escapable` bound is not compilable here. The rule's `usedAsStoredValue`
+    // text heuristic does not inspect same-signature `where`-clause bindings.
     public mutating func append<E: ~Copyable, Failure: Swift.Error>(
         addingCapacity: Index_Primitives.Index<E>.Count,
         initializingWith initializer: (inout Swift.OutputSpan<E>) throws(Failure) -> Void
