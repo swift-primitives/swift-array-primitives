@@ -34,14 +34,14 @@ private final class Payload {
 /// Serialized destruction recorder (the suite below is `.serialized`).
 private enum Probe {}
 
-private extension Probe {
+extension Probe {
     // SAFETY: Sync mechanism — every reader and writer of `_destroyed` runs inside the
     // `.serialized` `Array Tests` suite, so accesses are totally ordered by the test
     // harness and never concurrent. Reset per test via `Probe.reset()`.
-    nonisolated(unsafe) static var _destroyed: [Int] = []
-    static func reset() { unsafe _destroyed = [] }
-    static func recordDestroy(_ id: Int) { unsafe _destroyed.append(id) }
-    static var destroyedSorted: [Int] { unsafe _destroyed.sorted() }
+    fileprivate nonisolated(unsafe) static var _destroyed: [Int] = []
+    fileprivate static func reset() { unsafe _destroyed = [] }
+    fileprivate static func recordDestroy(_ id: Int) { unsafe _destroyed.append(id) }
+    fileprivate static var destroyedSorted: [Int] { unsafe _destroyed.sorted() }
 }
 
 // The two ratified columns.
