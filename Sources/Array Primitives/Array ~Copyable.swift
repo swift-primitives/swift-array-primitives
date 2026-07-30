@@ -256,15 +256,48 @@ extension __Array where S: ~Copyable, S: Store.`Protocol` & Buffer.`Protocol` {
 
     /// Consumes every element front-to-back, leaving the array empty.
     ///
-    /// The seam's ledger keeps `count` honest mid-drain (each `move` decrements), so the
-    /// loop terminates when the column reports empty.
+    /// ## Why REVERSE-then-POP and not a forward `move(at:)` walk
+    ///
+    /// The prior implementation walked `move(at:)` forward from `.zero` — the same
+    /// unlawful interior-move class fixed in `_removeShiftingDown` (the seam's
+    /// `Buffer.Linear` conformance only grants `move(at:)` at the trailing slot,
+    /// `slot == count - 1`); every element before the last one trapped under `-O`
+    /// (swift-primitives/swift-array-primitives#3).
+    ///
+    /// The lawful shape uses only what the seam actually grants at an interior slot
+    /// pair — `swapAt(_:_:)`, unrestricted (`Buffer.Linear+Store.Protocol.swift`
+    /// forwards it straight to the underlying storage, bypassing the trailing-only
+    /// `move`/`initialize` discipline) — plus trailing-only `move(at:)`:
+    ///
+    ///   1. Reverse the live region in place using only `swapAt` (two-pointer,
+    ///      closing from both ends).
+    ///   2. Pop from the trailing slot repeatedly (the one lawful ledger retraction).
+    ///      Since the region is now reversed, popping the tail yields the elements
+    ///      in their ORIGINAL front-to-back order.
+    ///
+    /// Every slot stays initialized throughout, nothing is copied, and the ledger
+    /// only ever moves at the trailing slot — which is what makes it correct for
+    /// `~Copyable` elements too.
     @inlinable
     public mutating func drain(_ body: (consuming S.Element) -> Void) {
         store.unshare()
-        var slot: Index = .zero
+
+        var low: Index = .zero
+        var high: Index.Count = count.subtract.saturating(.one)
+        while low < high.map(Ordinal.init) {
+            store.swapAt(low, high.map(Ordinal.init))
+            low = low.successor.saturating()
+            high = high.subtract.saturating(.one)
+        }
+
         while !isEmpty {
-            body(store.move(at: slot))
-            slot = slot.successor.saturating()
+            let end: Index = count.map(Ordinal.init)
+            // WHY: the loop guard above guarantees count ≥ 1, so end ≥ 1 and
+            // predecessor is always in-bounds.
+            // swift-format-ignore: NeverUseForceTry
+            // swiftlint:disable:next force_try
+            let last = try! end.predecessor.exact()
+            body(store.move(at: last))
         }
     }
 }

@@ -278,6 +278,46 @@ struct `Array Tests` {
         #expect(bCount == Index<Int>.Count(2))  // the gate cloned before draining
     }
 
+    // Regression for swift-primitives/swift-array-primitives#3: `drain(_:)` opened
+    // with an interior `store.move(at:)` walked FORWARD from `.zero` — the identical
+    // unlawful-interior-move class fixed in `_removeShiftingDown` and `swap(at:with:)`
+    // above, previously masked because the small fixed-capacity happy-path test never
+    // grew the column or mixed in prior mutations. This sweep grows the column past
+    // its initial capacity (forcing a reallocation), applies `pop`, `remove(at:)`, and
+    // `swap(at:with:)` beforehand, then drains and checks the delivered sequence and
+    // final empty state against a reference model — for every starting size 0...12, so
+    // the single-element and empty boundaries are covered alongside the general case.
+    @Test
+    func `drain sweeps every size under growth and mixed prior operations`() {
+        for size in 0...12 {
+            var a = MoveArray<Int>(initialCapacity: 2)  // forces growth past size 2
+            var model: [Int] = Swift.Array(0..<size)
+            for value in model {
+                a.append(value)
+            }
+
+            if !model.isEmpty {
+                let popped = a.pop()
+                #expect(popped == model.removeLast())
+            }
+            if model.count > 1 {
+                let removed = a.remove(at: Index<Int>(Ordinal(UInt(model.count / 2))))
+                let expected = model.remove(at: model.count / 2)
+                #expect(removed == expected)
+            }
+            if model.count > 1 {
+                a.swap(at: 0, with: Index<Int>(Ordinal(UInt(model.count - 1))))
+                model.swapAt(0, model.count - 1)
+            }
+
+            var seen: [Int] = []
+            a.drain { seen.append($0) }
+            #expect(seen == model)
+            let isEmpty = a.isEmpty
+            #expect(isEmpty)
+        }
+    }
+
     @Test
     func `removeAll on both columns; keepingCapacity preserves slots`() {
         var a = MoveArray<Int>(initialCapacity: 4)
