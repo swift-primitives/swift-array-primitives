@@ -250,6 +250,28 @@ struct `Array Tests` {
         #expect(e1 == 2)
     }
 
+    // Regression for the latent sibling defect noted alongside
+    // swift-primitives/swift-array-primitives#3: `swap(at:with:)` on a Shared (CoW)
+    // column rides the same `store.swapAt(_:_:)` seam as `drain(_:)`'s reversal step,
+    // and was previously untested on that column — only `MoveArray` was exercised above.
+    @Test
+    func `swap on a shared column detaches from siblings first`() {
+        var a = CoWArray<Int>(initialCapacity: 3)
+        a.append(1)
+        a.append(2)
+        a.append(3)
+        let b = a
+        a.swap(at: 0, with: 2)
+        let a0 = a[0]
+        let a2 = a[2]
+        let b0 = b[0]
+        let b2 = b[2]
+        #expect(a0 == 3)
+        #expect(a2 == 1)
+        #expect(b0 == 1)
+        #expect(b2 == 3)
+    }
+
     @Test
     func `drain consumes front-to-back and empties the array`() {
         var a = MoveArray<Int>(initialCapacity: 3)
@@ -306,8 +328,8 @@ struct `Array Tests` {
                 #expect(removed == expected)
             }
             if model.count > 1 {
-                a.swap(at: 0, with: Index<Int>(Ordinal(UInt(model.count - 1))))
-                model.swapAt(0, model.count - 1)
+                a.swap(at: 0, with: Index<Int>(Ordinal(UInt(model.endIndex - 1))))
+                model.swapAt(0, model.endIndex - 1)
             }
 
             var seen: [Int] = []

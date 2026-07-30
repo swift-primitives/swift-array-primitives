@@ -203,14 +203,14 @@ extension __Array where S: ~Copyable, S: Store.`Protocol` & Buffer.`Protocol` {
     ///
     /// The seam's 4-op discipline (`Buffer.Linear+Store.Protocol`) is *trailing-only*:
     /// `initialize(at:to:)` only appends at `slot == count`, and `move(at:)` only retracts
-    /// at `slot == count - 1` — both mirror the header cursor with the ledger's own
+    /// at `slot == count.subtract.saturating(.one)` — both mirror the header cursor with the ledger's own
     /// arithmetic. An interior `move(at:)` (any `index` other than the trailing slot)
     /// violates that contract; in `-Onone` it trips the buffer's `precondition`, and in
     /// `-O` the same `precondition` lowers to `Builtin.condfail_message` — a bare `ud2`
     /// (SIGILL) with no diagnostic (swift-primitives/swift-array-primitives#8; identical
     /// class fixed in swift-primitives/swift-hash-table-primitives#4). The prior
     /// implementation opened this removal with `store.move(at: index)`, so every interior
-    /// removal (`index < count - 1`) trapped under `-O`.
+    /// removal (`index < count.subtract.saturating(.one)`) trapped under `-O`.
     ///
     /// The lawful shape uses only the two ops the seam actually grants at an interior
     /// slot: the *live-slot subscript* (which never touches the ledger) and a *single*
@@ -228,7 +228,6 @@ extension __Array where S: ~Copyable, S: Store.`Protocol` & Buffer.`Protocol` {
     /// - Precondition: `position < count`; the caller already ran `unshare()`.
     /// - Complexity: O(`count` − `position`)
     @inlinable
-    @usableFromInline
     internal mutating func _removeShiftingDown(at position: Index) -> S.Element {
         var frontier: Index.Count = count.subtract.saturating(.one)
         var carry = store.move(at: frontier.map(Ordinal.init))
@@ -261,7 +260,7 @@ extension __Array where S: ~Copyable, S: Store.`Protocol` & Buffer.`Protocol` {
     /// The prior implementation walked `move(at:)` forward from `.zero` — the same
     /// unlawful interior-move class fixed in `_removeShiftingDown` (the seam's
     /// `Buffer.Linear` conformance only grants `move(at:)` at the trailing slot,
-    /// `slot == count - 1`); every element before the last one trapped under `-O`
+    /// `slot == count.subtract.saturating(.one)`); every element before the last one trapped under `-O`
     /// (swift-primitives/swift-array-primitives#3).
     ///
     /// The lawful shape uses only what the seam actually grants at an interior slot
