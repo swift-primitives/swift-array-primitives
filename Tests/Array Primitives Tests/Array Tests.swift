@@ -187,11 +187,11 @@ struct `Array Tests` {
     // after EVERY removal — covering leading, interior, and trailing removals, plus the
     // final one-element column.
     @Test
-    func `remove(at:) sweeps every removal order on a growing column without corrupting order`() {
+    func `remove(at:) sweeps every removal order on a growing column without corrupting order`() throws {
         let size = 12
         for startOffset in 0..<size {
             for stride in 1...5 {
-                var a = MoveArray<Int>(initialCapacity: Index<Int>.Count(size))
+                var a = MoveArray<Int>(initialCapacity: try Index<Int>.Count(size))
                 var model: [Int] = Swift.Array(0..<size)
                 for value in model {
                     a.append(value)
@@ -203,7 +203,8 @@ struct `Array Tests` {
                     let expected = model.remove(at: idx)
                     #expect(removed == expected)
                     let survivorCount = a.count
-                    #expect(survivorCount == Index<Int>.Count(model.count))
+                    let expectedCount = try Index<Int>.Count(model.count)
+                    #expect(survivorCount == expectedCount)
                     for position in 0..<model.count {
                         let survivor = a[Index<Int>(Ordinal(UInt(position)))]
                         #expect(survivor == model[position])
