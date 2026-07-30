@@ -22,22 +22,21 @@ The two ratified columns answer the ownership question at the type level. `Colum
 
 ```swift
 import Array_Primitives
-import Column_Primitives
 
 // Move-only by default: the array owns its heap storage outright — no implicit copies.
-var log = Array<Column.Heap<Int>>()
+var log = Array<Int>()
 log.append(200)
 log.append(404)
 let entries = log.count                 // 2
 
-// Opt in to copy-on-write value semantics with the Shared column:
-var snapshot = Array<Column.Shared<Int>>()
+// Opt in to copy-on-write value semantics with the Shared front door:
+var snapshot = Array<Int>.Shared()
 snapshot.append(200)
 let archived = snapshot                 // shares storage (O(1)) — no copy yet
 snapshot.append(404)                    // forks here; `archived` still holds [200]
 ```
 
-Storage is chosen by the column type parameter, so the same `Array<S>` covers more than these two — `Column.Inline<E, n>`, for example, keeps elements in the value itself with no heap allocation. Small-buffer storage (inline until it spills) awaits a future `Column.Small`.
+`Array<E>` is the canonical front door: a growable, move-only array pinned to the heap-allocated, contiguous linear column. `Array<E>.Shared` is the ownership-axis variant — the same column boxed behind `Ownership.Shared`, `Copyable` exactly when `E` is. `Array<E>.Small<n>` (in the separate `Array Small Primitive` product) re-points the allocation axis to an inline-until-it-spills buffer, where `n` is a byte budget rather than an element count.
 
 ---
 
@@ -70,9 +69,11 @@ The package is pre-1.0 — depend on `branch: "main"` until `0.1.0` is tagged. R
 
 | Product | Contents | When to import |
 |---------|----------|----------------|
-| `Array Primitives` | Umbrella — `Array<S>`, the column constructors, and the `Collection` / `Sequence` conformances | Most consumers |
-| `Array Primitive` | The `Array<S>` value type and its column-pinned surface, without the conformances | Move-only use that must not pull in conformance machinery |
-| `Array Protocol Primitives` | The array seam protocol that `Array<S>` conforms to | Writing code generic over array-like storage |
+| `Array Primitives` | Umbrella — `Array<E>`, `Array<E>.Shared`, and the `Collection` / `Sequence` conformances | Most consumers |
+| `Array Primitive` | The `__Array<S>` carrier and its front-door aliases (`Array<E>`, `Array<E>.Shared`), without the conformances | Move-only use that must not pull in conformance machinery |
+| `Array Protocol Primitives` | The array seam protocol that `__Array<S>` conforms to | Writing code generic over array-like storage |
+| `Array Small Primitive` | `Array<E>.Small<n>`, the inline-until-it-spills allocation variant ([DS-027].1) | Consumers who need a byte-budgeted inline buffer, e.g. `json` |
+| `Array Primitives Test Support` | Re-exported test-support helpers for consumers testing against `Array Primitives` | Test targets only |
 
 ---
 
@@ -90,9 +91,11 @@ The package is pre-1.0 — depend on `branch: "main"` until `0.1.0` is tagged. R
 
 ## Related Packages
 
-- [`swift-column-primitives`](https://github.com/swift-primitives/swift-column-primitives) — the column vocabulary (`Column.Heap`, `Column.Shared`, …) the array composes.
-- [`swift-shared-primitives`](https://github.com/swift-primitives/swift-shared-primitives) — the copy-on-write box behind the `Shared` column.
-- [`swift-fixed-primitives`](https://github.com/swift-primitives/swift-fixed-primitives) — the fixed-count discipline over a capacity-capped column.
+- [`swift-buffer-primitives`](https://github.com/swift-primitives/swift-buffer-primitives) / [`swift-buffer-linear-primitives`](https://github.com/swift-primitives/swift-buffer-linear-primitives) — the contiguous linear buffer the front doors pin to.
+- [`swift-storage-primitives`](https://github.com/swift-primitives/swift-storage-primitives) — the `Store.Protocol` / `Storage.Contiguous` seam the buffer is generic over.
+- [`swift-memory-heap-primitives`](https://github.com/swift-primitives/swift-memory-heap-primitives) / [`swift-memory-allocation-primitives`](https://github.com/swift-primitives/swift-memory-allocation-primitives) / [`swift-memory-small-primitives`](https://github.com/swift-primitives/swift-memory-small-primitives) — the allocation leaves (`Memory.Heap`, `Memory.Allocator`, `Memory.Small<n>`) that back `Array<E>` and `Array<E>.Small<n>`.
+- [`swift-ownership-shared-primitives`](https://github.com/swift-primitives/swift-ownership-shared-primitives) — the copy-on-write box behind `Array<E>.Shared`.
+- [`swift-index-primitives`](https://github.com/swift-primitives/swift-index-primitives) / [`swift-collection-primitives`](https://github.com/swift-primitives/swift-collection-primitives) / [`swift-sequence-primitives`](https://github.com/swift-primitives/swift-sequence-primitives) — the indexing and iteration seams `Array<E>` conforms to.
 
 ---
 
