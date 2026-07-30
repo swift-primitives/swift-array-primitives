@@ -54,8 +54,9 @@ where S: Span.`Protocol` & Store.`Protocol` & Buffer.`Protocol` & ~Copyable {}
 extension __Array: Collection.Bidirectional
 where S: Span.`Protocol` & Store.`Protocol` & Buffer.`Protocol` & ~Copyable {}
 
-// MARK: Array.Protocol (the hoisted __ArrayProtocol; `Array.Protocol` is the front-door
-// accessor and cannot be spelled bare on the generic alias)
+// MARK: Indexable (top-level capability protocol; `__ArrayProtocol` is a compatibility
+// alias — `Array` is a generic front-door typealias and has no nested `Array.Protocol`
+// spelling to conform through)
 
 extension __Array: __ArrayProtocol
 where S: Span.`Protocol` & Store.`Protocol` & Buffer.`Protocol` & ~Copyable {}
