@@ -251,10 +251,7 @@ extension __Array where S: ~Copyable, S: Store.`Protocol` & Buffer.`Protocol` {
         precondition(i < count && j < count, "Index out of bounds")
         guard i != j else { return }
         store.unshare()
-        let a = store.move(at: i)
-        let b = store.move(at: j)
-        store.initialize(at: i, to: b)
-        store.initialize(at: j, to: a)
+        store.swapAt(i, j)
     }
 
     /// Consumes every element front-to-back, leaving the array empty.
