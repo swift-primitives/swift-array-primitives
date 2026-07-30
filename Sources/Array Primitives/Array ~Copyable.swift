@@ -193,16 +193,51 @@ extension __Array where S: ~Copyable, S: Store.`Protocol` & Buffer.`Protocol` {
     public mutating func remove(at index: Index) -> S.Element {
         precondition(index < count, "Index out of bounds")
         store.unshare()
-        let end: Index = count.map(Ordinal.init)
-        let removed = store.move(at: index)
-        var dst = index
-        var src = dst.successor.saturating()
-        while src < end {
-            store.initialize(at: dst, to: store.move(at: src))
-            dst = src
-            src = src.successor.saturating()
+        return _removeShiftingDown(at: index)
+    }
+
+    /// Removes the element at `position`, shifting every later element down one slot, and
+    /// hands the removed element back.
+    ///
+    /// ## Why a backward CARRY SWEEP and not `move` + `initialize`
+    ///
+    /// The seam's 4-op discipline (`Buffer.Linear+Store.Protocol`) is *trailing-only*:
+    /// `initialize(at:to:)` only appends at `slot == count`, and `move(at:)` only retracts
+    /// at `slot == count - 1` — both mirror the header cursor with the ledger's own
+    /// arithmetic. An interior `move(at:)` (any `index` other than the trailing slot)
+    /// violates that contract; in `-Onone` it trips the buffer's `precondition`, and in
+    /// `-O` the same `precondition` lowers to `Builtin.condfail_message` — a bare `ud2`
+    /// (SIGILL) with no diagnostic (swift-primitives/swift-array-primitives#8; identical
+    /// class fixed in swift-primitives/swift-hash-table-primitives#4). The prior
+    /// implementation opened this removal with `store.move(at: index)`, so every interior
+    /// removal (`index < count - 1`) trapped under `-O`.
+    ///
+    /// The lawful shape uses only the two ops the seam actually grants at an interior
+    /// slot: the *live-slot subscript* (which never touches the ledger) and a *single*
+    /// trailing retraction. So:
+    ///
+    ///   1. Pop the trailing element into a carry — the one lawful ledger move.
+    ///   2. Walk the carry DOWN to `position`, exchanging it with one live slot at a time.
+    ///      Slot `i` receives what slot `i + 1` held, and the carry picks up slot `i`.
+    ///   3. When the walk reaches `position`, the carry holds the element that was there —
+    ///      the removed element — and every later element sits one slot lower.
+    ///
+    /// Every slot stays initialized for the whole sweep, the ledger moves exactly once,
+    /// and nothing is copied — which is what makes it correct for `~Copyable` elements too.
+    ///
+    /// - Precondition: `position < count`; the caller already ran `unshare()`.
+    /// - Complexity: O(`count` − `position`)
+    @inlinable
+    @usableFromInline
+    internal mutating func _removeShiftingDown(at position: Index) -> S.Element {
+        var frontier: Index.Count = count.subtract.saturating(.one)
+        var carry = store.move(at: frontier.map(Ordinal.init))
+        while position < frontier.map(Ordinal.init) {
+            frontier = frontier.subtract.saturating(.one)
+            let slot: Index = frontier.map(Ordinal.init)
+            swap(&carry, &store[slot])
         }
-        return removed
+        return carry
     }
 
     /// Exchanges the elements at the two given positions.

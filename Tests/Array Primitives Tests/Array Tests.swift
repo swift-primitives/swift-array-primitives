@@ -152,6 +152,16 @@ struct `Array Tests` {
 
     // MARK: - Generic mutations through the gate + seam (both columns)
 
+    // Regression for swift-primitives/swift-array-primitives#8: `remove(at:)` opened
+    // with an interior `store.move(at: index)`, which the seam's trailing-only
+    // discipline (`Buffer.Linear+Store.Protocol`) traps on — a readable `precondition`
+    // failure in debug, but the same trap lowers to a bare `ud2` (SIGILL, signal 4) in
+    // release, with no diagnostic. The fix (backward carry sweep, mirroring the
+    // identical class fixed in swift-primitives/swift-hash-table-primitives#4) never
+    // opens the seam anywhere but the trailing slot. This is the exact reported
+    // sequence: pop the tail, then remove an INTERIOR index (index 1 of 3, not the
+    // trailing slot) — the crash only reproduced under `-O`, so this test's value is
+    // running green on the release CI leg, not merely compiling.
     @Test
     func `pop and remove(at:) shift correctly on the direct column`() {
         var a = MoveArray<Int>(initialCapacity: 4)
@@ -161,7 +171,7 @@ struct `Array Tests` {
         a.append(4)
         let last = a.pop()
         #expect(last == 4)
-        let removed = a.remove(at: 1)  // [1, 2, 3] → remove 2 → [1, 3]
+        let removed = a.remove(at: 1)  // [1, 2, 3] → remove index 1 (interior) → [1, 3]
         #expect(removed == 2)
         let count = a.count
         #expect(count == Index<Int>.Count(2))
@@ -169,6 +179,39 @@ struct `Array Tests` {
         let e1 = a[1]
         #expect(e0 == 1)
         #expect(e1 == 3)
+    }
+
+    // Regression for swift-primitives/swift-array-primitives#8: drains a column of 12
+    // elements to empty under every (start offset × stride) removal order, checking
+    // both the removed value and the full surviving sequence against a reference model
+    // after EVERY removal — covering leading, interior, and trailing removals, plus the
+    // final one-element column.
+    @Test
+    func `remove(at:) sweeps every removal order on a growing column without corrupting order`() {
+        let size = 12
+        for startOffset in 0..<size {
+            for stride in 1...5 {
+                var a = MoveArray<Int>(initialCapacity: Index<Int>.Count(size))
+                var model: [Int] = Swift.Array(0..<size)
+                for value in model {
+                    a.append(value)
+                }
+                var offset = startOffset
+                while !model.isEmpty {
+                    let idx = offset % model.count
+                    let removed = a.remove(at: Index<Int>(Ordinal(UInt(idx))))
+                    let expected = model.remove(at: idx)
+                    #expect(removed == expected)
+                    let survivorCount = a.count
+                    #expect(survivorCount == Index<Int>.Count(model.count))
+                    for position in 0..<model.count {
+                        let survivor = a[Index<Int>(Ordinal(UInt(position)))]
+                        #expect(survivor == model[position])
+                    }
+                    offset += stride
+                }
+            }
+        }
     }
 
     @Test
