@@ -345,8 +345,12 @@ struct `Array Tests` {
         @Test
         func `remove(at:) sweeps every removal order on a growing column without corrupting order`() throws {
             let size = 12
-            try (0..<size).forEach { startOffset in
-                try (1...5).forEach { stride in
+            // swift-linter:disable:next counter loop iteration
+            // REASON: body throws typed (Index<Int>.Count init); .forEach erases typed throws to `any Error` per stdlib rethrows limitations, so for-in is the only construct that preserves it here.
+            for startOffset in 0..<size {
+                // swift-linter:disable:next counter loop iteration
+                // REASON: same typed-throws constraint as the outer loop.
+                for stride in 1...5 {
                     var a = MoveArray<Int>(initialCapacity: try Index<Int>.Count(size))
                     var model: [Int] = Swift.Array(0..<size)
                     for value in model {
@@ -361,7 +365,7 @@ struct `Array Tests` {
                         let survivorCount = a.count
                         let expectedCount = try Index<Int>.Count(model.count)
                         #expect(survivorCount == expectedCount)
-                        model.indices.forEach { position in
+                        for position in model.indices {
                             let survivor = a[Index<Int>(Ordinal(UInt(position)))]
                             #expect(survivor == model[position])
                         }
