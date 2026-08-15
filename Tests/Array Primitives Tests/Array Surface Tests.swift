@@ -51,7 +51,9 @@ struct `Array Seam Law Tests` {
         @Test
         func `the Shared CoW column obeys the seam ledger laws`() {
             let violations = Seam.Ledger.violations(
-                makeEmpty: { SharedColumn<Int>(HeapColumn<Int>(minimumCapacity: Index<Int>.Count(4))) },
+                makeEmpty: {
+                    SharedColumn<Int>(HeapColumn<Int>(minimumCapacity: Index<Int>.Count(4)))
+                },
                 element: { $0 }
             )
             #expect(violations.isEmpty, "\(violations)")

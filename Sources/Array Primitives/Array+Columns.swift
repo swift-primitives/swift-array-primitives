@@ -39,7 +39,9 @@ extension __Array where S: ~Copyable {
     ///
     /// - Complexity: O(1) amortized.
     @inlinable
-    public mutating func append<E: ~Copyable, Resource: Memory.Growable & ~Copyable>(_ element: consuming E)
+    public mutating func append<E: ~Copyable, Resource: Memory.Growable & ~Copyable>(
+        _ element: consuming E
+    )
     where S == Buffer<Storage<Memory.Allocator<Resource>>.Contiguous<E>>.Linear {
         store.append(element)
     }
@@ -49,14 +51,22 @@ extension __Array where S: ~Copyable {
     /// - Complexity: O(1) amortized (O(n) when a copy must be made first).
     @inlinable
     public mutating func append<E>(_ element: consuming E)
-    where S == Ownership.Shared<E, Buffer<Storage<Memory.Allocator<Memory.Heap>>.Contiguous<E>>.Linear> {
+    where
+        S == Ownership.Shared<
+            E, Buffer<Storage<Memory.Allocator<Memory.Heap>>.Contiguous<E>>.Linear
+        >
+    {
         store.append(element)
     }
 
     /// Appends an element on the statically-unique (~Copyable element) `Shared` column.
     @inlinable
     public mutating func append<E: ~Copyable>(_ element: consuming E)
-    where S == Ownership.Shared<E, Buffer<Storage<Memory.Allocator<Memory.Heap>>.Contiguous<E>>.Linear> {
+    where
+        S == Ownership.Shared<
+            E, Buffer<Storage<Memory.Allocator<Memory.Heap>>.Contiguous<E>>.Linear
+        >
+    {
         store.appendAssumingUnique(element)
     }
 }
@@ -76,7 +86,9 @@ extension __Array where S: ~Copyable {
     // REASON: Signature parity with `Swift.Array.removeAll(keepingCapacity: Bool = false)`.
     // The front-door `Array<E>` deliberately shadows `Swift.Array` per [DS-028]; an enum
     // parameter here would break the source-compatibility contract shadowing exists to keep.
-    public mutating func removeAll<E: ~Copyable, Resource: Memory.Growable & ~Copyable>(keepingCapacity: Bool = false)
+    public mutating func removeAll<E: ~Copyable, Resource: Memory.Growable & ~Copyable>(
+        keepingCapacity: Bool = false
+    )
     where S == Buffer<Storage<Memory.Allocator<Resource>>.Contiguous<E>>.Linear {
         store.removeAll(keepingCapacity: keepingCapacity)
     }
@@ -91,7 +103,11 @@ extension __Array where S: ~Copyable {
     // The front-door `Array<E>` deliberately shadows `Swift.Array` per [DS-028]; an enum
     // parameter here would break the source-compatibility contract shadowing exists to keep.
     public mutating func removeAll<E>(keepingCapacity: Bool = false)
-    where S == Ownership.Shared<E, Buffer<Storage<Memory.Allocator<Memory.Heap>>.Contiguous<E>>.Linear> {
+    where
+        S == Ownership.Shared<
+            E, Buffer<Storage<Memory.Allocator<Memory.Heap>>.Contiguous<E>>.Linear
+        >
+    {
         let capacity: Index_Primitives.Index<E>.Count = keepingCapacity ? store.capacity : .zero
         self.store = Ownership.Shared(
             Buffer<Storage<Memory.Allocator<Memory.Heap>>.Contiguous<E>>.Linear(
@@ -118,7 +134,9 @@ extension __Array where S: ~Copyable {
     // element `~Copyable` only and requires escapability, so the prescribed
     // `~Copyable & ~Escapable` bound is not compilable here. The rule's `usedAsStoredValue`
     // text heuristic does not inspect same-signature `where`-clause bindings.
-    public mutating func reserveCapacity<E: ~Copyable, Resource: Memory.Growable & ~Copyable>(_ minimumCapacity: Index_Primitives.Index<E>.Count)
+    public mutating func reserveCapacity<E: ~Copyable, Resource: Memory.Growable & ~Copyable>(
+        _ minimumCapacity: Index_Primitives.Index<E>.Count
+    )
     where S == Buffer<Storage<Memory.Allocator<Resource>>.Contiguous<E>>.Linear {
         store.reserveCapacity(minimumCapacity)
     }
@@ -126,7 +144,11 @@ extension __Array where S: ~Copyable {
     /// Ensures at least `minimumCapacity` slots are allocated (`Shared` column; uniquely).
     @inlinable
     public mutating func reserveCapacity<E>(_ minimumCapacity: Index_Primitives.Index<E>.Count)
-    where S == Ownership.Shared<E, Buffer<Storage<Memory.Allocator<Memory.Heap>>.Contiguous<E>>.Linear> {
+    where
+        S == Ownership.Shared<
+            E, Buffer<Storage<Memory.Allocator<Memory.Heap>>.Contiguous<E>>.Linear
+        >
+    {
         store.reserveCapacity(minimumCapacity)
     }
 
@@ -140,7 +162,9 @@ extension __Array where S: ~Copyable {
     // element `~Copyable` only and requires escapability, so the prescribed
     // `~Copyable & ~Escapable` bound is not compilable here. The rule's `usedAsStoredValue`
     // text heuristic does not inspect same-signature `where`-clause bindings.
-    public mutating func reallocate<E: ~Copyable>(capacity newCapacity: Index_Primitives.Index<E>.Count)
+    public mutating func reallocate<E: ~Copyable>(
+        capacity newCapacity: Index_Primitives.Index<E>.Count
+    )
     where S == Buffer<Storage<Memory.Allocator<Memory.Heap>>.Contiguous<E>>.Linear {
         store.reallocate(capacity: newCapacity)
     }
@@ -150,7 +174,11 @@ extension __Array where S: ~Copyable {
     /// - Precondition: `newCapacity >= count`
     @inlinable
     public mutating func reallocate<E>(capacity newCapacity: Index_Primitives.Index<E>.Count)
-    where S == Ownership.Shared<E, Buffer<Storage<Memory.Allocator<Memory.Heap>>.Contiguous<E>>.Linear> {
+    where
+        S == Ownership.Shared<
+            E, Buffer<Storage<Memory.Allocator<Memory.Heap>>.Contiguous<E>>.Linear
+        >
+    {
         store.reallocate(capacity: newCapacity)
     }
 }
@@ -199,7 +227,11 @@ extension __Array where S: ~Copyable {
     public func withSpan<E, R, Failure: Swift.Error>(
         _ body: (Swift.Span<E>) throws(Failure) -> R
     ) throws(Failure) -> R
-    where S == Ownership.Shared<E, Buffer<Storage<Memory.Allocator<Memory.Heap>>.Contiguous<E>>.Linear> {
+    where
+        S == Ownership.Shared<
+            E, Buffer<Storage<Memory.Allocator<Memory.Heap>>.Contiguous<E>>.Linear
+        >
+    {
         try store.withSpan(body)
     }
 
@@ -208,7 +240,11 @@ extension __Array where S: ~Copyable {
     public mutating func withMutableSpan<E, R, Failure: Swift.Error>(
         _ body: (inout Swift.MutableSpan<E>) throws(Failure) -> R
     ) throws(Failure) -> R
-    where S == Ownership.Shared<E, Buffer<Storage<Memory.Allocator<Memory.Heap>>.Contiguous<E>>.Linear> {
+    where
+        S == Ownership.Shared<
+            E, Buffer<Storage<Memory.Allocator<Memory.Heap>>.Contiguous<E>>.Linear
+        >
+    {
         try store.withMutableSpan(body)
     }
 }
