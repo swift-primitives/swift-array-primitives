@@ -105,7 +105,9 @@ extension __Array where S: ~Copyable {
     // element `~Copyable` only and requires escapability, so the prescribed
     // `~Copyable & ~Escapable` bound is not compilable here. The rule's `usedAsStoredValue`
     // text heuristic does not inspect same-signature `where`-clause bindings.
-    public init<E: ~Copyable, Resource: Memory.Growable & ~Copyable>(initialCapacity: Index_Primitives.Index<E>.Count = .zero)
+    public init<E: ~Copyable, Resource: Memory.Growable & ~Copyable>(
+        initialCapacity: Index_Primitives.Index<E>.Count = .zero
+    )
     where S == Buffer<Storage<Memory.Allocator<Resource>>.Contiguous<E>>.Linear {
         self.init(store: S(minimumCapacity: initialCapacity))
     }
@@ -117,7 +119,11 @@ extension __Array where S: ~Copyable {
     /// copyability — see `unshare`'s backstop).
     @inlinable
     public init<E>(initialCapacity: Index_Primitives.Index<E>.Count = .zero)
-    where S == Ownership.Shared<E, Buffer<Storage<Memory.Allocator<Memory.Heap>>.Contiguous<E>>.Linear> {
+    where
+        S == Ownership.Shared<
+            E, Buffer<Storage<Memory.Allocator<Memory.Heap>>.Contiguous<E>>.Linear
+        >
+    {
         self.init(
             store: Ownership.Shared(
                 Buffer<Storage<Memory.Allocator<Memory.Heap>>.Contiguous<E>>.Linear(
@@ -137,7 +143,11 @@ extension __Array where S: ~Copyable {
     // `~Copyable & ~Escapable` bound is not compilable here. The rule's `usedAsStoredValue`
     // text heuristic does not inspect same-signature `where`-clause bindings.
     public init<E: ~Copyable>(initialCapacity: Index_Primitives.Index<E>.Count = .zero)
-    where S == Ownership.Shared<E, Buffer<Storage<Memory.Allocator<Memory.Heap>>.Contiguous<E>>.Linear> {
+    where
+        S == Ownership.Shared<
+            E, Buffer<Storage<Memory.Allocator<Memory.Heap>>.Contiguous<E>>.Linear
+        >
+    {
         self.init(
             store: Ownership.Shared(
                 Buffer<Storage<Memory.Allocator<Memory.Heap>>.Contiguous<E>>.Linear(

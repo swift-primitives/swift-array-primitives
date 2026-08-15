@@ -343,7 +343,9 @@ struct `Array Tests` {
         // after EVERY removal — covering leading, interior, and trailing removals, plus the
         // final one-element column.
         @Test
-        func `remove(at:) sweeps every removal order on a growing column without corrupting order`() throws {
+        func `remove(at:) sweeps every removal order on a growing column without corrupting order`()
+            throws
+        {
             let size = 12
             // swift-linter:disable:next counter loop iteration
             // REASON: body throws typed (Index<Int>.Count init); .forEach erases typed throws to `any Error` per stdlib rethrows limitations, so for-in is the only construct that preserves it here.
