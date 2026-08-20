@@ -11,7 +11,7 @@
 
 // MARK: - Indexable (top-level capability protocol; formerly hoisted as __ArrayProtocol)
 
-public import Array_Primitive
+import Array_Primitive
 public import Collection_Primitives
 
 /// Protocol unifying element access across all `Array` variants.
