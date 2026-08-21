@@ -12,36 +12,19 @@ let package = Package(
         .visionOS(.v27),
     ],
     products: [
-        // MARK: - Namespace + base type
+
         .library(name: "Array Primitive", targets: ["Array Primitive"]),
 
-        // MARK: - Inline
-
-        // MARK: - Protocol
         .library(name: "Array Protocol Primitives", targets: ["Array Protocol Primitives"]),
 
-        // MARK: - Bounded variant: DELETED (Q3-B ruling 2026-06-10 — dead surface; the
-        // compile-time-dimensioned story lives at Index<E>.Bounded<N> + the inline column)
-
-        // MARK: - Fixed variant: EXTRACTED to swift-fixed-primitives (W5-1, G2 ruling —
-        // the truth-rename: Fixed<S> is a top-level family peer, not an Array variant;
-        // modules `Fixed Primitive(+s)`). __ArrayProtocol stays HERE; Fixed's conformance
-        // to it was withdrawn at extraction.
-
-        // MARK: - Static variant
-
-        // MARK: - Small variant ([DS-027].1: own product, NOT umbrella-re-exported)
         .library(name: "Array Small Primitive", targets: ["Array Small Primitive"]),
 
-        // MARK: - Umbrella
         .library(name: "Array Primitives", targets: ["Array Primitives"]),
 
-        // MARK: - Test Support
         .library(name: "Array Primitives Test Support", targets: ["Array Primitives Test Support"]),
     ],
     dependencies: [
-        // swift-memory-small-primitives: re-added at W1.5 for the `Array Small Primitive`
-        // variant target ONLY ([DS-027].1) — `Array<Byte>.Small<n>`'s Memory.Small<n> leaf.
+
         .package(
             url: "https://github.com/swift-primitives/swift-memory-small-primitives.git",
             branch: "main"
@@ -70,8 +53,7 @@ let package = Package(
             url: "https://github.com/swift-primitives/swift-sequence-primitives.git",
             branch: "main"
         ),
-        // W2 mesh: buffer packages on their  worktrees so every path to memory
-        // unifies on identity swift-memory-primitives (collision resolved).
+
         .package(
             url: "https://github.com/swift-primitives/swift-buffer-primitives.git",
             branch: "main"
@@ -80,8 +62,7 @@ let package = Package(
             url: "https://github.com/swift-primitives/swift-buffer-linear-primitives.git",
             branch: "main"
         ),
-        // W3 ⑤-(N): consumer spelling is now Buffer<Storage<Element>.Contiguous<Memory.Heap<Element>>>.Linear,
-        // so the substrate type Storage<Element>.Contiguous<Memory.Heap<Element>> is referenced directly.
+
         .package(
             url: "https://github.com/swift-primitives/swift-storage-primitives.git",
             branch: "main"
@@ -106,8 +87,7 @@ let package = Package(
             url: "https://github.com/swift-primitives/swift-memory-heap-primitives.git",
             branch: "main"
         ),
-        // W4: the ADT tier is generic over the storage COLUMN (Store.Protocol & Buffer.Protocol seam);
-        // the CoW column is the Shared combinator.
+
         .package(
             url: "https://github.com/swift-primitives/swift-ownership-shared-primitives.git",
             branch: "main"
@@ -119,7 +99,6 @@ let package = Package(
     ],
     targets: [
 
-        // MARK: - Namespace + base type (struct Array; the heap/dynamic array)
         .target(
             name: "Array Primitive",
             dependencies: [
@@ -151,9 +130,6 @@ let package = Package(
             ]
         ),
 
-        // MARK: - Inline (typealias to Swift.InlineArray)
-
-        // MARK: - Protocol (Array.Protocol membership contract + defaults)
         .target(
             name: "Array Protocol Primitives",
             dependencies: [
@@ -163,13 +139,6 @@ let package = Package(
             ]
         ),
 
-        // MARK: - Static type
-
-        // MARK: - Static ops
-
-        // MARK: - Small type ([DS-027].1: own product, NO umbrella re-export — keeps json's
-        //         variant closure lean; the 7 heap-only consumers gain nothing. The
-        //         Memory.Small<n> leaf dep lands on THIS target only.)
         .target(
             name: "Array Small Primitive",
             dependencies: [
@@ -192,9 +161,6 @@ let package = Package(
             ]
         ),
 
-        // MARK: - Small ops
-
-        // MARK: - Base ops + Umbrella ([MOD-005] dual-role: base Array conformances + re-export of all variants)
         .target(
             name: "Array Primitives",
             dependencies: [
@@ -247,7 +213,6 @@ let package = Package(
             ]
         ),
 
-        // MARK: - Test Support
         .target(
             name: "Array Primitives Test Support",
             dependencies: [
@@ -260,7 +225,6 @@ let package = Package(
             path: "Tests/Support"
         ),
 
-        // MARK: - Tests
         .testTarget(
             name: "Array Primitives Tests",
             dependencies: [

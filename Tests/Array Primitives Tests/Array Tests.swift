@@ -11,9 +11,6 @@ import Storage_Contiguous_Primitives
 import Tagged_Primitives_Standard_Library_Integration
 import Testing
 
-// MARK: - Fixtures
-
-/// ~Copyable element with identity + recording deinit (teardown observation).
 private struct Item: ~Copyable {
     let id: Int
     var value: Int
@@ -24,50 +21,31 @@ private struct Item: ~Copyable {
     deinit { Probe.recordDestroy(id) }
 }
 
-/// Copyable element with observable destruction (class ref — deinit at refcount zero).
 private final class Payload {
     let id: Int
     init(_ id: Int) { self.id = id }
     deinit { Probe.recordDestroy(id) }
 }
 
-/// Serialized destruction recorder (the suite below is `.serialized`).
 private enum Probe {}
 
 extension Probe {
-    // SAFETY: Sync mechanism — every reader and writer of `_destroyed` runs inside the
-    // `.serialized` `Array Tests` suite, so accesses are totally ordered by the test
-    // harness and never concurrent. Reset per test via `Probe.reset()`.
+
     nonisolated(unsafe) fileprivate static var _destroyed: [Int] = []
     fileprivate static func reset() { unsafe _destroyed = [] }
     fileprivate static func recordDestroy(_ id: Int) { unsafe _destroyed.append(id) }
     fileprivate static var destroyedSorted: [Int] { unsafe _destroyed.sorted() }
 }
 
-// The two ratified columns.
-// swift-linter:disable:next unification typealias
-// REASON: Test-local `private` alias with no API surface, standing in for a 68-character
-// four-level generic that recurs dozens of times in this file. No consumer call site is
-// affected, so the indirection harm [API-NAME-004] guards against does not obtain.
 private typealias HeapColumn<E: ~Copyable> =
     Buffer<Storage<Memory.Allocator<Memory.Heap>>.Contiguous<E>>.Linear
 
 private typealias SharedColumn<E: ~Copyable> = Ownership.Shared<E, HeapColumn<E>>
 
-// `Array<E>` here is the institute's own typealias (shadows `Swift.Array`); `[E]`
-// sugar is hardwired to `Swift.Array` and would silently change the type.
-// swift-format-ignore: UseShorthandTypeNames
-// swiftlint:disable syntactic_sugar
-/// The default move-only array — the CANONICAL front door ([DS-028]).
-private typealias MoveArray<E: ~Copyable> = Array<E>
-// swiftlint:enable syntactic_sugar
+private typealias MoveArray<E: ~Copyable> = [E]
 
-/// The explicit CoW value-semantic array (`Shared` column — no front door yet;
-/// spelled through the carrier).
 private typealias CoWArray<E: ~Copyable> = __Array<SharedColumn<E>>
 
-/// Generic borrow-through-call reads via the lattice bound — compiles ONLY with the
-/// element-unbounded conformances (the Audit-#5 relaxation, W5-1; the R2 probe shape).
 private func latticeSum<C: Collection.`Protocol` & ~Copyable>(_ c: borrowing C) -> Int
 where C.Element == Item, C.Index == Index<Item> {
     var total = 0
@@ -81,8 +59,6 @@ where C.Element == Item, C.Index == Index<Item> {
 
 @Suite(.serialized)
 struct `Array Tests` {
-
-    // MARK: - Unit
 
     @Suite struct Unit {
         @Test
@@ -109,7 +85,7 @@ struct `Array Tests` {
             let e2 = a[2]
             #expect(e0 == 3)
             #expect(e2 == 1)
-            a.swap(at: 1, with: 1)  // same-index no-op
+            a.swap(at: 1, with: 1)
             let e1 = a[1]
             #expect(e1 == 2)
         }
@@ -143,8 +119,6 @@ struct `Array Tests` {
         }
     }
 
-    // MARK: - Edge Case (shared/aliased-column boundary)
-
     @Suite struct `Edge Case` {
         @Test
         func `shared column constructs empty with capacity`() {
@@ -160,10 +134,10 @@ struct `Array Tests` {
             var a = CoWArray<Int>(initialCapacity: 2)
             a.append(1)
             a.append(2)
-            let b = a  // S5: Array is Copyable because S is
+            let b = a
             let bCount = b.count
             #expect(bCount == Index<Int>.Count(2))
-            a.append(3)  // CoW restore inside Shared.append
+            a.append(3)
             let aCount = a.count
             let bCount2 = b.count
             #expect(aCount == Index<Int>.Count(3))
@@ -175,12 +149,12 @@ struct `Array Tests` {
             var a = CoWArray<Int>(initialCapacity: 2)
             a.append(1)
             a.append(2)
-            let b = a  // share the box
-            a[0] = 100  // generic _modify → unshare()
+            let b = a
+            a[0] = 100
             let aSees = a[0]
             let bSees = b[0]
             #expect(aSees == 100)
-            #expect(bSees == 1)  // sibling untouched: uniqueness was restored
+            #expect(bSees == 1)
         }
 
         @Test
@@ -202,11 +176,6 @@ struct `Array Tests` {
             #expect(b0 == 1)
         }
 
-        // Regression for the latent sibling defect noted alongside
-        // swift-primitives/swift-array-primitives#3: `swap(at:with:)` on a Shared (CoW)
-        // column rides the same `store.swapAt(_:_:)` seam as `drain(_:)`'s reversal step,
-        // and was previously untested on that column — only `MoveArray` was exercised
-        // in the Unit suite above.
         @Test
         func `swap on a shared column detaches from siblings first`() {
             var a = CoWArray<Int>(initialCapacity: 3)
@@ -237,7 +206,7 @@ struct `Array Tests` {
             let aEmpty = a.isEmpty
             let bCount = b.count
             #expect(aEmpty)
-            #expect(bCount == Index<Int>.Count(2))  // the gate cloned before draining
+            #expect(bCount == Index<Int>.Count(2))
         }
 
         @Test
@@ -258,7 +227,7 @@ struct `Array Tests` {
             let cEmpty = c.isEmpty
             let dCount = d.count
             #expect(cEmpty)
-            #expect(dCount == Index<Int>.Count(1))  // detach, not drain: sibling intact
+            #expect(dCount == Index<Int>.Count(1))
         }
 
         @Test
@@ -284,20 +253,18 @@ struct `Array Tests` {
         }
     }
 
-    // MARK: - Integration
-
     @Suite struct Integration {
         @Test
         func `direct column appends, reads, and writes through the gated subscript`() {
             var a = MoveArray<Int>(initialCapacity: 2)
             a.append(10)
             a.append(20)
-            a.append(30)  // growth past initial capacity
+            a.append(30)
             let count = a.count
             #expect(count == Index<Int>.Count(3))
             let e1 = a[1]
             #expect(e1 == 20)
-            a[1] = 25  // _modify (gate is a no-op here)
+            a[1] = 25
             let e1b = a[1]
             #expect(e1b == 25)
             let opt = a.element(at: 2)
@@ -308,16 +275,6 @@ struct `Array Tests` {
             #expect(viaClosure == 20)
         }
 
-        // Regression for swift-primitives/swift-array-primitives#8: `remove(at:)` opened
-        // with an interior `store.move(at: index)`, which the seam's trailing-only
-        // discipline (`Buffer.Linear+Store.Protocol`) traps on — a readable `precondition`
-        // failure in debug, but the same trap lowers to a bare `ud2` (SIGILL, signal 4) in
-        // release, with no diagnostic. The fix (backward carry sweep, mirroring the
-        // identical class fixed in swift-primitives/swift-hash-table-primitives#4) never
-        // opens the seam anywhere but the trailing slot. This is the exact reported
-        // sequence: pop the tail, then remove an INTERIOR index (index 1 of 3, not the
-        // trailing slot) — the crash only reproduced under `-O`, so this test's value is
-        // running green on the release CI leg, not merely compiling.
         @Test
         func `pop and remove(at:) shift correctly on the direct column`() {
             var a = MoveArray<Int>(initialCapacity: 4)
@@ -327,7 +284,7 @@ struct `Array Tests` {
             a.append(4)
             let last = a.pop()
             #expect(last == 4)
-            let removed = a.remove(at: 1)  // [1, 2, 3] → remove index 1 (interior) → [1, 3]
+            let removed = a.remove(at: 1)
             #expect(removed == 2)
             let count = a.count
             #expect(count == Index<Int>.Count(2))
@@ -337,21 +294,14 @@ struct `Array Tests` {
             #expect(e1 == 3)
         }
 
-        // Regression for swift-primitives/swift-array-primitives#8: drains a column of 12
-        // elements to empty under every (start offset × stride) removal order, checking
-        // both the removed value and the full surviving sequence against a reference model
-        // after EVERY removal — covering leading, interior, and trailing removals, plus the
-        // final one-element column.
         @Test
         func `remove(at:) sweeps every removal order on a growing column without corrupting order`()
             throws
         {
             let size = 12
-            // swift-linter:disable:next counter loop iteration
-            // REASON: body throws typed (Index<Int>.Count init); .forEach erases typed throws to `any Error` per stdlib rethrows limitations, so for-in is the only construct that preserves it here.
+
             for startOffset in 0..<size {
-                // swift-linter:disable:next counter loop iteration
-                // REASON: same typed-throws constraint as the outer loop.
+
                 for stride in 1...5 {
                     var a = MoveArray<Int>(initialCapacity: try Index<Int>.Count(size))
                     var model: [Int] = Swift.Array(0..<size)
@@ -377,19 +327,10 @@ struct `Array Tests` {
             }
         }
 
-        // Regression for swift-primitives/swift-array-primitives#3: `drain(_:)` opened
-        // with an interior `store.move(at:)` walked FORWARD from `.zero` — the identical
-        // unlawful-interior-move class fixed in `_removeShiftingDown` and `swap(at:with:)`
-        // above, previously masked because the small fixed-capacity happy-path test never
-        // grew the column or mixed in prior mutations. This sweep grows the column past
-        // its initial capacity (forcing a reallocation), applies `pop`, `remove(at:)`, and
-        // `swap(at:with:)` beforehand, then drains and checks the delivered sequence and
-        // final empty state against a reference model — for every starting size 0...12, so
-        // the single-element and empty boundaries are covered alongside the general case.
         @Test
         func `drain sweeps every size under growth and mixed prior operations`() {
             (0...12).forEach { size in
-                var a = MoveArray<Int>(initialCapacity: 2)  // forces growth past size 2
+                var a = MoveArray<Int>(initialCapacity: 2)
                 var model: [Int] = Swift.Array(0..<size)
                 for value in model {
                     a.append(value)
@@ -437,7 +378,7 @@ struct `Array Tests` {
                 #expect(mid == [2])
             }
             let ds = Probe.destroyedSorted
-            #expect(ds == [1, 2])  // the remaining element died with the array
+            #expect(ds == [1, 2])
         }
 
         @Test
@@ -456,7 +397,7 @@ struct `Array Tests` {
             var c = CoWArray<Int>(initialCapacity: 1)
             c.append(2)
             let sibling = c
-            c.reserveCapacity(Index<Int>.Count(8))  // uniquely, behind the gate
+            c.reserveCapacity(Index<Int>.Count(8))
             let cCapacityOK = c.capacity >= Index<Int>.Count(8)
             #expect(cCapacityOK)
             let siblingValue = sibling[0]
@@ -472,11 +413,7 @@ struct `Array Tests` {
             var sum = 0
             do {
                 let span = a.span
-                // swift-linter:disable:next counter loop iteration
-                // REASON: `span` is a `Swift.Span` (~Escapable). Climbing to
-                // `span.indices.forEach { … }` would capture a nonescapable value in a
-                // closure, which SE-0446 forbids. The counter loop is the only legal
-                // spelling here.
+
                 for i in 0..<span.count { sum += span[i] }
             }
             #expect(sum == 6)
@@ -496,11 +433,7 @@ struct `Array Tests` {
             let b = a
             let sum = a.withSpan { span in
                 var acc = 0
-                // swift-linter:disable:next counter loop iteration
-                // REASON: `span` is a `Swift.Span` (~Escapable). Climbing to
-                // `span.indices.forEach { … }` would capture a nonescapable value in a
-                // closure, which SE-0446 forbids. The counter loop is the only legal
-                // spelling here.
+
                 for i in 0..<span.count { acc += span[i] }
                 return acc
             }
@@ -522,14 +455,14 @@ struct `Array Tests` {
             var b = CoWArray<Int>(initialCapacity: 8)
             b.append(1)
             b.append(2)
-            #expect(a == b)  // element-wise, capacity-independent
+            #expect(a == b)
             b.append(3)
             #expect(a != b)
             var h1 = Hasher()
             var h2 = Hasher()
             a.hash(into: &h1)
             var a2 = a
-            a2[0] = 1  // forces divergence (same elements)
+            a2[0] = 1
             a2.hash(into: &h2)
             #expect(h1.finalize() == h2.finalize())
         }
@@ -562,14 +495,14 @@ struct `Array Tests` {
                 a.append(Item(1, value: 10))
                 a.append(Item(2, value: 20))
                 a.append(Item(3, value: 30))
-                let total = latticeSum(a)  // generic Collection.Protocol dispatch
+                let total = latticeSum(a)
                 #expect(total == 60)
                 var walked = 0
-                a.forEach { walked += $0.value }  // Iterable terminal over the span bridge
+                a.forEach { walked += $0.value }
                 #expect(walked == 60)
             }
             let ds = Probe.destroyedSorted
-            #expect(ds == [1, 2, 3])  // borrowing reads moved nothing out
+            #expect(ds == [1, 2, 3])
         }
 
         @Test
@@ -579,7 +512,7 @@ struct `Array Tests` {
                 span.append(2)
             }
             let count = a.count
-            #expect(count == Index<Int>.Count(2))  // no full-population requirement
+            #expect(count == Index<Int>.Count(2))
             a.append(addingCapacity: Index<Int>.Count(2)) { span in
                 span.append(3)
             }
@@ -587,11 +520,7 @@ struct `Array Tests` {
             #expect(count2 == Index<Int>.Count(3))
             let total: Int = a.edit { span in
                 var acc = 0
-                // swift-linter:disable:next counter loop iteration
-                // REASON: `span` is a `Swift.Span` (~Escapable). Climbing to
-                // `span.indices.forEach { … }` would capture a nonescapable value in a
-                // closure, which SE-0446 forbids. The counter loop is the only legal
-                // spelling here.
+
                 for i in 0..<span.count { acc += span[i] }
                 return acc
             }
@@ -610,7 +539,7 @@ struct `Array Tests` {
             var b = MoveArray<Int>(initialCapacity: 2)
             b.append(7)
             b.append(8)
-            var it = b.makeIterator()  // consuming, via the S chain
+            var it = b.makeIterator()
             var seen: [Int] = []
             while let x = it.next() { seen.append(x) }
             #expect(seen == [7, 8])

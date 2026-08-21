@@ -1,14 +1,3 @@
-// ===----------------------------------------------------------------------===//
-//
-// This source file is part of the swift-primitives open source project
-//
-// Copyright (c) 2024-2026 Coen ten Thije Boonkkamp and the swift-primitives project authors
-// Licensed under Apache License v2.0
-//
-// See LICENSE for license information
-//
-// ===----------------------------------------------------------------------===//
-
 public import Array_Primitive
 public import Buffer_Linear_Primitive
 public import Buffer_Primitive
@@ -17,30 +6,10 @@ public import Memory_Allocator_Primitive
 public import Memory_Heap_Primitives
 public import Storage_Contiguous_Primitives
 
-// MARK: - Array + OutputSpan-based init / append / edit (direct column)
-//
-// The SE-0527 construction/append/edit idioms, pinned to the direct move-only column
-// (the windows forward the buffer's own OutputSpan surfaces). The `Shared` column's
-// OutputSpan surface arrives with `Shared`-side `edit`/windowed-append forwards,
-// recorded as future work — its construction path is covered by the pinned
-// `Array(initialCapacity:)` + `append` ops.
-
 extension __Array where S: ~Copyable {
 
-    /// Creates a growable array with the given initial capacity, initialized via an
-    /// `OutputSpan<E>` closure (direct column).
-    ///
-    /// ## Throwing behavior
-    ///
-    /// On throw, partially-initialized elements are deinitialized by the `OutputSpan`'s
-    /// deinit; the array is not constructed; the error propagates.
     @inlinable
-    // swift-linter:disable:next phantom suppression
-    // REASON: `E` is not a phantom — the declaration's own `where` clause binds it into
-    // `Storage.Contiguous<E>`, which stores values of `E`. `Contiguous` constrains its
-    // element `~Copyable` only and requires escapability, so the prescribed
-    // `~Copyable & ~Escapable` bound is not compilable here. The rule's `usedAsStoredValue`
-    // text heuristic does not inspect same-signature `where`-clause bindings.
+
     public init<E: ~Copyable, Failure: Swift.Error>(
         capacity: Index_Primitives.Index<E>.Count,
         initializingWith initializer: (inout Swift.OutputSpan<E>) throws(Failure) -> Void
@@ -54,20 +23,8 @@ extension __Array where S: ~Copyable {
         )
     }
 
-    /// Appends `addingCapacity` elements via an `OutputSpan` closure, growing storage if
-    /// needed (direct column).
-    ///
-    /// ## Throwing behavior
-    ///
-    /// Elements appended before a throw **remain committed** to the array (append-style
-    /// semantics, distinct from init-style destroy-on-throw).
     @inlinable
-    // swift-linter:disable:next phantom suppression
-    // REASON: `E` is not a phantom — the declaration's own `where` clause binds it into
-    // `Storage.Contiguous<E>`, which stores values of `E`. `Contiguous` constrains its
-    // element `~Copyable` only and requires escapability, so the prescribed
-    // `~Copyable & ~Escapable` bound is not compilable here. The rule's `usedAsStoredValue`
-    // text heuristic does not inspect same-signature `where`-clause bindings.
+
     public mutating func append<E: ~Copyable, Failure: Swift.Error>(
         addingCapacity: Index_Primitives.Index<E>.Count,
         initializingWith initializer: (inout Swift.OutputSpan<E>) throws(Failure) -> Void
@@ -79,14 +36,6 @@ extension __Array where S: ~Copyable {
         )
     }
 
-    /// Edits the array's contents through an `OutputSpan<E>` covering the entire allocated
-    /// region `[0 ..< capacity)`, with `initializedCount` set to the current `count`
-    /// (direct column).
-    ///
-    /// ## Throwing behavior
-    ///
-    /// If the closure throws, the OutputSpan's current state is still committed
-    /// (append-style semantics).
     @inlinable
     public mutating func edit<E: ~Copyable, Failure: Swift.Error, R: ~Copyable>(
         _ body: (inout Swift.OutputSpan<E>) throws(Failure) -> R

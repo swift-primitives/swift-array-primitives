@@ -12,26 +12,14 @@ import Storage_Contiguous_Primitives
 import Tagged_Primitives_Standard_Library_Integration
 import Testing
 
-// The W4 audit backfill: the seam-ledger laws on both ratified columns, and the
-// surface gaps the column-keyed core suite left open.
-
-// swift-linter:disable:next unification typealias
-// REASON: Test-local `private` alias with no API surface, standing in for a 68-character
-// four-level generic that recurs dozens of times in this file. No consumer call site is
-// affected, so the indirection harm [API-NAME-004] guards against does not obtain.
 private typealias HeapColumn<E: ~Copyable> =
     Buffer<Storage<Memory.Allocator<Memory.Heap>>.Contiguous<E>>.Linear
 
 private typealias SharedColumn<E: ~Copyable> = Ownership.Shared<E, HeapColumn<E>>
-// `Array<E>` here is the institute's own typealias (shadows `Swift.Array`); `[E]`
-// sugar is hardwired to `Swift.Array` and would silently change the type.
-// swift-format-ignore: UseShorthandTypeNames
-// swiftlint:disable:next syntactic_sugar
-private typealias MoveArray<E: ~Copyable> = Array<E>
+
+private typealias MoveArray<E: ~Copyable> = [E]
 
 private typealias CoWArray<E: ~Copyable> = __Array<SharedColumn<E>>
-
-// MARK: - The seam-ledger laws (audit #2): both columns must be lawful
 
 @Suite
 struct `Array Seam Law Tests` {
@@ -60,8 +48,6 @@ struct `Array Seam Law Tests` {
         }
     }
 }
-
-// MARK: - Surface backfill (audit #4)
 
 @Suite(.serialized)
 struct `Array Surface Tests` {
@@ -144,12 +130,9 @@ struct `Array Surface Tests` {
             b.hash(into: &hb)
             #expect(ha.finalize() == hb.finalize())
             b.append(2)
-            #expect(a != b)  // length-discriminating
+            #expect(a != b)
             let prefixSame = (a[0] == b[0])
             #expect(prefixSame)
         }
     }
 }
-
-// The Fixed span-keyed-conformance suite (audit #4) moved to swift-fixed-primitives
-// with the W5-1 extraction.

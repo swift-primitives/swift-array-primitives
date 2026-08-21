@@ -1,19 +1,3 @@
-// ===----------------------------------------------------------------------===//
-//
-// This source file is part of the swift-primitives open source project
-//
-// Copyright (c) 2024-2026 Coen ten Thije Boonkkamp and the swift-primitives project authors
-// Licensed under Apache License v2.0
-//
-// See LICENSE for license information
-//
-// ===----------------------------------------------------------------------===//
-
-// The COLUMN-PINNED surface: growth and storage-shape operations cannot ride the seam
-// (no growth capability there by design), so each op appears once per ratified column —
-// the direct move-only heap buffer, and the `Shared` CoW box over it (whose ops are
-// CoW-checked inside `Shared`). The pins are `where ==` clauses on METHODS (mechanic #2:
-// extensions cannot introduce free element parameters; methods can).
 public import Array_Primitive
 public import Buffer_Linear_Primitive
 public import Buffer_Linear_Primitives
@@ -25,19 +9,8 @@ public import Memory_Heap_Primitives
 public import Ownership_Shared_Primitive
 public import Storage_Contiguous_Primitives
 
-// ============================================================================
-// MARK: - Append (growth)
-// ============================================================================
-
 extension __Array where S: ~Copyable {
-    /// Appends an element to the array (direct move-only column, any growable backing).
-    ///
-    /// Generic over the fresh-byte-construction capability `Memory.Growable`, so this serves the
-    /// dense-heap column (`Memory.Heap`) AND the inline⊕heap small column (`Memory.Small<n>`)
-    /// uniformly — for the small column, growth past the inline budget re-runs the spill decision
-    /// and relocates into a heap region (never a trap).
-    ///
-    /// - Complexity: O(1) amortized.
+
     @inlinable
     public mutating func append<E: ~Copyable, Resource: Memory.Growable & ~Copyable>(
         _ element: consuming E
@@ -46,9 +19,6 @@ extension __Array where S: ~Copyable {
         store.append(element)
     }
 
-    /// Appends an element to the array (`Shared` CoW column; uniqueness-checked).
-    ///
-    /// - Complexity: O(1) amortized (O(n) when a copy must be made first).
     @inlinable
     public mutating func append<E>(_ element: consuming E)
     where
@@ -59,7 +29,6 @@ extension __Array where S: ~Copyable {
         store.append(element)
     }
 
-    /// Appends an element on the statically-unique (~Copyable element) `Shared` column.
     @inlinable
     public mutating func append<E: ~Copyable>(_ element: consuming E)
     where
@@ -71,21 +40,10 @@ extension __Array where S: ~Copyable {
     }
 }
 
-// ============================================================================
-// MARK: - Remove All (storage rebinding)
-// ============================================================================
-
 extension __Array where S: ~Copyable {
-    /// Removes all elements (direct move-only column, any growable backing).
-    ///
-    /// Allocation-generic per [DS-029] form 2: `Buffer.Linear.removeAll(keepingCapacity:)`
-    /// is R-generic, so this one op serves the dense-heap column (`Memory.Heap`) AND the
-    /// inline⊕heap small column (`Memory.Small<n>`) uniformly.
+
     @inlinable
-    // swift-linter:disable:next bool public parameter
-    // REASON: Signature parity with `Swift.Array.removeAll(keepingCapacity: Bool = false)`.
-    // The front-door `Array<E>` deliberately shadows `Swift.Array` per [DS-028]; an enum
-    // parameter here would break the source-compatibility contract shadowing exists to keep.
+
     public mutating func removeAll<E: ~Copyable, Resource: Memory.Growable & ~Copyable>(
         keepingCapacity: Bool = false
     )
@@ -93,15 +51,8 @@ extension __Array where S: ~Copyable {
         store.removeAll(keepingCapacity: keepingCapacity)
     }
 
-    /// Removes all elements (`Shared` CoW column).
-    ///
-    /// Detaches to a fresh box rather than draining in place: sibling values sharing the
-    /// old box keep their elements untouched, and no deep copy is ever needed.
     @inlinable
-    // swift-linter:disable:next bool public parameter
-    // REASON: Signature parity with `Swift.Array.removeAll(keepingCapacity: Bool = false)`.
-    // The front-door `Array<E>` deliberately shadows `Swift.Array` per [DS-028]; an enum
-    // parameter here would break the source-compatibility contract shadowing exists to keep.
+
     public mutating func removeAll<E>(keepingCapacity: Bool = false)
     where
         S == Ownership.Shared<
@@ -117,23 +68,10 @@ extension __Array where S: ~Copyable {
     }
 }
 
-// ============================================================================
-// MARK: - Capacity (growth / reshape)
-// ============================================================================
-
 extension __Array where S: ~Copyable {
-    /// Ensures at least `minimumCapacity` slots are allocated (direct column, any growable
-    /// backing).
-    ///
-    /// Allocation-generic per [DS-029] form 2: `Buffer.Linear.reserveCapacity` is R-generic,
-    /// so this covers heap AND small columns uniformly.
+
     @inlinable
-    // swift-linter:disable:next phantom suppression
-    // REASON: `E` is not a phantom — the declaration's own `where` clause binds it into
-    // `Storage.Contiguous<E>`, which stores values of `E`. `Contiguous` constrains its
-    // element `~Copyable` only and requires escapability, so the prescribed
-    // `~Copyable & ~Escapable` bound is not compilable here. The rule's `usedAsStoredValue`
-    // text heuristic does not inspect same-signature `where`-clause bindings.
+
     public mutating func reserveCapacity<E: ~Copyable, Resource: Memory.Growable & ~Copyable>(
         _ minimumCapacity: Index_Primitives.Index<E>.Count
     )
@@ -141,7 +79,6 @@ extension __Array where S: ~Copyable {
         store.reserveCapacity(minimumCapacity)
     }
 
-    /// Ensures at least `minimumCapacity` slots are allocated (`Shared` column; uniquely).
     @inlinable
     public mutating func reserveCapacity<E>(_ minimumCapacity: Index_Primitives.Index<E>.Count)
     where
@@ -152,16 +89,8 @@ extension __Array where S: ~Copyable {
         store.reserveCapacity(minimumCapacity)
     }
 
-    /// Grows or shrinks storage to exactly `newCapacity`, preserving elements (direct column).
-    ///
-    /// - Precondition: `newCapacity >= count`
     @inlinable
-    // swift-linter:disable:next phantom suppression
-    // REASON: `E` is not a phantom — the declaration's own `where` clause binds it into
-    // `Storage.Contiguous<E>`, which stores values of `E`. `Contiguous` constrains its
-    // element `~Copyable` only and requires escapability, so the prescribed
-    // `~Copyable & ~Escapable` bound is not compilable here. The rule's `usedAsStoredValue`
-    // text heuristic does not inspect same-signature `where`-clause bindings.
+
     public mutating func reallocate<E: ~Copyable>(
         capacity newCapacity: Index_Primitives.Index<E>.Count
     )
@@ -169,9 +98,6 @@ extension __Array where S: ~Copyable {
         store.reallocate(capacity: newCapacity)
     }
 
-    /// Grows or shrinks storage to exactly `newCapacity` (`Shared` column; uniquely).
-    ///
-    /// - Precondition: `newCapacity >= count`
     @inlinable
     public mutating func reallocate<E>(capacity newCapacity: Index_Primitives.Index<E>.Count)
     where
@@ -183,24 +109,14 @@ extension __Array where S: ~Copyable {
     }
 }
 
-// ============================================================================
-// MARK: - Cloning (direct column; the generic `clone()` covers the CoW column)
-// ============================================================================
-
 extension __Array where S: ~Copyable {
-    /// Returns an independent copy of this array sized to exactly fit `count` (direct column).
-    ///
-    /// - Complexity: O(`count`)
+
     @inlinable
     public func clone<E>() -> Self
     where S == Buffer<Storage<Memory.Allocator<Memory.Heap>>.Contiguous<E>>.Linear {
         Self(store: store.clone())
     }
 
-    /// Returns an independent copy with storage of the given capacity (direct column).
-    ///
-    /// - Precondition: `capacity >= count`
-    /// - Complexity: O(`count`)
     @inlinable
     public func clone<E>(capacity: Index_Primitives.Index<E>.Count) -> Self
     where S == Buffer<Storage<Memory.Allocator<Memory.Heap>>.Contiguous<E>>.Linear {
@@ -208,12 +124,8 @@ extension __Array where S: ~Copyable {
     }
 }
 
-// ============================================================================
-// MARK: - Spans
-// ============================================================================
-
 extension __Array where S: ~Copyable {
-    /// Mutable span of the array elements (direct column; form-α method).
+
     @inlinable
     @_lifetime(&self)
     public mutating func mutableSpan<E: ~Copyable>() -> Swift.MutableSpan<E>
@@ -221,8 +133,6 @@ extension __Array where S: ~Copyable {
         store.mutableSpan
     }
 
-    /// Calls `body` with a read-only span over the elements (`Shared` column; scoped at
-    /// the class hop).
     @inlinable
     public func withSpan<E, R, Failure: Swift.Error>(
         _ body: (Swift.Span<E>) throws(Failure) -> R
@@ -235,7 +145,6 @@ extension __Array where S: ~Copyable {
         try store.withSpan(body)
     }
 
-    /// Calls `body` with a mutable span (`Shared` column; uniqueness restored FIRST).
     @inlinable
     public mutating func withMutableSpan<E, R, Failure: Swift.Error>(
         _ body: (inout Swift.MutableSpan<E>) throws(Failure) -> R
@@ -249,19 +158,9 @@ extension __Array where S: ~Copyable {
     }
 }
 
-// The read-only span on span-vending columns is the `Span.Protocol` witness:
-// see `Array.Conformances.swift`.
-
-// ============================================================================
-// MARK: - Buffer Access (Escape Hatch for C Interop; direct column)
-// ============================================================================
-
 @_spi(Unsafe)
 extension __Array where S: ~Copyable {
-    /// Provides read-only access to the underlying contiguous storage.
-    ///
-    /// - Warning: This is an escape hatch for C interop. Prefer `span` for safe access.
-    /// - Warning: The pointer must not escape the closure scope.
+
     @unsafe
     @inlinable
     public func withUnsafeBufferPointer<E, R, Failure: Swift.Error>(
